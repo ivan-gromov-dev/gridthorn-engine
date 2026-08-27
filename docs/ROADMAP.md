@@ -5,17 +5,17 @@ phase ends in a working, documented result.
 
 ## Milestone 0 — Project and CLI foundation
 
-- [ ] Set and document the minimum supported Rust version (MSRV).
-- [ ] Create the Cargo workspace and dependency-boundary rules.
-- [ ] Create `gridthorn_cli` with `new`, `run`, `check`, and `--version`.
-- [ ] Add an embedded minimal project template and generation tests.
-- [ ] Configure formatting, lints, tests, and CI.
+- [x] Set and document the minimum supported Rust version (MSRV).
+- [x] Create the Cargo workspace and dependency-boundary rules.
+- [x] Create `gridthorn_cli` with `new`, `run`, `check`, and `--version`.
+- [x] Add an embedded minimal project template and generation tests.
+- [x] Configure formatting, lints, tests, and CI.
 - [x] Add an ADR process for architectural decisions.
-- [ ] Define public API, SemVer, and changelog policies.
+- [x] Define public API, SemVer, and changelog policies.
 - [x] Define runtime, determinism, plugin, and serialization contracts.
 - [ ] Complete the dependency spikes listed in
   [TECHNOLOGY.md](TECHNOLOGY.md).
-- [ ] Provide a contributor guide and common development commands.
+- [x] Provide a contributor guide and common development commands.
 
 **Result:** a reproducible SDK foundation and a real CLI that creates, checks,
 and launches the minimal generated project.

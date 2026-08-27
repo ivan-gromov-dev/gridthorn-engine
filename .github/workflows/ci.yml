@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: Linux
+            os: ubuntu-latest
+          - platform: macOS
+            os: macos-latest
+          - platform: Windows
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy,rustfmt
+      - name: Run repository checks (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/verify.ps1
+      - name: Run repository checks (Linux and macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: sh ./scripts/verify.sh
+
+  msrv:
+    name: MSRV 1.85.0
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.85.0
+      - name: Check all targets at the MSRV
+        run: cargo check --workspace --all-targets --locked
+
+  ci-success:
+    name: CI Success
+    if: always()
+    needs:
+      - verify
+      - msrv
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm all required checks passed
+        env:
+          VERIFY_RESULT: ${{ needs.verify.result }}
+          MSRV_RESULT: ${{ needs.msrv.result }}
+        run: |
+          if [ "$VERIFY_RESULT" != "success" ] || [ "$MSRV_RESULT" != "success" ]; then
+            echo "Required checks did not all pass."
+            exit 1
+          fi

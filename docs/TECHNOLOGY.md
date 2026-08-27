@@ -34,9 +34,9 @@ Statuses used below:
 
 | Area            | Choice                           | Status      | Purpose and boundary                                                                                      |
 | --------------- | -------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------- |
-| Language        | Rust stable                      | Selected    | MSRV will be recorded in the workspace manifest and CI.                                                   |
-| Build           | Cargo workspace                  | Selected    | Crates, examples, feature flags, tests, and releases.                                                     |
-| CLI             | `clap`                           | Selected    | Typed commands, help, validation, and completions.                                                        |
+| Language        | Rust stable                      | Selected    | MSRV is recorded in the workspace manifest and verified in CI.                                            |
+| Build           | Cargo workspace                  | Selected    | Implemented foundation for crates, feature flags, tests, and releases.                                    |
+| CLI             | `clap`                           | Selected    | Implemented typed commands, help, and validation; completions are deferred.                               |
 | Window/events   | `winit`                          | Selected    | Cross-platform windows and OS event loop behind `gridthorn_app`.                                          |
 | Graphics        | `wgpu` + WGSL                    | Selected    | Cross-platform GPU API behind `gridthorn_render`.                                                         |
 | Math            | `glam`                           | Selected    | Vectors and matrices; exposed only through deliberate SDK aliases or types.                               |
