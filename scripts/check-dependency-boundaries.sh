@@ -25,7 +25,9 @@ workspace_names = {package["name"] for package in workspace_packages}
 
 allowed_dependencies = {
     "gridthorn": set(),
+    "gridthorn_app": {"gridthorn_render"},
     "gridthorn_cli": set(),
+    "gridthorn_render": set(),
 }
 
 for package in workspace_packages:

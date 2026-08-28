@@ -49,7 +49,7 @@ plugins/
 ├── navigation
 └── save
 
-examples/
+../gridthorn-examples/       # sibling examples repository
 ├── classic_2d
 └── tycoon_slice
 ```

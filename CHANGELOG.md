@@ -19,3 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with an aggregate `CI Success` gate.
 - Repository-scoped `$implement` and `$release` skills for tested feature work
   and consistent release preparation.
+- Provisional `gridthorn_app` and `gridthorn_render` crates with a documented
+  window, GPU surface, resize, minimize, restore, and close lifecycle example.
+- A sibling `gridthorn-examples` repository convention with one independently
+  owned directory per executable example.

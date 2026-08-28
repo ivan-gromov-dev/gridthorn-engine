@@ -120,8 +120,9 @@ serialization, and performance requirements.
 
 Before the baseline is considered stable, create and document small tests for:
 
-1. A `winit` application that owns a `wgpu` surface and survives resize,
-   minimize, and close events.
+1. [Implemented as a Windows-validated prototype](spikes/window-surface.md): a
+   `winit` application that owns a `wgpu` surface and survives resize, minimize,
+   restore, and close events. macOS and Linux runtime validation remains open.
 2. A `bevy_ecs` world running explicit `Startup`, `FixedUpdate`, and `Update`
    schedules under Gridthorn's application loop.
 3. A headless run of the same fixed-update schedule.

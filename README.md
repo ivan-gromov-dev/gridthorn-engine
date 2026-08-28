@@ -46,6 +46,7 @@ they are explicitly marked as implemented.
 | Cargo workspace and CI | Implemented foundation |
 | CLI | `new`, `run`, `check`, and `--version` implemented |
 | Public SDK facade | Version API only; runtime APIs planned |
+| App and renderer internals | Window/surface lifecycle spike implemented |
 | Runtime and public SDK | Planned for Milestone 1 and later |
 | Stable release or API | Not available |
 
@@ -66,6 +67,15 @@ cargo run -p gridthorn_cli -- run ../hello-gridthorn
 The `--engine-path` option is only needed while Gridthorn is used from an
 unpublished checkout. Installed releases generate a registry dependency by
 default.
+
+Run the provisional window and GPU surface lifecycle example:
+
+```console
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_window_surface
+```
+
+Runnable examples live in their own directories in the sibling
+`gridthorn-examples` repository.
 
 ## Repository workflows
 

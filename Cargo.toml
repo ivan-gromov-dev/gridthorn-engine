@@ -1,7 +1,9 @@
 [workspace]
 members = [
     "crates/gridthorn",
+    "crates/gridthorn_app",
     "crates/gridthorn_cli",
+    "crates/gridthorn_render",
 ]
 resolver = "3"
 
@@ -24,7 +26,10 @@ anyhow = "1.0.99"
 clap = { version = "4.5.46", features = ["derive"] }
 semver = "1.0.26"
 serde = { version = "1.0.219", features = ["derive"] }
+pollster = "0.4.0"
+thiserror = "2.0.19"
 toml = "0.9.5"
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter", "fmt"] }
-
+wgpu = "26.0.1"
+winit = "0.30.13"

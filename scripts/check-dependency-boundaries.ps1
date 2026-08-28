@@ -22,7 +22,9 @@ try {
 
     $allowedDependencies = @{
         gridthorn = @()
+        gridthorn_app = @("gridthorn_render")
         gridthorn_cli = @()
+        gridthorn_render = @()
     }
 
     foreach ($package in $metadata.packages) {

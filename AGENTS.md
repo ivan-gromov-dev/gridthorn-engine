@@ -30,6 +30,9 @@ more specific rules for its subtree.
 - Tests belong to the domain they validate under `src/<domain>/test/`, split
   into focused files. Do not create crate-wide `tests/` buckets or collect
   unrelated tests in one generalized test module.
+- Store every runnable example in the sibling `../gridthorn-examples`
+  repository under `<example-name>/`, with its own manifest and domain-focused
+  source tree.
 
 ## Comment policy
 
