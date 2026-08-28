@@ -5,9 +5,9 @@ impl WindowSurfaceTarget {
     /// Wrap an owned native window handle for renderer initialization.
     pub fn new<T>(target: T) -> Self
     where
-        T: wgpu::WindowHandle + 'static,
+        T: wgpu::DisplayAndWindowHandle + 'static,
     {
-        Self(target.into())
+        Self(wgpu::SurfaceTarget::DisplayAndWindow(Box::new(target)))
     }
 
     pub(super) fn into_wgpu(self) -> wgpu::SurfaceTarget<'static> {

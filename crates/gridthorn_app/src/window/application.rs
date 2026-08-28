@@ -159,10 +159,10 @@ where
         match event {
             WindowEvent::CloseRequested => event_loop.exit(),
             WindowEvent::Resized(size) => {
-                if let Some(renderer) = self.renderer.as_mut() {
-                    if let Err(error) = renderer.resize(size.width, size.height) {
-                        self.fail(event_loop, error.into());
-                    }
+                if let Some(renderer) = self.renderer.as_mut()
+                    && let Err(error) = renderer.resize(size.width, size.height)
+                {
+                    self.fail(event_loop, error.into());
                 }
             }
             WindowEvent::Occluded(occluded) => {
@@ -171,10 +171,10 @@ where
                 }
             }
             WindowEvent::RedrawRequested => {
-                if let Some(renderer) = self.renderer.as_mut() {
-                    if let Err(error) = renderer.render() {
-                        self.fail(event_loop, error.into());
-                    }
+                if let Some(renderer) = self.renderer.as_mut()
+                    && let Err(error) = renderer.render()
+                {
+                    self.fail(event_loop, error.into());
                 }
             }
             _ => {}

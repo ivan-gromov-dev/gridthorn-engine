@@ -97,16 +97,21 @@ impl SurfaceRenderer {
             return Ok(());
         }
 
-        let frame = match self.surface.get_current_texture() {
-            Ok(frame) => frame,
-            Err(wgpu::SurfaceError::Timeout) => return Ok(()),
-            Err(wgpu::SurfaceError::Outdated | wgpu::SurfaceError::Lost) => {
+        let (frame, suboptimal) = match self.surface.get_current_texture() {
+            wgpu::CurrentSurfaceTexture::Success(frame) => (frame, false),
+            wgpu::CurrentSurfaceTexture::Suboptimal(frame) => (frame, true),
+            wgpu::CurrentSurfaceTexture::Timeout | wgpu::CurrentSurfaceTexture::Occluded => {
+                return Ok(());
+            }
+            wgpu::CurrentSurfaceTexture::Outdated => {
                 self.reconfigure_current()?;
                 return Ok(());
             }
-            Err(error) => return Err(RenderSurfaceError::frame_acquisition(error)),
+            wgpu::CurrentSurfaceTexture::Lost => return Err(RenderSurfaceError::SurfaceLost),
+            wgpu::CurrentSurfaceTexture::Validation => {
+                return Err(RenderSurfaceError::SurfaceValidation);
+            }
         };
-        let suboptimal = frame.suboptimal;
         let view = frame.texture.create_view(&TextureViewDescriptor::default());
         let mut encoder = self
             .device
@@ -135,7 +140,7 @@ impl SurfaceRenderer {
             });
         }
         self.queue.submit([encoder.finish()]);
-        frame.present();
+        self.queue.present(frame);
 
         if suboptimal {
             warn!("surface frame was suboptimal; reconfiguring");

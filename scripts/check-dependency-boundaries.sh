@@ -28,6 +28,7 @@ allowed_dependencies = {
     "gridthorn_app": {"gridthorn_render"},
     "gridthorn_cli": set(),
     "gridthorn_render": set(),
+    "gridthorn_world": set(),
 }
 
 for package in workspace_packages:

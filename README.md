@@ -47,6 +47,7 @@ they are explicitly marked as implemented.
 | CLI | `new`, `run`, `check`, and `--version` implemented |
 | Public SDK facade | Version API only; runtime APIs planned |
 | App and renderer internals | Window/surface lifecycle spike implemented |
+| World and schedules | ECS lifecycle schedule spike implemented |
 | Runtime and public SDK | Planned for Milestone 1 and later |
 | Stable release or API | Not available |
 
@@ -76,6 +77,12 @@ cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_
 
 Runnable examples live in their own directories in the sibling
 `gridthorn-examples` repository.
+
+Run the provisional ECS schedule example:
+
+```console
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_schedule_loop
+```
 
 ## Repository workflows
 

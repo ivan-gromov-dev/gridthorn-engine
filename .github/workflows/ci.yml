@@ -38,11 +38,11 @@ jobs:
         run: sh ./scripts/verify.sh
 
   msrv:
-    name: MSRV 1.85.0
+    name: MSRV 1.97.1
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.85.0
+      - uses: dtolnay/rust-toolchain@1.97.1
       - name: Check all targets at the MSRV
         run: cargo check --workspace --all-targets --locked
 

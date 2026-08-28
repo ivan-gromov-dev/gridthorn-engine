@@ -32,12 +32,13 @@ pub enum RenderSurfaceError {
     #[error("selected graphics adapter has no compatible surface configuration")]
     UnsupportedConfiguration,
 
-    /// Acquiring a renderable frame failed permanently.
-    #[error("surface frame acquisition failed")]
-    FrameAcquisition {
-        #[source]
-        source: BoxedError,
-    },
+    /// The presentation surface was lost and must be recreated.
+    #[error("GPU presentation surface was lost")]
+    SurfaceLost,
+
+    /// Frame acquisition encountered a captured validation failure.
+    #[error("GPU surface frame acquisition failed validation")]
+    SurfaceValidation,
 }
 
 impl RenderSurfaceError {
@@ -55,12 +56,6 @@ impl RenderSurfaceError {
 
     pub(super) fn device_request(source: impl Error + Send + Sync + 'static) -> Self {
         Self::DeviceRequest {
-            source: Box::new(source),
-        }
-    }
-
-    pub(super) fn frame_acquisition(source: impl Error + Send + Sync + 'static) -> Self {
-        Self::FrameAcquisition {
             source: Box::new(source),
         }
     }

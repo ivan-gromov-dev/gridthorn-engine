@@ -25,6 +25,7 @@ try {
         gridthorn_app = @("gridthorn_render")
         gridthorn_cli = @()
         gridthorn_render = @()
+        gridthorn_world = @()
     }
 
     foreach ($package in $metadata.packages) {

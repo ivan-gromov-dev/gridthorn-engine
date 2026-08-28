@@ -33,13 +33,13 @@ impl ProjectWorkspace {
 
 impl Drop for ProjectWorkspace {
     fn drop(&mut self) {
-        if let Err(error) = fs::remove_dir_all(&self.root) {
-            if self.root.exists() {
-                eprintln!(
-                    "failed to remove command test workspace {}: {error}",
-                    self.root.display()
-                );
-            }
+        if let Err(error) = fs::remove_dir_all(&self.root)
+            && self.root.exists()
+        {
+            eprintln!(
+                "failed to remove command test workspace {}: {error}",
+                self.root.display()
+            );
         }
     }
 }

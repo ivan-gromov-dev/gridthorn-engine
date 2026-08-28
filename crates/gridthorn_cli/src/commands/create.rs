@@ -24,14 +24,15 @@ pub(crate) fn execute(
 
     let generated = project::render(template, project_name, engine_path)?;
     let result = write_project(project_path, &generated);
-    if result.is_err() && project_path.exists() {
-        if let Err(error) = fs::remove_dir_all(project_path) {
-            warn!(
-                path = %project_path.display(),
-                %error,
-                "could not remove incomplete project directory"
-            );
-        }
+    if result.is_err()
+        && project_path.exists()
+        && let Err(error) = fs::remove_dir_all(project_path)
+    {
+        warn!(
+            path = %project_path.display(),
+            %error,
+            "could not remove incomplete project directory"
+        );
     }
     result?;
 

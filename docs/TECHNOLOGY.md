@@ -123,8 +123,10 @@ Before the baseline is considered stable, create and document small tests for:
 1. [Implemented as a Windows-validated prototype](spikes/window-surface.md): a
    `winit` application that owns a `wgpu` surface and survives resize, minimize,
    restore, and close events. macOS and Linux runtime validation remains open.
-2. A `bevy_ecs` world running explicit `Startup`, `FixedUpdate`, and `Update`
-   schedules under Gridthorn's application loop.
+2. [Implemented as a windowed prototype](spikes/ecs-schedule-loop.md): a
+   `bevy_ecs` world running explicit `Startup`, `FixedUpdate`, and `Update`
+   schedules under Gridthorn's application loop. Headless reuse, change
+   detection, and parallel-system policy remain separate validation work.
 3. A headless run of the same fixed-update schedule.
 4. A minimal `gridthorn` CLI that creates and runs a generated project.
 5. Structured error and tracing output spanning CLI, app, and renderer layers.

@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Cargo workspace with Rust 1.85.0 as the MSRV.
+- Cargo workspace with Rust 1.97.1 as the MSRV.
 - Initial `gridthorn` SDK facade and version API.
 - `gridthorn` CLI with `new`, `run`, `check`, and `--version`.
 - Embedded minimal project template and generation/build tests.
@@ -21,5 +21,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and consistent release preparation.
 - Provisional `gridthorn_app` and `gridthorn_render` crates with a documented
   window, GPU surface, resize, minimize, restore, and close lifecycle example.
+- Provisional `gridthorn_world` ECS storage and explicit `Startup`,
+  `FixedUpdate`, and `Update` schedules behind Gridthorn-owned APIs.
+- A windowed `schedule-loop` example that drives ECS schedules through the
+  Gridthorn application lifecycle.
 - A sibling `gridthorn-examples` repository convention with one independently
   owned directory per executable example.
+
+### Changed
+
+- Raised the project MSRV to Rust 1.97.1 so current `bevy_ecs` and `wgpu`
+  releases can be validated.
+- Updated `bevy_ecs`, `pollster`, `thiserror`, `toml`, and `wgpu` to their
+  current releases.

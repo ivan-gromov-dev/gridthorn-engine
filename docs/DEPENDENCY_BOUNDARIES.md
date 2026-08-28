@@ -13,6 +13,7 @@ slice and its focused dependency spikes:
 | `gridthorn_app` | Provisional application and window lifecycle | `gridthorn_render` |
 | `gridthorn_cli` | Thin command-line adapter and project template | None |
 | `gridthorn_render` | Provisional GPU surface and renderer services | None |
+| `gridthorn_world` | Provisional ECS storage and lifecycle schedules | None |
 
 The CLI deliberately validates project files and delegates builds to Cargo. It
 does not depend on SDK internals. The facade contains no hidden runtime
@@ -35,11 +36,10 @@ workspace's internal dependency allowlist.
 
 ## Rust versions
 
-The minimum supported Rust version is **1.85.0**, the first stable release with
-Rust 2024 edition support. Packages declare this through the workspace
-`rust-version` field. The default development toolchain follows stable so local
-formatting and lints receive current fixes; CI separately checks the workspace
-with Rust 1.85.0.
+The minimum supported Rust version is **1.97.1**. Packages declare this through
+the workspace `rust-version` field. Local development follows the latest stable
+toolchain, while CI separately checks the complete workspace with the exact
+MSRV.
 
 Raising the MSRV requires a documented reason, a changelog entry, and a CI
 change in the same pull request.

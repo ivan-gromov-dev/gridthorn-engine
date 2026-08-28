@@ -1,6 +1,6 @@
 # Contributing to Gridthorn
 
-Gridthorn requires stable Rust for normal development and supports Rust 1.85.0
+Gridthorn requires stable Rust for normal development and supports Rust 1.97.1
 as its MSRV.
 
 ## Common commands
