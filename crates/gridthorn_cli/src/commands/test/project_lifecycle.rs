@@ -3,9 +3,9 @@ use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context, Result};
+use clap::Parser;
 
-use super::super::{check, create, run};
-use crate::project::TemplateKind;
+use crate::Cli;
 
 struct ProjectWorkspace {
     root: PathBuf,
@@ -56,17 +56,38 @@ fn local_engine_path() -> Result<PathBuf> {
 fn generated_project_can_be_checked_and_run() -> Result<()> {
     let workspace = ProjectWorkspace::create()?;
     let project_path = workspace.project();
+    let project_argument = project_path.to_string_lossy().into_owned();
+    let engine_argument = local_engine_path()?.to_string_lossy().into_owned();
 
-    create::execute(
-        &project_path,
-        TemplateKind::Minimal,
-        Some(&local_engine_path()?),
-    )?;
+    Cli::try_parse_from([
+        "gridthorn",
+        "new",
+        &project_argument,
+        "--engine-path",
+        &engine_argument,
+    ])?
+    .execute()?;
     assert!(project_path.join("Cargo.toml").is_file());
     assert!(project_path.join("gridthorn.toml").is_file());
     assert!(project_path.join("src/main.rs").is_file());
 
-    check::execute(&project_path)?;
-    run::execute(&project_path, &[])?;
+    Cli::try_parse_from(["gridthorn", "check", &project_argument])?.execute()?;
+    Cli::try_parse_from(["gridthorn", "run", &project_argument])?.execute()?;
+    Ok(())
+}
+
+#[test]
+fn check_reports_missing_project_files_with_context() -> Result<()> {
+    let workspace = ProjectWorkspace::create()?;
+    let invalid_project = workspace.root.join("invalid-project");
+    fs::create_dir(&invalid_project)?;
+    let project_argument = invalid_project.to_string_lossy().into_owned();
+
+    let error = Cli::try_parse_from(["gridthorn", "check", &project_argument])?
+        .execute()
+        .expect_err("an empty directory must not validate as a project");
+
+    assert!(error.to_string().contains("Cargo.toml not found"));
+    assert!(error.to_string().contains(&project_argument));
     Ok(())
 }

@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `FixedUpdate`, and `Update` schedules behind Gridthorn-owned APIs.
 - A windowed `schedule-loop` example that drives ECS schedules through the
   Gridthorn application lifecycle.
+- A `headless-schedule` example that runs the same fixed-update boundary without
+  application, windowing, GPU, or renderer dependencies.
+- Process-level and public-parser coverage for the complete CLI-generated
+  project lifecycle, including contextual invalid-project diagnostics.
 - A sibling `gridthorn-examples` repository convention with one independently
   owned directory per executable example.
 

@@ -127,8 +127,11 @@ Before the baseline is considered stable, create and document small tests for:
    `bevy_ecs` world running explicit `Startup`, `FixedUpdate`, and `Update`
    schedules under Gridthorn's application loop. Headless reuse, change
    detection, and parallel-system policy remain separate validation work.
-3. A headless run of the same fixed-update schedule.
-4. A minimal `gridthorn` CLI that creates and runs a generated project.
+3. [Implemented as an internal architecture prototype](spikes/headless-schedule.md):
+   a headless run of the same fixed-update schedule without application,
+   windowing, GPU, or renderer dependencies.
+4. [Implemented and process-validated](spikes/cli-project-lifecycle.md): a
+   minimal `gridthorn` CLI that creates, checks, and runs a generated project.
 5. Structured error and tracing output spanning CLI, app, and renderer layers.
 6. Repeatable fixed-step runs that produce the same state hash for the same
    commands and seed under the determinism scope defined in

@@ -48,6 +48,7 @@ they are explicitly marked as implemented.
 | Public SDK facade | Version API only; runtime APIs planned |
 | App and renderer internals | Window/surface lifecycle spike implemented |
 | World and schedules | ECS lifecycle schedule spike implemented |
+| Headless schedule execution | Internal architecture spike implemented |
 | Runtime and public SDK | Planned for Milestone 1 and later |
 | Stable release or API | Not available |
 
@@ -82,6 +83,12 @@ Run the provisional ECS schedule example:
 
 ```console
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_schedule_loop
+```
+
+Run the same fixed-update boundary without a window or renderer:
+
+```console
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_headless_schedule -- --ticks 10
 ```
 
 ## Repository workflows
