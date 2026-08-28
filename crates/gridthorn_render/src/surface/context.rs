@@ -45,6 +45,7 @@ impl SurfaceRenderer {
                 .map_err(RenderSurfaceError::device_request)?;
         let adapter_info = adapter.get_info();
         info!(
+            component = "renderer",
             adapter = %adapter_info.name,
             backend = ?adapter_info.backend,
             "initialized graphics adapter"
@@ -73,7 +74,7 @@ impl SurfaceRenderer {
             SurfaceChange::Configure(extent) => self.configure(extent)?,
             SurfaceChange::Suspend => {
                 self.configuration = None;
-                debug!("suspended zero-sized surface");
+                debug!(component = "renderer", "suspended zero-sized surface");
             }
             SurfaceChange::Unchanged => {}
         }
@@ -83,7 +84,10 @@ impl SurfaceRenderer {
     /// Pause or resume frame acquisition for platform occlusion.
     pub fn set_occluded(&mut self, occluded: bool) {
         self.lifecycle.set_occluded(occluded);
-        debug!(occluded, "surface occlusion changed");
+        debug!(
+            component = "renderer",
+            occluded, "surface occlusion changed"
+        );
     }
 
     /// Clear and present one frame when the surface is renderable.
@@ -143,7 +147,10 @@ impl SurfaceRenderer {
         self.queue.present(frame);
 
         if suboptimal {
-            warn!("surface frame was suboptimal; reconfiguring");
+            warn!(
+                component = "renderer",
+                "surface frame was suboptimal; reconfiguring"
+            );
             self.reconfigure_current()?;
         }
         Ok(())
@@ -157,6 +164,7 @@ impl SurfaceRenderer {
         self.surface.configure(&self.device, &configuration);
         self.configuration = Some(configuration);
         debug!(
+            component = "renderer",
             width = extent.width,
             height = extent.height,
             "configured surface"

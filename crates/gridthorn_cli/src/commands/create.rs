@@ -29,6 +29,7 @@ pub(crate) fn execute(
         && let Err(error) = fs::remove_dir_all(project_path)
     {
         warn!(
+            component = "cli",
             path = %project_path.display(),
             %error,
             "could not remove incomplete project directory"
@@ -36,7 +37,11 @@ pub(crate) fn execute(
     }
     result?;
 
-    info!(project = %project_path.display(), "created Gridthorn project");
+    info!(
+        component = "cli",
+        project = %project_path.display(),
+        "created Gridthorn project"
+    );
     println!("Created `{project_name}` at {}", project_path.display());
     println!("Next: cd {} && gridthorn run", project_path.display());
     Ok(())

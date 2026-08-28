@@ -132,7 +132,8 @@ Before the baseline is considered stable, create and document small tests for:
    windowing, GPU, or renderer dependencies.
 4. [Implemented and process-validated](spikes/cli-project-lifecycle.md): a
    minimal `gridthorn` CLI that creates, checks, and runs a generated project.
-5. Structured error and tracing output spanning CLI, app, and renderer layers.
+5. [Implemented as a cross-layer prototype](spikes/structured-diagnostics.md):
+   structured error and tracing output spanning CLI, app, and renderer layers.
 6. Repeatable fixed-step runs that produce the same state hash for the same
    commands and seed under the determinism scope defined in
    [ARCHITECTURE.md](ARCHITECTURE.md#determinism-contract).

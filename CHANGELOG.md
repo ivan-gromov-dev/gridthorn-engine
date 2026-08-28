@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   application, windowing, GPU, or renderer dependencies.
 - Process-level and public-parser coverage for the complete CLI-generated
   project lifecycle, including contextual invalid-project diagnostics.
+- Structured `component` fields across CLI, application, and renderer tracing,
+  plus a CLI-driven diagnostics-flow example and renderer-to-app error test.
 - A sibling `gridthorn-examples` repository convention with one independently
   owned directory per executable example.
 

@@ -3,6 +3,7 @@ use std::path::Path;
 use std::process::{Command, ExitStatus};
 
 use anyhow::{Context, Result, bail};
+use tracing::info;
 
 pub(crate) fn check(project_root: &Path) -> Result<()> {
     execute("check", project_root, &[])
@@ -32,9 +33,22 @@ fn cargo_command(action: &str, project_root: &Path) -> Command {
 }
 
 fn execute_command(action: &str, project_root: &Path, command: &mut Command) -> Result<()> {
+    info!(
+        component = "cli",
+        operation = action,
+        project = %project_root.display(),
+        "starting Cargo subprocess"
+    );
     let status = command
         .status()
         .with_context(|| format!("failed to start Cargo in {}", project_root.display()))?;
+    info!(
+        component = "cli",
+        operation = action,
+        success = status.success(),
+        exit_code = status.code(),
+        "Cargo subprocess completed"
+    );
     require_success(action, status)
 }
 

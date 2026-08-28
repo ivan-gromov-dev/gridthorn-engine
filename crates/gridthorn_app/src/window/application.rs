@@ -90,7 +90,11 @@ where
         let mut control = WindowControl::default();
         self.lifecycle.started(&mut control);
         self.apply_control(event_loop, &control);
-        info!("window and GPU surface initialized");
+        info!(
+            component = "app",
+            event = "initialized",
+            "window and GPU surface initialized"
+        );
         Ok(())
     }
 
@@ -114,7 +118,12 @@ where
     }
 
     fn fail(&mut self, event_loop: &ActiveEventLoop, error: ApplicationError) {
-        error!(%error, "window application failed");
+        error!(
+            component = "app",
+            event = "failure",
+            %error,
+            "window application failed"
+        );
         self.error = Some(error);
         event_loop.exit();
     }

@@ -40,3 +40,6 @@ impl ApplicationError {
         }
     }
 }
+
+#[cfg(test)]
+mod test;

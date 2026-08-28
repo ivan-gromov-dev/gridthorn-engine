@@ -49,6 +49,7 @@ they are explicitly marked as implemented.
 | App and renderer internals | Window/surface lifecycle spike implemented |
 | World and schedules | ECS lifecycle schedule spike implemented |
 | Headless schedule execution | Internal architecture spike implemented |
+| Cross-layer diagnostics | CLI/app/renderer tracing spike implemented |
 | Runtime and public SDK | Planned for Milestone 1 and later |
 | Stable release or API | Not available |
 
@@ -89,6 +90,12 @@ Run the same fixed-update boundary without a window or renderer:
 
 ```console
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_headless_schedule -- --ticks 10
+```
+
+Run the self-closing structured diagnostics flow through the CLI:
+
+```console
+cargo run -p gridthorn_cli -- run ../gridthorn-examples/diagnostics-flow
 ```
 
 ## Repository workflows
