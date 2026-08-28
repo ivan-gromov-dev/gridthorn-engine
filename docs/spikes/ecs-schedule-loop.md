@@ -51,9 +51,9 @@ Run the self-closing end-to-end path:
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_schedule_loop -- --smoke
 ```
 
-## Deferred measurements
+## Review outcome
 
-Clean compile-time, binary-size, and dependency-growth comparisons remain
-deferred until all Milestone 0 dependency spikes are present. The headless
-schedule spike will determine whether the same runtime boundary can execute
-without linking application or renderer crates.
+Combined compile-time, binary-size, and dependency-growth measurements are in
+the [Milestone 0 review](milestone-0-review.md). Headless reuse and deterministic
+sequential execution were validated by later spikes. Change detection and a
+parallel-system policy remain Milestone 1 runtime work.

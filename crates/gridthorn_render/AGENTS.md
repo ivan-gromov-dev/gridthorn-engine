@@ -7,6 +7,5 @@
   simulation, or the SDK facade.
 - Zero-sized or occluded surfaces must not acquire frames or configure a
   swapchain.
-- Keep the window-handle bridge provisional until the platform boundary is
-  validated by the Milestone 0 spike.
-
+- Keep the window-handle bridge provisional until Milestone 1 defines the
+  public platform boundary.

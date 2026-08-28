@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-08-28
+
 ### Added
 
 - Cargo workspace with Rust 1.97.1 as the MSRV.
@@ -37,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the provisional `gridthorn_simulation` crate.
 - A deterministic-replay example covering repeatable fixed-step runs and
   changed-seed and changed-command controls.
+- A completed Milestone 0 foundation review with clean-build, binary-size, and
+  dependency-growth baselines plus explicit runtime deferrals.
 
 ### Changed
 

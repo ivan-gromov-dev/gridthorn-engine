@@ -3,7 +3,7 @@
 This roadmap describes risk-reduction order rather than promised dates. Every
 phase ends in a working, documented result.
 
-## Milestone 0 — Project and CLI foundation
+## Milestone 0 — Project and CLI foundation (complete)
 
 - [x] Set and document the minimum supported Rust version (MSRV).
 - [x] Create the Cargo workspace and dependency-boundary rules.
@@ -13,12 +13,16 @@ phase ends in a working, documented result.
 - [x] Add an ADR process for architectural decisions.
 - [x] Define public API, SemVer, and changelog policies.
 - [x] Define runtime, determinism, plugin, and serialization contracts.
-- [ ] Complete the dependency spikes listed in
+- [x] Complete the dependency spikes listed in
   [TECHNOLOGY.md](TECHNOLOGY.md).
 - [x] Provide a contributor guide and common development commands.
 
 **Result:** a reproducible SDK foundation and a real CLI that creates, checks,
 and launches the minimal generated project.
+
+Completed on 2026-08-28. The evidence, measurements, and explicit runtime
+deferrals are recorded in the
+[Milestone 0 review](spikes/milestone-0-review.md).
 
 ## Milestone 1 — Runtime vertical slice
 

@@ -4,8 +4,8 @@
 
 Implemented as a provisional Milestone 0 prototype. Automated lifecycle tests
 and an executable Windows smoke path validate the current design. Runtime
-validation on macOS and Linux remains open, so this spike does not complete the
-Milestone 0 dependency-spikes roadmap item by itself.
+validation on macOS and Linux remains explicitly deferred to Milestone 1; CI
+continues to compile and test the code on all three operating systems.
 
 ## Question
 
@@ -52,8 +52,7 @@ needed.
 
 ## Deferred measurements
 
-Clean compile-time and release binary-size comparisons are deferred until all
-Milestone 0 dependency spikes are available. Measuring them together will make
-the incremental cost of each selected dependency comparable. Platform runtime
-validation remains required on macOS and Linux; the normal CI matrix continues
-to compile and test the packages on all three operating systems.
+Combined clean-build and release binary-size baselines are recorded in the
+[Milestone 0 review](milestone-0-review.md). Platform runtime validation remains
+required on macOS and Linux; the normal CI matrix continues to compile and test
+the packages on all three operating systems.

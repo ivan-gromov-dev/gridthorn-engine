@@ -1,8 +1,7 @@
 # Public API and Release Policy
 
-Gridthorn is currently pre-release software. The workspace version begins at
-`0.1.0`, and no API is stable until the first explicitly announced stable
-release.
+Gridthorn `0.1.0` is a pre-1.0 source release. No API is stable until the first
+explicitly announced stable release.
 
 ## Public surface
 
@@ -37,4 +36,3 @@ User-visible changes are recorded in the root `CHANGELOG.md` under `Unreleased`
 using the Keep a Changelog categories. Release preparation moves those entries
 to a dated version section and updates comparison links once a public repository
 URL is established.
-

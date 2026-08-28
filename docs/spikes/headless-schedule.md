@@ -46,6 +46,5 @@ tests cover default and explicit arguments, invalid tick counts, zero steps,
 and multiple fixed steps. `cargo tree` confirmed the absence of application and
 presentation packages.
 
-Compile-time, binary-size, and dependency-growth comparisons remain deferred
-until every Milestone 0 dependency spike is present so their costs can be
-measured consistently.
+Compile-time, binary-size, and dependency-growth baselines are recorded in the
+[Milestone 0 review](milestone-0-review.md).
