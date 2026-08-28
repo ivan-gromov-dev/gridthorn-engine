@@ -13,6 +13,7 @@ slice and its focused dependency spikes:
 | `gridthorn_app` | Provisional application and window lifecycle | `gridthorn_render` |
 | `gridthorn_cli` | Thin command-line adapter and project template | None |
 | `gridthorn_render` | Provisional GPU surface and renderer services | None |
+| `gridthorn_simulation` | Deterministic simulation primitives and state fingerprints | None |
 | `gridthorn_world` | Provisional ECS storage and lifecycle schedules | None |
 
 The CLI deliberately validates project files and delegates builds to Cargo. It

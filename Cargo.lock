@@ -1041,6 +1041,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "gridthorn_simulation"
+version = "0.1.0"
+
+[[package]]
 name = "gridthorn_world"
 version = "0.1.0"
 dependencies = [

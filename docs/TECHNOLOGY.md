@@ -134,8 +134,9 @@ Before the baseline is considered stable, create and document small tests for:
    minimal `gridthorn` CLI that creates, checks, and runs a generated project.
 5. [Implemented as a cross-layer prototype](spikes/structured-diagnostics.md):
    structured error and tracing output spanning CLI, app, and renderer layers.
-6. Repeatable fixed-step runs that produce the same state hash for the same
-   commands and seed under the determinism scope defined in
+6. [Implemented as a deterministic replay prototype](spikes/deterministic-fixed-step.md):
+   repeatable fixed-step runs that produce the same state fingerprint for the
+   same commands and seed under the determinism scope defined in
    [ARCHITECTURE.md](ARCHITECTURE.md#determinism-contract).
 
 The Milestone 0 headless run is an internal architecture spike. It proves that

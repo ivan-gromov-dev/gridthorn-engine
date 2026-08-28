@@ -28,6 +28,7 @@ allowed_dependencies = {
     "gridthorn_app": {"gridthorn_render"},
     "gridthorn_cli": set(),
     "gridthorn_render": set(),
+    "gridthorn_simulation": set(),
     "gridthorn_world": set(),
 }
 

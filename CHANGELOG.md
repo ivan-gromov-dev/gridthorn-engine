@@ -33,6 +33,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   plus a CLI-driven diagnostics-flow example and renderer-to-app error test.
 - A sibling `gridthorn-examples` repository convention with one independently
   owned directory per executable example.
+- Engine-owned SplitMix64 streams and stable FNV-1a state fingerprint encoding
+  in the provisional `gridthorn_simulation` crate.
+- A deterministic-replay example covering repeatable fixed-step runs and
+  changed-seed and changed-command controls.
 
 ### Changed
 

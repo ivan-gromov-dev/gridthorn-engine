@@ -27,7 +27,7 @@ user explicitly requests that additional action.
 
 - Read the canonical SemVer from `[workspace.package].version`.
 - Unless the user specifies a release level or exact version, increment the
-  patch component by one: `X.Y.Z` becomes `X.Y.(Z+1)`.
+  patch component by one: `X.Y.Z` becomes `X.(Y+1).Z`.
 - Use the local calendar date at skill execution time in ISO `YYYY-MM-DD`
   format. Do not reuse an earlier changelog date or infer a date from Git.
 - Update every authoritative version occurrence required for a consistent
@@ -88,4 +88,3 @@ Release description:
 The description must mention breaking or compatibility-relevant changes, or
 state that none were identified. List the checks actually executed. Do not
 invent issue links, contributors, artifacts, checksums, or publication status.
-

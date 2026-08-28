@@ -50,6 +50,7 @@ they are explicitly marked as implemented.
 | World and schedules | ECS lifecycle schedule spike implemented |
 | Headless schedule execution | Internal architecture spike implemented |
 | Cross-layer diagnostics | CLI/app/renderer tracing spike implemented |
+| Deterministic fixed-step replay | Seeded RNG and state fingerprint spike implemented |
 | Runtime and public SDK | Planned for Milestone 1 and later |
 | Stable release or API | Not available |
 
@@ -96,6 +97,13 @@ Run the self-closing structured diagnostics flow through the CLI:
 
 ```console
 cargo run -p gridthorn_cli -- run ../gridthorn-examples/diagnostics-flow
+```
+
+Run a fixed-step command stream twice and compare its authoritative state
+fingerprint:
+
+```console
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_deterministic_replay
 ```
 
 ## Repository workflows
