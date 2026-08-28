@@ -82,12 +82,17 @@ fn check_reports_missing_project_files_with_context() -> Result<()> {
     let invalid_project = workspace.root.join("invalid-project");
     fs::create_dir(&invalid_project)?;
     let project_argument = invalid_project.to_string_lossy().into_owned();
+    let resolved_project = invalid_project.canonicalize()?;
 
     let error = Cli::try_parse_from(["gridthorn", "check", &project_argument])?
         .execute()
         .expect_err("an empty directory must not validate as a project");
 
     assert!(error.to_string().contains("Cargo.toml not found"));
-    assert!(error.to_string().contains(&project_argument));
+    assert!(
+        error
+            .to_string()
+            .contains(resolved_project.to_string_lossy().as_ref())
+    );
     Ok(())
 }
