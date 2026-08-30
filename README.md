@@ -62,7 +62,7 @@ they are explicitly marked as implemented.
 | Scenes and game states             | Provisional state stack and atomic scene-owned entity switching         |
 | Sprite batching and animation      | Provisional ordered texture batches and sprite-sheet playback            |
 | Text and runtime UI                | Provisional bitmap text, screen panels, and mouse buttons                |
-| Audio                              | Provisional PCM16 WAV assets, command queue, and Kira output adapter     |
+| Audio                              | Provisional PCM16 WAV assets, queue, and opt-in Kira output adapter      |
 | Current source release             | `0.2.0`                                                                |
 | Stable API                         | Not available; APIs remain pre-1.0 and provisional                     |
 

@@ -3,10 +3,12 @@ mod errors;
 use std::{collections::HashMap, sync::Arc};
 
 use kira::{
-    AudioManager, AudioManagerSettings, Decibels, Frame, Tween,
-    backend::{Backend, DefaultBackend},
+    AudioManager, Decibels, Frame, Tween,
+    backend::Backend,
     sound::static_sound::{StaticSoundData, StaticSoundHandle, StaticSoundSettings},
 };
+#[cfg(feature = "native-output")]
+use kira::{AudioManagerSettings, backend::DefaultBackend};
 
 pub use errors::AudioOutputError;
 
@@ -16,10 +18,12 @@ use crate::{AudioClip, AudioCommand, AudioCommandQueue, AudioVoiceId};
 ///
 /// Constructing this service is the only audio operation that requires an
 /// output device. Decoding clips and queueing commands remain headless-safe.
+#[cfg(feature = "native-output")]
 pub struct AudioOutput {
     backend: OutputBackend<DefaultBackend>,
 }
 
+#[cfg(feature = "native-output")]
 impl AudioOutput {
     /// Connect to the default operating-system audio output device.
     ///

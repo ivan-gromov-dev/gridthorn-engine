@@ -4,6 +4,7 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum AudioOutputError {
     /// The operating system did not provide a usable output stream.
+    #[cfg(feature = "native-output")]
     #[error("failed to initialize the audio output device: {0}")]
     DeviceInitialization(String),
     /// The clip layout cannot be represented by the provisional stereo mixer.

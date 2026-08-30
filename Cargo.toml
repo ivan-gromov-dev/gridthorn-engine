@@ -32,7 +32,7 @@ bevy_ecs = { version = "0.19.1", default-features = false, features = ["multi_th
 bytemuck = { version = "1.25.0", features = ["derive"] }
 clap = { version = "4.5.46", features = ["derive"] }
 image = { version = "0.25.8", default-features = false, features = ["png", "pnm"] }
-kira = { version = "0.12.4", default-features = false, features = ["cpal"] }
+kira = { version = "0.12.4", default-features = false }
 semver = "1.0.26"
 serde = { version = "1.0.219", features = ["derive"] }
 pollster = "1.0.1"
