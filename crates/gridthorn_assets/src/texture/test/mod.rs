@@ -27,6 +27,19 @@ fn reports_the_source_path_for_invalid_image_data() {
     fs::remove_file(path).expect("remove fixture");
 }
 
+#[test]
+fn cloned_handles_share_data_but_separate_loads_remain_distinct() {
+    let path = temporary_path("identity", "ppm");
+    fs::write(&path, b"P6\n1 1\n255\n\xff\x00\x00").expect("write fixture");
+    let first = TextureAsset::load(&path).expect("decode first handle");
+    let clone = first.clone();
+    let second = TextureAsset::load(&path).expect("decode second handle");
+
+    assert!(first.shares_data_with(&clone));
+    assert!(!first.shares_data_with(&second));
+    fs::remove_file(path).expect("remove fixture");
+}
+
 fn temporary_path(label: &str, extension: &str) -> std::path::PathBuf {
     let unique = SystemTime::now()
         .duration_since(UNIX_EPOCH)

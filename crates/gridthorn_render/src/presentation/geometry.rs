@@ -1,5 +1,7 @@
 use bytemuck::{Pod, Zeroable};
 
+use gridthorn_assets::TextureAsset;
+
 use super::RenderFrame;
 
 #[repr(C)]
@@ -14,20 +16,42 @@ pub(crate) struct FrameGeometry {
     pub(crate) vertices: Vec<SpriteVertex>,
 }
 
-pub(crate) fn textured_sprite_vertices(
+pub(crate) struct TexturedSpriteBatch<'texture> {
+    pub(crate) texture: &'texture TextureAsset,
+    pub(crate) vertices: Vec<SpriteVertex>,
+}
+
+pub(crate) fn textured_sprite_batches(
     frame: &RenderFrame,
-    sprite: &super::TexturedSprite,
     width: u32,
     height: u32,
-) -> Vec<SpriteVertex> {
-    projected_vertices(
-        frame.camera(),
-        sprite.position(),
-        sprite.size(),
-        sprite.tint().components(),
-        width,
-        height,
-    )
+) -> Vec<TexturedSpriteBatch<'_>> {
+    let mut batches: Vec<TexturedSpriteBatch<'_>> = Vec::new();
+    for sprite in frame.textured_sprites() {
+        let vertices = projected_vertices(
+            frame.camera(),
+            sprite.position(),
+            sprite.size(),
+            sprite.tint().components(),
+            width,
+            height,
+        );
+        if vertices.is_empty() {
+            continue;
+        }
+        if let Some(batch) = batches
+            .last_mut()
+            .filter(|batch| batch.texture.shares_data_with(sprite.texture()))
+        {
+            batch.vertices.extend(vertices);
+        } else {
+            batches.push(TexturedSpriteBatch {
+                texture: sprite.texture(),
+                vertices,
+            });
+        }
+    }
+    batches
 }
 
 impl FrameGeometry {

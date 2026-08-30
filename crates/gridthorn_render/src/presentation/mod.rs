@@ -11,5 +11,4 @@ pub use frame::RenderFrame;
 pub use sprite::{Sprite, TexturedSprite};
 pub use timing_overlay::TimingOverlay;
 
-pub(crate) use geometry::textured_sprite_vertices;
-pub(crate) use geometry::{FrameGeometry, SpriteVertex};
+pub(crate) use geometry::{FrameGeometry, SpriteVertex, textured_sprite_batches};

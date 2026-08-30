@@ -60,6 +60,7 @@ they are explicitly marked as implemented.
 | Deterministic fixed-step replay    | Seeded RNG and state fingerprint spike implemented                     |
 | Runtime and public SDK             | Milestone 1 vertical slice complete; APIs remain provisional           |
 | Scenes and game states             | Provisional state stack and atomic scene-owned entity switching         |
+| Sprite batching and animation      | Adjacent shared-texture batching implemented; animation remains planned |
 | Current source release             | `0.2.0`                                                                |
 | Stable API                         | Not available; APIs remain pre-1.0 and provisional                     |
 
