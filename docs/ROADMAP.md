@@ -78,6 +78,10 @@ The provisional runtime UI path now renders ordered colored rectangles and
 5x7 bitmap text in top-left-origin screen pixels through the same colored GPU
 batch. The built-in font covers Latin letters, digits, and common diagnostics
 punctuation; richer font assets, layout, and interactive widgets remain planned.
+Mouse-driven runtime buttons now consume the engine-owned frame input boundary,
+report hover and held visuals, and emit one activation only after an inside
+press completes with an inside release. Focus loss or dragging outside cancels
+the pending activation; keyboard focus and higher-level layout remain planned.
 
 - [ ] Scenes and game states.
 - [ ] Sprite batching and 2D animation.

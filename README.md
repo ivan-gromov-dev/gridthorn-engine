@@ -61,7 +61,7 @@ they are explicitly marked as implemented.
 | Runtime and public SDK             | Milestone 1 vertical slice complete; APIs remain provisional           |
 | Scenes and game states             | Provisional state stack and atomic scene-owned entity switching         |
 | Sprite batching and animation      | Provisional ordered texture batches and sprite-sheet playback            |
-| Text and runtime UI                | Provisional screen rectangles and built-in 5x7 bitmap text               |
+| Text and runtime UI                | Provisional bitmap text, screen panels, and mouse buttons                |
 | Current source release             | `0.2.0`                                                                |
 | Stable API                         | Not available; APIs remain pre-1.0 and provisional                     |
 
