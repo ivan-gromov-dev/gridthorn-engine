@@ -156,7 +156,9 @@ fn sound_data(
             .collect::<Vec<_>>(),
         2 => clip
             .samples()
-            .chunks_exact(2)
+            .as_chunks::<2>()
+            .0
+            .iter()
             .map(|samples| Frame::new(samples[0], samples[1]))
             .collect::<Vec<_>>(),
         channels => return Err(AudioOutputError::UnsupportedChannelCount { channels }),

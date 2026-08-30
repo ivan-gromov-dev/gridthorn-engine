@@ -45,7 +45,9 @@ impl AudioClip {
         }
         let samples = document
             .data
-            .chunks_exact(2)
+            .as_chunks::<2>()
+            .0
+            .iter()
             .map(|sample| f32::from(i16::from_le_bytes([sample[0], sample[1]])) / 32_768.0)
             .collect::<Vec<_>>();
         Ok(Self {
