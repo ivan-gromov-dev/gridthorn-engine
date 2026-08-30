@@ -24,14 +24,13 @@ Completed on 2026-08-28. The evidence, measurements, and explicit runtime
 deferrals are recorded in the
 [Milestone 0 review](spikes/milestone-0-review.md).
 
-## Milestone 1 — Runtime vertical slice
+## Milestone 1 — Runtime vertical slice (complete)
 
-Started on 2026-08-30. The first implemented increment exposes the provisional
+Started and completed on 2026-08-30. The implemented slice exposes the provisional
 application lifecycle, ordered frame schedules, and fixed-time accumulation
 through the SDK facade. The timed runtime is now integrated with the native
-window loop, including suspend/resume and shutdown behavior. A documented
-end-to-end runtime example remains before the lifecycle and time items are
-complete. Native keyboard and mouse events now cross an engine-owned boundary
+window loop, including suspend/resume and shutdown behavior. Native keyboard
+and mouse events cross an engine-owned boundary
 into frame-scoped `InputState`; command mapping and a controllable example
 now drive a world entity through continuous tick input and ordered one-shot
 `GameCommand` values. The same example now presents that entity through an
@@ -40,19 +39,27 @@ Texture files now decode into engine-owned RGBA assets and can be presented by
 the same example as textured sprites. That example also maps host-frame time,
 fixed work, accumulated lag, and overload state into a compact screen-space
 timing overlay.
+`gridthorn check` now rejects drift between `gridthorn.toml`, the Cargo package
+name, the Cargo dependency requirement, and the running CLI/SDK version before
+delegating compilation to Cargo.
+The generated minimal project composes these capabilities into a controllable
+sprite and is built and executed through `gridthorn new`, `check`, and `run`.
 
-- [ ] Application lifecycle and schedules.
-- [ ] Time, `Update`, and fixed-step `FixedUpdate`.
+- [x] Application lifecycle and schedules.
+- [x] Time, `Update`, and fixed-step `FixedUpdate`.
 - [x] Window and keyboard/mouse input.
 - [x] Minimal world model through the Gridthorn API.
 - [x] Basic 2D renderer, camera, and sprite.
 - [x] Texture loading as an asset.
 - [x] Diagnostic timing overlay.
-- [ ] Extend CLI checks with engine/project compatibility validation.
-- [ ] Build and run one documented example through the CLI.
+- [x] Extend CLI checks with engine/project compatibility validation.
+- [x] Build and run one documented example through the CLI.
 
 **Result:** `gridthorn new` to a controllable sprite and observable fixed tick in
 one cohesive workflow.
+
+Evidence, limitations, and explicit performance deferrals are recorded in the
+[Milestone 1 review](milestone-1-review.md).
 
 ## Milestone 2 — General-purpose 2D SDK
 

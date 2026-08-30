@@ -1045,7 +1045,7 @@ dependencies = [
 
 [[package]]
 name = "gridthorn"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "gridthorn_app",
  "gridthorn_assets",
@@ -1057,7 +1057,7 @@ dependencies = [
 
 [[package]]
 name = "gridthorn_app"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "gridthorn_input",
  "gridthorn_render",
@@ -1070,7 +1070,7 @@ dependencies = [
 
 [[package]]
 name = "gridthorn_assets"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "image",
  "thiserror 2.0.20",
@@ -1078,7 +1078,7 @@ dependencies = [
 
 [[package]]
 name = "gridthorn_cli"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -1091,11 +1091,11 @@ dependencies = [
 
 [[package]]
 name = "gridthorn_input"
-version = "0.1.0"
+version = "0.2.0"
 
 [[package]]
 name = "gridthorn_render"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "bytemuck",
  "gridthorn_assets",
@@ -1108,14 +1108,14 @@ dependencies = [
 
 [[package]]
 name = "gridthorn_simulation"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "thiserror 2.0.20",
 ]
 
 [[package]]
 name = "gridthorn_world"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "bevy_ecs",
 ]

@@ -70,9 +70,11 @@ fn generated_project_can_be_checked_and_run() -> Result<()> {
     assert!(project_path.join("Cargo.toml").is_file());
     assert!(project_path.join("gridthorn.toml").is_file());
     assert!(project_path.join("src/main.rs").is_file());
+    assert!(project_path.join("src/game/mod.rs").is_file());
+    assert!(project_path.join("src/game/model.rs").is_file());
 
     Cli::try_parse_from(["gridthorn", "check", &project_argument])?.execute()?;
-    Cli::try_parse_from(["gridthorn", "run", &project_argument])?.execute()?;
+    Cli::try_parse_from(["gridthorn", "run", &project_argument, "--", "--smoke"])?.execute()?;
     Ok(())
 }
 
@@ -93,6 +95,39 @@ fn check_reports_missing_project_files_with_context() -> Result<()> {
         error
             .to_string()
             .contains(resolved_project.to_string_lossy().as_ref())
+    );
+    Ok(())
+}
+
+#[test]
+fn check_rejects_cargo_manifest_drift_before_starting_cargo() -> Result<()> {
+    let workspace = ProjectWorkspace::create()?;
+    let project_path = workspace.project();
+    let project_argument = project_path.to_string_lossy().into_owned();
+    let engine_argument = local_engine_path()?.to_string_lossy().into_owned();
+    Cli::try_parse_from([
+        "gridthorn",
+        "new",
+        &project_argument,
+        "--engine-path",
+        &engine_argument,
+    ])?
+    .execute()?;
+    let cargo_manifest_path = project_path.join("Cargo.toml");
+    let cargo_manifest = fs::read_to_string(&cargo_manifest_path)?;
+    fs::write(
+        &cargo_manifest_path,
+        cargo_manifest.replace("name = \"minimal-game\"", "name = \"drifted-name\""),
+    )?;
+
+    let error = Cli::try_parse_from(["gridthorn", "check", &project_argument])?
+        .execute()
+        .expect_err("manifest drift must fail before Cargo starts");
+
+    assert!(
+        error
+            .to_string()
+            .contains("does not match Cargo package name")
     );
     Ok(())
 }

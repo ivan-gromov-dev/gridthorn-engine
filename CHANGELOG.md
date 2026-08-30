@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-30
+
 ### Added
 
 - Provisional public application runtime with ordered `Startup`, `PollEvents`,
@@ -26,9 +28,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sprite presentation through the public SDK facade.
 - A compact screen-space timing overlay for host-frame duration, fixed work,
   accumulated lag, and fixed-step overload state.
+- A generated Milestone 1 runtime project with native input, fixed updates, a
+  controllable sprite, timing diagnostics, and a headless CI smoke path.
 
 ### Changed
 
+- `gridthorn check` now validates that the Cargo package name and Gridthorn
+  dependency requirement agree with `gridthorn.toml` and the running CLI.
 - CI now restores Cargo dependency artifacts and shares one target directory
   with CLI-generated project checks to avoid rebuilding the engine from scratch.
 

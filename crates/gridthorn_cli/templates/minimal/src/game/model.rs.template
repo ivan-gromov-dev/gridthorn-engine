@@ -1,0 +1,44 @@
+use gridthorn::EntityId;
+use gridthorn::prelude::{InputState, KeyCode};
+
+#[derive(Clone, Copy, Debug, Default)]
+pub(super) struct Position {
+    pub(super) x: i16,
+    pub(super) y: i16,
+}
+
+pub(super) struct Controlled(pub(super) EntityId);
+
+#[derive(Clone, Copy, Debug, Default)]
+pub(super) struct MovementIntent {
+    pub(super) x: i16,
+    pub(super) y: i16,
+}
+
+impl MovementIntent {
+    pub(super) fn from_input(input: &InputState) -> Self {
+        let right = input.key_down(KeyCode::KeyD) || input.key_down(KeyCode::ArrowRight);
+        let left = input.key_down(KeyCode::KeyA) || input.key_down(KeyCode::ArrowLeft);
+        let down = input.key_down(KeyCode::KeyS) || input.key_down(KeyCode::ArrowDown);
+        let up = input.key_down(KeyCode::KeyW) || input.key_down(KeyCode::ArrowUp);
+        Self {
+            x: i16::from(right) - i16::from(left),
+            y: i16::from(down) - i16::from(up),
+        }
+    }
+}
+
+pub(super) enum PlayerCommand {
+    Reset,
+}
+
+pub(super) struct SmokeState {
+    pub(super) enabled: bool,
+    pub(super) fixed_ticks: u32,
+}
+
+impl SmokeState {
+    pub(super) fn new(enabled: bool) -> Self {
+        Self { enabled, fixed_ticks: 0 }
+    }
+}

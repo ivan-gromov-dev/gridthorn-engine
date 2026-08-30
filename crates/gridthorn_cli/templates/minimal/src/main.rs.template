@@ -1,4 +1,18 @@
-fn main() {
-    println!("Hello from Gridthorn {}!", gridthorn::version());
-}
+mod game;
 
+use gridthorn::prelude::{WindowConfig, WindowedApplication};
+
+fn main() -> Result<(), gridthorn::ApplicationError> {
+    let smoke_enabled = std::env::args().skip(1).any(|argument| argument == "--smoke");
+    if smoke_enabled {
+        let mut runtime = game::runtime(true);
+        runtime.run_frame(2)?;
+        runtime.shutdown();
+        return Ok(());
+    }
+    let config = WindowConfig {
+        title: "{{project_name}}".to_owned(),
+        ..WindowConfig::default()
+    };
+    WindowedApplication::new(config, game::runtime(false)).run()
+}

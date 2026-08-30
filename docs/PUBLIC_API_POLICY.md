@@ -1,6 +1,6 @@
 # Public API and Release Policy
 
-Gridthorn `0.1.0` is a pre-1.0 source release. No API is stable until the first
+Gridthorn `0.2.0` is a pre-1.0 source release. No API is stable until the first
 explicitly announced stable release.
 
 ## Public surface

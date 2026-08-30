@@ -5,10 +5,11 @@ games. It is suitable for traditional 2D genres while providing a particularly
 strong foundation for tile-based, isometric, management, tycoon, and
 simulation-heavy games.
 
-The project has completed its Milestone 0 foundation. It has a reproducible
-Cargo workspace, a minimal SDK facade, a working CLI, and executable dependency
-spikes; the cohesive Milestone 1 runtime is still under construction. A visual
-editor will later be built on the same public APIs and development protocol.
+The project has completed its Milestone 1 runtime vertical slice. It has a
+reproducible Cargo workspace, a working CLI, native window and input handling,
+fixed-step world updates, sprite presentation, texture loading, and runtime
+timing diagnostics. A visual editor will later be built on the same public APIs
+and development protocol.
 
 ## Principles
 
@@ -36,7 +37,7 @@ editor will later be built on the same public APIs and development protocol.
 
 ## Status
 
-The Milestone 0 foundation is complete. Commands and Rust snippets
+The Milestone 1 runtime vertical slice is complete. Commands and Rust snippets
 outside the section below still describe target developer experience unless
 they are explicitly marked as implemented.
 
@@ -45,7 +46,7 @@ they are explicitly marked as implemented.
 | Product and architecture direction | Design baseline                                                        |
 | Milestone 0 foundation             | Complete; runtime deferrals recorded                                   |
 | Cargo workspace and CI             | Implemented foundation                                                 |
-| CLI                                | `new`, `run`, `check`, and `--version` implemented                     |
+| CLI                                | Commands plus cross-manifest engine compatibility checks implemented   |
 | Public SDK facade                  | Version API plus provisional lifecycle and schedule APIs               |
 | App and renderer internals         | Window/surface lifecycle and basic colored-sprite pipeline implemented |
 | Keyboard and mouse input           | Provisional engine-owned frame state implemented                       |
@@ -56,8 +57,8 @@ they are explicitly marked as implemented.
 | Cross-layer diagnostics            | CLI/app/renderer tracing spike implemented                             |
 | Runtime timing overlay             | Frame time, fixed work, lag, and overload bars implemented             |
 | Deterministic fixed-step replay    | Seeded RNG and state fingerprint spike implemented                     |
-| Runtime and public SDK             | Milestone 1; timed native window-loop integration implemented          |
-| Current source release             | `0.1.0`                                                                |
+| Runtime and public SDK             | Milestone 1 vertical slice complete; APIs remain provisional           |
+| Current source release             | `0.2.0`                                                                |
 | Stable API                         | Not available; APIs remain pre-1.0 and provisional                     |
 
 The first implementation target is a foundation and runtime vertical slice with
@@ -66,13 +67,17 @@ diagnostics, and a documented example.
 
 ## Try the implemented foundation
 
-From this source checkout, generate a project against the local SDK and run it:
+From this source checkout, generate a controllable sprite project against the
+local SDK and run it:
 
 ```console
 cargo run -p gridthorn_cli -- new ../hello-gridthorn --engine-path ./crates/gridthorn
 cargo run -p gridthorn_cli -- check ../hello-gridthorn
 cargo run -p gridthorn_cli -- run ../hello-gridthorn
 ```
+
+Use WASD or arrows to move, Space to reset, and Escape to exit. The generated
+project includes fixed updates and the three-bar timing overlay.
 
 The `--engine-path` option selects this source checkout. Without it, the CLI
 generates a registry dependency; publishing the crates is separate from this
