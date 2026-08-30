@@ -27,6 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A compact screen-space timing overlay for host-frame duration, fixed work,
   accumulated lag, and fixed-step overload state.
 
+### Changed
+
+- CI now restores Cargo dependency artifacts and shares one target directory
+  with CLI-generated project checks to avoid rebuilding the engine from scratch.
+
 ## [0.1.0] - 2026-08-28
 
 ### Added
