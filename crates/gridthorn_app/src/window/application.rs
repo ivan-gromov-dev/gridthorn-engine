@@ -214,6 +214,9 @@ where
             self.fail(event_loop, error);
             return;
         }
+        if let Some(renderer) = self.renderer.as_mut() {
+            renderer.set_frame(self.lifecycle.render_frame());
+        }
         self.apply_control(event_loop, &control);
         if let Some(window) = self.window.as_ref() {
             window.request_redraw();

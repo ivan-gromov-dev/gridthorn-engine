@@ -27,6 +27,7 @@ pedantic = "warn"
 [workspace.dependencies]
 anyhow = "1.0.99"
 bevy_ecs = { version = "0.19.1", default-features = false, features = ["multi_threaded", "std"] }
+bytemuck = { version = "1.25.0", features = ["derive"] }
 clap = { version = "4.5.46", features = ["derive"] }
 semver = "1.0.26"
 serde = { version = "1.0.219", features = ["derive"] }

@@ -1,4 +1,5 @@
 use gridthorn_input::InputEvent;
+use gridthorn_render::RenderFrame;
 
 use super::{ApplicationError, WindowControl};
 
@@ -29,6 +30,11 @@ pub trait WindowLifecycle {
     /// Returns a contextual application failure that stops the event loop.
     fn input(&mut self, _event: InputEvent) -> Result<(), ApplicationError> {
         Ok(())
+    }
+
+    /// Return the immutable presentation snapshot for the next redraw.
+    fn render_frame(&mut self) -> RenderFrame {
+        RenderFrame::default()
     }
 
     /// Pause platform-dependent work without advancing simulation time.

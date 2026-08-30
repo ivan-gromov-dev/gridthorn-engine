@@ -34,14 +34,14 @@ end-to-end runtime example remains before the lifecycle and time items are
 complete. Native keyboard and mouse events now cross an engine-owned boundary
 into frame-scoped `InputState`; command mapping and a controllable example
 now drive a world entity through continuous tick input and ordered one-shot
-`GameCommand` values. Rendering that entity remains the next vertical-slice
-gap.
+`GameCommand` values. The same example now presents that entity through an
+engine-owned orthographic camera, colored sprite frame, and GPU pipeline.
 
 - [ ] Application lifecycle and schedules.
 - [ ] Time, `Update`, and fixed-step `FixedUpdate`.
 - [x] Window and keyboard/mouse input.
 - [x] Minimal world model through the Gridthorn API.
-- [ ] Basic 2D renderer, camera, and sprite.
+- [x] Basic 2D renderer, camera, and sprite.
 - [ ] Texture loading as an asset.
 - [ ] Diagnostic timing overlay.
 - [ ] Extend CLI checks with engine/project compatibility validation.

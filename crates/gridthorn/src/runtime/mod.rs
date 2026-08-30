@@ -5,6 +5,7 @@ pub use gridthorn_app::{
 pub use gridthorn_input::{
     ButtonState, CursorPosition, InputBuffer, InputEvent, InputState, KeyCode, MouseButton,
 };
+pub use gridthorn_render::{Camera2d, Color, RenderFrame, Sprite};
 pub use gridthorn_simulation::{
     FixedStepConfig, FixedStepConfigError, FixedTime, FrameTiming, GameCommandQueue, TimeError,
 };

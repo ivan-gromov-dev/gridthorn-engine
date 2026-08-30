@@ -7,10 +7,11 @@ mod runtime;
 mod version;
 
 pub use runtime::{
-    ApplicationError, ApplicationRuntime, ButtonState, CursorPosition, EntityId, ExitRequest,
-    FixedStepConfig, FixedStepConfigError, FixedTime, FrameTiming, GameCommandQueue, InputBuffer,
-    InputEvent, InputState, KeyCode, LifecycleError, MouseButton, ScheduleBuilder, ScheduleRuntime,
-    ScheduleStage, TimeError, WindowConfig, WindowedApplication, WorldAccess,
+    ApplicationError, ApplicationRuntime, ButtonState, Camera2d, Color, CursorPosition, EntityId,
+    ExitRequest, FixedStepConfig, FixedStepConfigError, FixedTime, FrameTiming, GameCommandQueue,
+    InputBuffer, InputEvent, InputState, KeyCode, LifecycleError, MouseButton, RenderFrame,
+    ScheduleBuilder, ScheduleRuntime, ScheduleStage, Sprite, TimeError, WindowConfig,
+    WindowedApplication, WorldAccess,
 };
 pub use version::version;
 
@@ -18,8 +19,8 @@ pub use version::version;
 ///
 pub mod prelude {
     pub use crate::{
-        ApplicationRuntime, ExitRequest, FixedStepConfig, FixedTime, FrameTiming, GameCommandQueue,
-        InputState, KeyCode, MouseButton, ScheduleBuilder, ScheduleStage, WindowConfig,
-        WindowedApplication,
+        ApplicationRuntime, Camera2d, Color, ExitRequest, FixedStepConfig, FixedTime, FrameTiming,
+        GameCommandQueue, InputState, KeyCode, MouseButton, RenderFrame, ScheduleBuilder,
+        ScheduleStage, Sprite, WindowConfig, WindowedApplication,
     };
 }

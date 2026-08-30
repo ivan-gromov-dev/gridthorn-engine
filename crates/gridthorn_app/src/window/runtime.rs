@@ -2,6 +2,7 @@ use std::time::{Duration, Instant};
 
 use crate::{ApplicationRuntime, ExitRequest};
 use gridthorn_input::{InputBuffer, InputEvent};
+use gridthorn_render::RenderFrame;
 
 use super::{ApplicationError, WindowApplication, WindowConfig, WindowControl, WindowLifecycle};
 
@@ -74,6 +75,13 @@ impl WindowLifecycle for RuntimeWindowLifecycle {
     fn input(&mut self, event: InputEvent) -> Result<(), ApplicationError> {
         self.input.push(event);
         Ok(())
+    }
+
+    fn render_frame(&mut self) -> RenderFrame {
+        self.runtime
+            .world()
+            .read_resource(Clone::clone)
+            .unwrap_or_default()
     }
 
     fn suspended(&mut self) {

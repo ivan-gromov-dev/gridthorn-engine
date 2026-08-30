@@ -47,7 +47,7 @@ they are explicitly marked as implemented.
 | Cargo workspace and CI             | Implemented foundation                                                 |
 | CLI                                | `new`, `run`, `check`, and `--version` implemented                     |
 | Public SDK facade                  | Version API plus provisional lifecycle and schedule APIs               |
-| App and renderer internals         | Window/surface lifecycle spike implemented                             |
+| App and renderer internals         | Window/surface lifecycle and basic colored-sprite pipeline implemented |
 | Keyboard and mouse input           | Provisional engine-owned frame state implemented                       |
 | World and schedules                | ECS lifecycle schedule spike implemented                               |
 | Game commands and world control    | Ordered commands and controllable entity example implemented           |
@@ -91,8 +91,8 @@ Run the provisional ECS schedule example:
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_schedule_loop
 ```
 
-Run the provisional keyboard-controlled world example (WASD or arrows; Space
-resets and Escape exits):
+Run the provisional keyboard-controlled colored-sprite example (WASD or
+arrows; Space resets and Escape exits):
 
 ```console
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_runtime_input

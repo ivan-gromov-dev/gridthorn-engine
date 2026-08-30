@@ -1,12 +1,14 @@
 use tracing::{debug, info, warn};
 use wgpu::{
-    Adapter, Color, CommandEncoderDescriptor, Device, DeviceDescriptor, Instance, LoadOp,
-    Operations, Queue, RenderPassColorAttachment, RenderPassDescriptor, RequestAdapterOptions,
-    StoreOp, Surface, SurfaceConfiguration, TextureViewDescriptor,
+    Adapter, CommandEncoderDescriptor, Device, DeviceDescriptor, Instance, Queue,
+    RequestAdapterOptions, Surface, SurfaceConfiguration, TextureViewDescriptor,
 };
+
+use crate::RenderFrame;
 
 use super::error::RenderSurfaceError;
 use super::lifecycle::{SurfaceChange, SurfaceExtent, SurfaceLifecycle};
+use super::pipeline::SpritePipeline;
 use super::target::WindowSurfaceTarget;
 
 /// GPU renderer bound to one owned window surface.
@@ -17,6 +19,8 @@ pub struct SurfaceRenderer {
     surface: Surface<'static>,
     configuration: Option<SurfaceConfiguration>,
     lifecycle: SurfaceLifecycle,
+    frame: RenderFrame,
+    sprite_pipeline: Option<SpritePipeline>,
 }
 
 impl SurfaceRenderer {
@@ -58,6 +62,8 @@ impl SurfaceRenderer {
             surface,
             configuration: None,
             lifecycle: SurfaceLifecycle::default(),
+            frame: RenderFrame::default(),
+            sprite_pipeline: None,
         };
         renderer.resize(width, height)?;
         Ok(renderer)
@@ -88,6 +94,11 @@ impl SurfaceRenderer {
             component = "renderer",
             occluded, "surface occlusion changed"
         );
+    }
+
+    /// Replace the immutable presentation snapshot used by the next frame.
+    pub fn set_frame(&mut self, frame: RenderFrame) {
+        self.frame = frame;
     }
 
     /// Clear and present one frame when the surface is renderable.
@@ -122,27 +133,15 @@ impl SurfaceRenderer {
             .create_command_encoder(&CommandEncoderDescriptor {
                 label: Some("gridthorn surface encoder"),
             });
-        {
-            let color_attachment = RenderPassColorAttachment {
-                view: &view,
-                depth_slice: None,
-                resolve_target: None,
-                ops: Operations {
-                    load: LoadOp::Clear(Color {
-                        r: 0.04,
-                        g: 0.10,
-                        b: 0.16,
-                        a: 1.0,
-                    }),
-                    store: StoreOp::Store,
-                },
-            };
-            let _render_pass = encoder.begin_render_pass(&RenderPassDescriptor {
-                label: Some("gridthorn surface clear pass"),
-                color_attachments: &[Some(color_attachment)],
-                ..RenderPassDescriptor::default()
-            });
-        }
+        let extent = self
+            .lifecycle
+            .extent()
+            .ok_or(RenderSurfaceError::UnsupportedConfiguration)?;
+        let pipeline = self
+            .sprite_pipeline
+            .as_ref()
+            .ok_or(RenderSurfaceError::UnsupportedConfiguration)?;
+        pipeline.encode(&self.device, &mut encoder, &view, &self.frame, extent);
         self.queue.submit([encoder.finish()]);
         self.queue.present(frame);
 
@@ -162,6 +161,7 @@ impl SurfaceRenderer {
             .get_default_config(&self.adapter, extent.width, extent.height)
             .ok_or(RenderSurfaceError::UnsupportedConfiguration)?;
         self.surface.configure(&self.device, &configuration);
+        self.sprite_pipeline = Some(SpritePipeline::new(&self.device, configuration.format));
         self.configuration = Some(configuration);
         debug!(
             component = "renderer",

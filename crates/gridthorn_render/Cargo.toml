@@ -9,6 +9,7 @@ authors.workspace = true
 publish = false
 
 [dependencies]
+bytemuck.workspace = true
 pollster.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
