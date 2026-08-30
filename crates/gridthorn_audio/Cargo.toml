@@ -9,6 +9,7 @@ authors.workspace = true
 publish = false
 
 [dependencies]
+kira.workspace = true
 thiserror.workspace = true
 
 [lints]
