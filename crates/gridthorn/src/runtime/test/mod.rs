@@ -1,5 +1,7 @@
 use crate::prelude::*;
 
+mod time;
+
 #[derive(Default)]
 struct TickCount(u32);
 

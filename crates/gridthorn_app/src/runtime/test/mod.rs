@@ -2,6 +2,8 @@ use gridthorn_world::{ScheduleBuilder, ScheduleStage};
 
 use super::{ApplicationRuntime, LifecycleError};
 
+mod time;
+
 #[derive(Default)]
 struct StageTrace(Vec<&'static str>);
 

@@ -7,14 +7,14 @@ edition, MSRV, version, license, authors, and lint policy from the root
 The workspace contains only the boundaries needed by the current executable
 slice and its focused dependency spikes:
 
-| Crate | Responsibility | Allowed Gridthorn dependencies |
-| --- | --- | --- |
-| `gridthorn` | Public SDK facade and curated prelude | `gridthorn_app`, `gridthorn_world` |
-| `gridthorn_app` | Provisional application and window lifecycle | `gridthorn_render`, `gridthorn_world` |
-| `gridthorn_cli` | Thin command-line adapter and project template | None |
-| `gridthorn_render` | Provisional GPU surface and renderer services | None |
-| `gridthorn_simulation` | Deterministic simulation primitives and state fingerprints | None |
-| `gridthorn_world` | Provisional ECS storage and lifecycle schedules | None |
+| Crate                  | Responsibility                                             | Allowed Gridthorn dependencies                                |
+| ---------------------- | ---------------------------------------------------------- | ------------------------------------------------------------- |
+| `gridthorn`            | Public SDK facade and curated prelude                      | `gridthorn_app`, `gridthorn_simulation`, `gridthorn_world`    |
+| `gridthorn_app`        | Provisional application and window lifecycle               | `gridthorn_render`, `gridthorn_simulation`, `gridthorn_world` |
+| `gridthorn_cli`        | Thin command-line adapter and project template             | None                                                          |
+| `gridthorn_render`     | Provisional GPU surface and renderer services              | None                                                          |
+| `gridthorn_simulation` | Deterministic simulation primitives and state fingerprints | None                                                          |
+| `gridthorn_world`      | Provisional ECS storage and lifecycle schedules            | None                                                          |
 
 The CLI deliberately validates project files and delegates builds to Cargo. It
 does not depend on SDK internals. The facade re-exports deliberate runtime and

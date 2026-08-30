@@ -7,13 +7,15 @@ mod runtime;
 mod version;
 
 pub use runtime::{
-    ApplicationRuntime, EntityId, LifecycleError, ScheduleBuilder, ScheduleRuntime, ScheduleStage,
-    WorldAccess,
+    ApplicationRuntime, EntityId, FixedStepConfig, FixedStepConfigError, FixedTime, FrameTiming,
+    LifecycleError, ScheduleBuilder, ScheduleRuntime, ScheduleStage, TimeError, WorldAccess,
 };
 pub use version::version;
 
 /// Commonly used Gridthorn APIs.
 ///
 pub mod prelude {
-    pub use crate::{ApplicationRuntime, ScheduleBuilder, ScheduleStage};
+    pub use crate::{
+        ApplicationRuntime, FixedStepConfig, FixedTime, FrameTiming, ScheduleBuilder, ScheduleStage,
+    };
 }

@@ -40,21 +40,21 @@ The Milestone 0 foundation is complete. Commands and Rust snippets
 outside the section below still describe target developer experience unless
 they are explicitly marked as implemented.
 
-| Area | Status |
-| --- | --- |
-| Product and architecture direction | Design baseline |
-| Milestone 0 foundation | Complete; runtime deferrals recorded |
-| Cargo workspace and CI | Implemented foundation |
-| CLI | `new`, `run`, `check`, and `--version` implemented |
-| Public SDK facade | Version API plus provisional lifecycle and schedule APIs |
-| App and renderer internals | Window/surface lifecycle spike implemented |
-| World and schedules | ECS lifecycle schedule spike implemented |
-| Headless schedule execution | Internal architecture spike implemented |
-| Cross-layer diagnostics | CLI/app/renderer tracing spike implemented |
-| Deterministic fixed-step replay | Seeded RNG and state fingerprint spike implemented |
-| Runtime and public SDK | Milestone 1 started; ordered lifecycle frame runner implemented |
-| Current source release | `0.1.0` |
-| Stable API | Not available; APIs remain pre-1.0 and provisional |
+| Area                               | Status                                                                 |
+| ---------------------------------- | ---------------------------------------------------------------------- |
+| Product and architecture direction | Design baseline                                                        |
+| Milestone 0 foundation             | Complete; runtime deferrals recorded                                   |
+| Cargo workspace and CI             | Implemented foundation                                                 |
+| CLI                                | `new`, `run`, `check`, and `--version` implemented                     |
+| Public SDK facade                  | Version API plus provisional lifecycle and schedule APIs               |
+| App and renderer internals         | Window/surface lifecycle spike implemented                             |
+| World and schedules                | ECS lifecycle schedule spike implemented                               |
+| Headless schedule execution        | Internal architecture spike implemented                                |
+| Cross-layer diagnostics            | CLI/app/renderer tracing spike implemented                             |
+| Deterministic fixed-step replay    | Seeded RNG and state fingerprint spike implemented                     |
+| Runtime and public SDK             | Milestone 1 started; lifecycle runner and fixed-step clock implemented |
+| Current source release             | `0.1.0`                                                                |
+| Stable API                         | Not available; APIs remain pre-1.0 and provisional                     |
 
 The first implementation target is a foundation and runtime vertical slice with
 a usable CLI, window, game loop, world, sprite, input, fixed-step simulation,

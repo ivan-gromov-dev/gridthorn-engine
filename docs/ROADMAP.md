@@ -14,7 +14,7 @@ phase ends in a working, documented result.
 - [x] Define public API, SemVer, and changelog policies.
 - [x] Define runtime, determinism, plugin, and serialization contracts.
 - [x] Complete the dependency spikes listed in
-  [TECHNOLOGY.md](TECHNOLOGY.md).
+      [TECHNOLOGY.md](TECHNOLOGY.md).
 - [x] Provide a contributor guide and common development commands.
 
 **Result:** a reproducible SDK foundation and a real CLI that creates, checks,
@@ -27,9 +27,10 @@ deferrals are recorded in the
 ## Milestone 1 — Runtime vertical slice
 
 Started on 2026-08-30. The first implemented increment exposes the provisional
-application lifecycle and ordered frame schedules through the SDK facade.
-Window-loop integration and fixed-time accumulation remain before the lifecycle
-and schedules item is complete.
+application lifecycle, ordered frame schedules, and fixed-time accumulation
+through the SDK facade. Window-loop integration remains before the lifecycle
+and schedules item is complete; timing diagnostics and an end-to-end example
+remain before the time item is complete.
 
 - [ ] Application lifecycle and schedules.
 - [ ] Time, `Update`, and fixed-step `FixedUpdate`.
