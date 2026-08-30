@@ -6,6 +6,5 @@
   `gridthorn` facade.
 - Depend on renderer services through the narrow `gridthorn_render` surface
   contract. Do not access renderer storage or `wgpu` types.
-- Keep experimental lifecycle APIs out of the facade until Milestone 1 proves
-  their public behavior.
-
+- Expose lifecycle APIs through the facade only when their behavior is tested
+  through a complete application workflow.

@@ -21,6 +21,20 @@ fn stores_domain_components_without_exposing_backend_types() {
 }
 
 #[test]
+fn reads_one_component_through_the_entity_boundary() {
+    let mut backend = World::new();
+    let mut world = WorldAccess {
+        backend: &mut backend,
+    };
+    let entity = world.spawn(Position(3));
+
+    assert_eq!(
+        world.read_component(entity, |position: &Position| position.0),
+        Some(3)
+    );
+}
+
+#[test]
 fn stores_typed_resources_behind_gridthorn_access() {
     let mut backend = World::new();
     let mut world = WorldAccess {

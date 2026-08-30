@@ -27,6 +27,9 @@ more specific rules for its subtree.
   has that single cross-cutting responsibility.
 - Prefer a new focused module when code has a distinct lifecycle, data owner,
   error boundary, or reason to change.
+- Define domain error types in a dedicated `errors.rs` module. Do not mix error
+  enums, structs, or their conversion helpers into files that own normal domain
+  logic.
 - Tests belong to the domain they validate under `src/<domain>/test/`, split
   into focused files. Do not create crate-wide `tests/` buckets or collect
   unrelated tests in one generalized test module.

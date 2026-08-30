@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-30
+
+### Added
+
+- Provisional public application runtime with ordered `Startup`, `PollEvents`,
+  `Input`, `FixedUpdate`, `Update`, `PostUpdate`, `Render`, and `Shutdown`
+  schedules exposed through the `gridthorn` facade.
+- Configurable fixed-step time accumulation with integer tick indices, bounded
+  per-frame catch-up, observable overload, and preserved backlog.
+- A provisional `WindowedApplication` that drives timed runtime frames from the
+  native event loop, excludes suspended time, and guarantees runtime shutdown.
+- Engine-owned keyboard and mouse events with held and frame-edge state,
+  cursor position, focus-loss release, and native window-loop delivery.
+- Ordered generic `GameCommandQueue` consumption, engine-owned exit requests,
+  direct component reads, and a keyboard-controlled world entity example.
+- An engine-owned orthographic `Camera2d`, colored `Sprite` presentation frame,
+  and basic GPU pipeline used by the keyboard-controlled example.
+- A provisional `TextureAsset` loader for PNG and PNM images plus textured
+  sprite presentation through the public SDK facade.
+- A compact screen-space timing overlay for host-frame duration, fixed work,
+  accumulated lag, and fixed-step overload state.
+- A generated Milestone 1 runtime project with native input, fixed updates, a
+  controllable sprite, timing diagnostics, and a headless CI smoke path.
+
+### Changed
+
+- `gridthorn check` now validates that the Cargo package name and Gridthorn
+  dependency requirement agree with `gridthorn.toml` and the running CLI.
+- CI now restores Cargo dependency artifacts and shares one target directory
+  with CLI-generated project checks to avoid rebuilding the engine from scratch.
+
 ## [0.1.0] - 2026-08-28
 
 ### Added

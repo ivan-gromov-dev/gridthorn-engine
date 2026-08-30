@@ -7,5 +7,5 @@
   simulation, or the SDK facade.
 - Zero-sized or occluded surfaces must not acquire frames or configure a
   swapchain.
-- Keep the window-handle bridge provisional until Milestone 1 defines the
-  public platform boundary.
+- Keep native window handles confined to the provisional renderer surface
+  bridge; game-facing APIs use engine-owned presentation types.

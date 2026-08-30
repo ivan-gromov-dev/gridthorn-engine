@@ -11,5 +11,9 @@ fn renders_minimal_project_files() {
             .project_manifest
             .contains("name = \"sample-game\"")
     );
-    assert!(generated.main_source.contains("gridthorn::version()"));
+    assert!(generated.main_source.contains("WindowedApplication"));
+    assert!(generated.main_source.contains("title: \"sample-game\""));
+    assert!(generated.game_source.contains("ScheduleStage::FixedUpdate"));
+    assert!(generated.game_source.contains("TimingOverlay"));
+    assert!(generated.model_source.contains("MovementIntent"));
 }

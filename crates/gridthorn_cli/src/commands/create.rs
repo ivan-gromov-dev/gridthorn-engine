@@ -54,6 +54,12 @@ fn write_project(project_path: &Path, generated: &GeneratedProject) -> Result<()
             project_path.display()
         )
     })?;
+    fs::create_dir_all(project_path.join("src/game")).with_context(|| {
+        format!(
+            "failed to create game source directory {}",
+            project_path.display()
+        )
+    })?;
 
     write_file(&project_path.join("Cargo.toml"), &generated.cargo_manifest)?;
     write_file(
@@ -61,6 +67,14 @@ fn write_project(project_path: &Path, generated: &GeneratedProject) -> Result<()
         &generated.project_manifest,
     )?;
     write_file(&project_path.join("src/main.rs"), &generated.main_source)?;
+    write_file(
+        &project_path.join("src/game/mod.rs"),
+        &generated.game_source,
+    )?;
+    write_file(
+        &project_path.join("src/game/model.rs"),
+        &generated.model_source,
+    )?;
     write_file(&project_path.join(".gitignore"), &generated.gitignore)?;
     Ok(())
 }

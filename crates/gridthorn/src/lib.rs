@@ -1,15 +1,27 @@
 //! Public SDK facade for Gridthorn.
 //!
-//! The runtime is still under construction. This crate currently exposes only
-//! compatibility information used by generated projects and the CLI.
+//! Runtime APIs remain provisional while the Milestone 1 vertical slice is
+//! under construction.
 
+mod runtime;
 mod version;
 
+pub use runtime::{
+    ApplicationError, ApplicationRuntime, ButtonState, Camera2d, Color, CursorPosition, EntityId,
+    ExitRequest, FixedStepConfig, FixedStepConfigError, FixedTime, FrameTiming, GameCommandQueue,
+    InputBuffer, InputEvent, InputState, KeyCode, LifecycleError, MouseButton, RenderFrame,
+    ScheduleBuilder, ScheduleRuntime, ScheduleStage, Sprite, TextureAsset, TextureAssetError,
+    TexturedSprite, TimeError, TimingOverlay, WindowConfig, WindowedApplication, WorldAccess,
+};
 pub use version::version;
 
 /// Commonly used Gridthorn APIs.
 ///
-/// This prelude is intentionally empty until the first runtime APIs are
-/// implemented. Keeping it present lets generated projects adopt APIs without
-/// changing their import convention later.
-pub mod prelude {}
+pub mod prelude {
+    pub use crate::{
+        ApplicationRuntime, Camera2d, Color, ExitRequest, FixedStepConfig, FixedTime, FrameTiming,
+        GameCommandQueue, InputState, KeyCode, MouseButton, RenderFrame, ScheduleBuilder,
+        ScheduleStage, Sprite, TextureAsset, TexturedSprite, TimingOverlay, WindowConfig,
+        WindowedApplication,
+    };
+}

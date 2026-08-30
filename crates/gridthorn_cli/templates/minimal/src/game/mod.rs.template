@@ -1,0 +1,93 @@
+mod model;
+
+use gridthorn::prelude::{
+    ApplicationRuntime, Camera2d, Color, ExitRequest, FrameTiming, GameCommandQueue, InputState,
+    KeyCode, RenderFrame, ScheduleBuilder, ScheduleStage, Sprite, TimingOverlay,
+};
+
+use model::{Controlled, MovementIntent, PlayerCommand, Position, SmokeState};
+
+pub(crate) fn runtime(smoke_enabled: bool) -> ApplicationRuntime {
+    let mut schedules = ScheduleBuilder::new();
+    schedules
+        .add_system(ScheduleStage::Startup, move |world| {
+            let controlled = world.spawn(Position::default());
+            world.insert_resource(Controlled(controlled));
+            world.insert_resource(MovementIntent::default());
+            world.insert_resource(GameCommandQueue::<PlayerCommand>::new());
+            world.insert_resource(SmokeState::new(smoke_enabled));
+        })
+        .add_system(ScheduleStage::Input, |world| {
+            let input = world
+                .read_resource(|input: &InputState| input.clone())
+                .unwrap_or_default();
+            let intent = MovementIntent::from_input(&input);
+            world.update_resource(|movement: &mut MovementIntent| *movement = intent);
+            if input.key_just_pressed(KeyCode::Space) {
+                world.update_resource(|commands: &mut GameCommandQueue<PlayerCommand>| {
+                    commands.push(PlayerCommand::Reset);
+                });
+            }
+            if input.key_just_pressed(KeyCode::Escape) {
+                world.update_resource(|exit: &mut ExitRequest| exit.request());
+            }
+        })
+        .add_system(ScheduleStage::FixedUpdate, |world| {
+            let mut commands = Vec::new();
+            world.update_resource(|queue: &mut GameCommandQueue<PlayerCommand>| {
+                commands.extend(queue.drain());
+            });
+            let controlled = world.read_resource(|entity: &Controlled| entity.0);
+            let movement = world
+                .read_resource(|intent: &MovementIntent| *intent)
+                .unwrap_or_default();
+            if let Some(entity) = controlled {
+                for command in commands {
+                    match command {
+                        PlayerCommand::Reset => {
+                            world.update_component(entity, |position: &mut Position| {
+                                *position = Position::default();
+                            });
+                        }
+                    }
+                }
+                world.update_component(entity, |position: &mut Position| {
+                    position.x = position.x.saturating_add(movement.x);
+                    position.y = position.y.saturating_add(movement.y);
+                });
+            }
+            world.update_resource(|smoke: &mut SmokeState| smoke.fixed_ticks += 1);
+        })
+        .add_system(ScheduleStage::Update, |world| {
+            let should_exit = world
+                .read_resource(|smoke: &SmokeState| smoke.enabled && smoke.fixed_ticks >= 2)
+                .unwrap_or(false);
+            if should_exit {
+                world.update_resource(|exit: &mut ExitRequest| exit.request());
+            }
+        })
+        .add_system(ScheduleStage::Render, |world| {
+            let position = world
+                .read_resource(|controlled: &Controlled| controlled.0)
+                .and_then(|entity| world.read_component(entity, |position: &Position| *position))
+                .unwrap_or_default();
+            let mut frame = RenderFrame::new(
+                Camera2d::default(),
+                vec![Sprite::new(
+                    [f32::from(position.x), f32::from(position.y)],
+                    [32.0, 32.0],
+                    Color::rgb(0.95, 0.55, 0.18),
+                )],
+            );
+            if let Some(timing) = world.read_resource(|timing: &FrameTiming| *timing) {
+                frame = frame.with_timing_overlay(TimingOverlay::new(
+                    timing.frame_elapsed(),
+                    timing.fixed_steps(),
+                    timing.accumulated_lag(),
+                    timing.overloaded(),
+                ));
+            }
+            world.insert_resource(frame);
+        });
+    ApplicationRuntime::new(schedules.build())
+}

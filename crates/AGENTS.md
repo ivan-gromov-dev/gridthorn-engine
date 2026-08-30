@@ -14,6 +14,3 @@ These rules apply to all crates below this directory.
   explicit, documented decision.
 - Add tests under the owning `src/<domain>/test/` directory, grouped by
   behavior. A module declares its test subtree behind `#[cfg(test)]`.
-- Keep Rust comments declaration-level. Avoid comments inside executable blocks
-  except where a non-obvious invariant or workaround cannot be expressed in the
-  code structure.

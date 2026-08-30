@@ -13,29 +13,24 @@ pub enum RenderSurfaceError {
         #[source]
         source: BoxedError,
     },
-
     /// No compatible graphics adapter was available.
     #[error("compatible graphics adapter request failed")]
     AdapterRequest {
         #[source]
         source: BoxedError,
     },
-
     /// The logical graphics device could not be created.
     #[error("graphics device request failed")]
     DeviceRequest {
         #[source]
         source: BoxedError,
     },
-
     /// The selected adapter cannot present to this surface.
     #[error("selected graphics adapter has no compatible surface configuration")]
     UnsupportedConfiguration,
-
     /// The presentation surface was lost and must be recreated.
     #[error("GPU presentation surface was lost")]
     SurfaceLost,
-
     /// Frame acquisition encountered a captured validation failure.
     #[error("GPU surface frame acquisition failed validation")]
     SurfaceValidation,

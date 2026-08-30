@@ -9,6 +9,9 @@ on:
 permissions:
   contents: read
 
+env:
+  CARGO_TARGET_DIR: ${{ github.workspace }}/target
+
 jobs:
   verify:
     name: Verify (${{ matrix.platform }})
@@ -28,6 +31,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy,rustfmt
+      - uses: Swatinem/rust-cache@v2
       - name: Run repository checks (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
@@ -43,6 +47,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@1.97.1
+      - uses: Swatinem/rust-cache@v2
       - name: Check all targets at the MSRV
         run: cargo check --workspace --all-targets --locked
 

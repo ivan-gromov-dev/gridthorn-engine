@@ -2,7 +2,7 @@ use bevy_ecs::{schedule::Schedule, world::World};
 
 use crate::WorldAccess;
 
-use super::{ScheduleRuntime, ScheduleStage};
+use super::{ScheduleRuntime, ScheduleStage, runtime::LifecycleSchedules};
 
 type WorldSystem = Box<dyn for<'world> FnMut(&mut WorldAccess<'world>) + Send + Sync>;
 
@@ -10,8 +10,13 @@ type WorldSystem = Box<dyn for<'world> FnMut(&mut WorldAccess<'world>) + Send + 
 #[derive(Default)]
 pub struct ScheduleBuilder {
     startup: Vec<WorldSystem>,
+    poll_events: Vec<WorldSystem>,
+    input: Vec<WorldSystem>,
     fixed_update: Vec<WorldSystem>,
     update: Vec<WorldSystem>,
+    post_update: Vec<WorldSystem>,
+    render: Vec<WorldSystem>,
+    shutdown: Vec<WorldSystem>,
 }
 
 impl ScheduleBuilder {
@@ -29,8 +34,13 @@ impl ScheduleBuilder {
     ) -> &mut Self {
         let systems = match stage {
             ScheduleStage::Startup => &mut self.startup,
+            ScheduleStage::PollEvents => &mut self.poll_events,
+            ScheduleStage::Input => &mut self.input,
             ScheduleStage::FixedUpdate => &mut self.fixed_update,
             ScheduleStage::Update => &mut self.update,
+            ScheduleStage::PostUpdate => &mut self.post_update,
+            ScheduleStage::Render => &mut self.render,
+            ScheduleStage::Shutdown => &mut self.shutdown,
         };
         systems.push(Box::new(system));
         self
@@ -41,9 +51,16 @@ impl ScheduleBuilder {
     pub fn build(self) -> ScheduleRuntime {
         ScheduleRuntime::new(
             World::new(),
-            build_schedule(self.startup),
-            build_schedule(self.fixed_update),
-            build_schedule(self.update),
+            LifecycleSchedules {
+                startup: build_schedule(self.startup),
+                poll_events: build_schedule(self.poll_events),
+                input: build_schedule(self.input),
+                fixed_update: build_schedule(self.fixed_update),
+                update: build_schedule(self.update),
+                post_update: build_schedule(self.post_update),
+                render: build_schedule(self.render),
+                shutdown: build_schedule(self.shutdown),
+            },
         )
     }
 }
