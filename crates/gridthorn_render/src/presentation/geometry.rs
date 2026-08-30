@@ -72,8 +72,49 @@ impl FrameGeometry {
                 vertex(right, top, color, [1.0, 0.0]),
             ]);
         }
+        if let Some(overlay) = frame.timing_overlay() {
+            vertices.extend(timing_overlay_vertices(overlay));
+        }
         Self { vertices }
     }
+}
+
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "small diagnostic counts become normalized GPU bar widths"
+)]
+fn timing_overlay_vertices(overlay: super::TimingOverlay) -> Vec<SpriteVertex> {
+    let frame_ratio = (overlay.frame_elapsed().as_secs_f32() / (1.0 / 60.0)).clamp(0.0, 2.0) * 0.5;
+    let fixed_ratio = ((overlay.fixed_steps() as f32) / 4.0).clamp(0.0, 1.0);
+    let lag_ratio = (overlay.accumulated_lag().as_secs_f32() / 0.1).clamp(0.0, 1.0);
+    let frame_color = if frame_ratio > 0.5 {
+        [1.0, 0.72, 0.18, 0.95]
+    } else {
+        [0.2, 0.9, 0.45, 0.95]
+    };
+    let lag_color = if overlay.overloaded() {
+        [1.0, 0.18, 0.16, 0.95]
+    } else {
+        [0.55, 0.65, 0.9, 0.95]
+    };
+    let mut vertices = Vec::with_capacity(18);
+    vertices.extend(clip_rect(-0.96, 0.96, frame_ratio, frame_color));
+    vertices.extend(clip_rect(-0.96, 0.90, fixed_ratio, [0.3, 0.65, 1.0, 0.95]));
+    vertices.extend(clip_rect(-0.96, 0.84, lag_ratio, lag_color));
+    vertices
+}
+
+fn clip_rect(left: f32, top: f32, ratio: f32, color: [f32; 4]) -> [SpriteVertex; 6] {
+    let right = left + 0.42 * ratio;
+    let bottom = top - 0.035;
+    [
+        vertex(left, top, color, [0.0, 0.0]),
+        vertex(left, bottom, color, [0.0, 0.0]),
+        vertex(right, bottom, color, [0.0, 0.0]),
+        vertex(left, top, color, [0.0, 0.0]),
+        vertex(right, bottom, color, [0.0, 0.0]),
+        vertex(right, top, color, [0.0, 0.0]),
+    ]
 }
 
 #[expect(

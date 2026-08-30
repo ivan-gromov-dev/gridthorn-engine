@@ -3,6 +3,7 @@ use std::time::Duration;
 /// Observable timing result for one host frame.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct FrameTiming {
+    frame_elapsed: Duration,
     fixed_steps: u32,
     first_tick_index: u64,
     completed_ticks: u64,
@@ -12,6 +13,7 @@ pub struct FrameTiming {
 
 impl FrameTiming {
     pub(crate) fn new(
+        frame_elapsed: Duration,
         fixed_steps: u32,
         first_tick_index: u64,
         completed_ticks: u64,
@@ -19,12 +21,19 @@ impl FrameTiming {
         accumulated_lag: Duration,
     ) -> Self {
         Self {
+            frame_elapsed,
             fixed_steps,
             first_tick_index,
             completed_ticks,
             overloaded,
             accumulated_lag,
         }
+    }
+
+    /// Host time accumulated for this frame.
+    #[must_use]
+    pub fn frame_elapsed(self) -> Duration {
+        self.frame_elapsed
     }
 
     /// Number of fixed updates assigned to this host frame.

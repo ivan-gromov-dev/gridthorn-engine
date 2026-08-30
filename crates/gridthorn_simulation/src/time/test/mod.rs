@@ -32,8 +32,10 @@ fn accumulates_partial_frames_into_integer_tick_indices() {
         .expect("time should advance");
 
     assert_eq!(first.fixed_steps(), 0);
+    assert_eq!(first.frame_elapsed(), Duration::from_millis(6));
     assert_eq!(first.accumulated_lag(), Duration::from_millis(6));
     assert_eq!(second.fixed_steps(), 2);
+    assert_eq!(second.frame_elapsed(), Duration::from_millis(15));
     assert_eq!(second.first_tick_index(), 0);
     assert_eq!(second.completed_ticks(), 2);
     assert_eq!(second.accumulated_lag(), Duration::from_millis(1));

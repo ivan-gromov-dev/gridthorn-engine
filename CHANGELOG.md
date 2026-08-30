@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and basic GPU pipeline used by the keyboard-controlled example.
 - A provisional `TextureAsset` loader for PNG and PNM images plus textured
   sprite presentation through the public SDK facade.
+- A compact screen-space timing overlay for host-frame duration, fixed work,
+  accumulated lag, and fixed-step overload state.
 
 ## [0.1.0] - 2026-08-28
 

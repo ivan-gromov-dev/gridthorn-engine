@@ -51,6 +51,7 @@ impl FixedStepClock {
             .checked_sub(consumed)
             .ok_or(TimeError::ElapsedArithmeticOverflow)?;
         let timing = FrameTiming::new(
+            elapsed,
             fixed_steps,
             self.completed_ticks,
             completed_ticks,
@@ -76,6 +77,7 @@ impl FixedStepClock {
             .checked_add(u64::from(fixed_steps))
             .ok_or(TimeError::TickIndexOverflow)?;
         let timing = FrameTiming::new(
+            Duration::ZERO,
             fixed_steps,
             self.completed_ticks,
             completed_ticks,

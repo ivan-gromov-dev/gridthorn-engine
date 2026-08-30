@@ -1,4 +1,4 @@
-use super::{Camera2d, Sprite, TexturedSprite};
+use super::{Camera2d, Sprite, TexturedSprite, TimingOverlay};
 
 /// Immutable presentation snapshot consumed by the renderer.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -6,6 +6,7 @@ pub struct RenderFrame {
     camera: Camera2d,
     sprites: Vec<Sprite>,
     textured_sprites: Vec<TexturedSprite>,
+    timing_overlay: Option<TimingOverlay>,
 }
 
 impl RenderFrame {
@@ -16,6 +17,7 @@ impl RenderFrame {
             camera,
             sprites,
             textured_sprites: Vec::new(),
+            timing_overlay: None,
         }
     }
 
@@ -42,5 +44,18 @@ impl RenderFrame {
     #[must_use]
     pub fn textured_sprites(&self) -> &[TexturedSprite] {
         &self.textured_sprites
+    }
+
+    /// Attach a screen-space diagnostic timing overlay.
+    #[must_use]
+    pub fn with_timing_overlay(mut self, overlay: TimingOverlay) -> Self {
+        self.timing_overlay = Some(overlay);
+        self
+    }
+
+    /// Timing overlay requested for this snapshot.
+    #[must_use]
+    pub fn timing_overlay(&self) -> Option<TimingOverlay> {
+        self.timing_overlay
     }
 }

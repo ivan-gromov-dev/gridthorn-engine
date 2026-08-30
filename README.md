@@ -54,6 +54,7 @@ they are explicitly marked as implemented.
 | Texture assets                     | PNG/PNM decoding and textured-sprite presentation implemented           |
 | Headless schedule execution        | Internal architecture spike implemented                                |
 | Cross-layer diagnostics            | CLI/app/renderer tracing spike implemented                             |
+| Runtime timing overlay             | Frame time, fixed work, lag, and overload bars implemented             |
 | Deterministic fixed-step replay    | Seeded RNG and state fingerprint spike implemented                     |
 | Runtime and public SDK             | Milestone 1; timed native window-loop integration implemented          |
 | Current source release             | `0.1.0`                                                                |
@@ -98,6 +99,9 @@ arrows; Space resets and Escape exits):
 ```console
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_runtime_input
 ```
+
+The three bars in the upper-left show host-frame duration, fixed updates, and
+remaining fixed-step lag. The lag bar turns red while catch-up is overloaded.
 
 Run the same fixed-update boundary without a window or renderer:
 

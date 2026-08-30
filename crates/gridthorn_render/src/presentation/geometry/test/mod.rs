@@ -1,5 +1,7 @@
+use std::time::Duration;
+
 use super::FrameGeometry;
-use crate::{Camera2d, Color, RenderFrame, Sprite};
+use crate::{Camera2d, Color, RenderFrame, Sprite, TimingOverlay};
 
 #[test]
 fn projects_centered_sprite_into_clip_space() {
@@ -48,4 +50,19 @@ fn ignores_invalid_camera_and_sprite_extents() {
             .vertices
             .is_empty()
     );
+}
+
+#[test]
+fn adds_three_screen_space_bars_for_timing_diagnostics() {
+    let frame = RenderFrame::default().with_timing_overlay(TimingOverlay::new(
+        Duration::from_millis(20),
+        2,
+        Duration::from_millis(35),
+        true,
+    ));
+
+    let geometry = FrameGeometry::new(&frame, 800, 600);
+
+    assert_eq!(geometry.vertices.len(), 18);
+    assert_slice_close(&geometry.vertices[12].color, &[1.0, 0.18, 0.16, 0.95]);
 }
