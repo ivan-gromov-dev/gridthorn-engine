@@ -82,6 +82,10 @@ Mouse-driven runtime buttons now consume the engine-owned frame input boundary,
 report hover and held visuals, and emit one activation only after an inside
 press completes with an inside release. Focus loss or dragging outside cancels
 the pending activation; keyboard focus and higher-level layout remain planned.
+The provisional audio foundation decodes interleaved PCM16 WAV clips without an
+output device and exposes an ordered queue for play, stop, and normalized volume
+commands with stable voice identifiers. Output-device integration, mixing,
+suspend/resume behavior, and broader formats remain planned.
 
 - [ ] Scenes and game states.
 - [ ] Sprite batching and 2D animation.

@@ -1049,6 +1049,7 @@ version = "0.2.0"
 dependencies = [
  "gridthorn_app",
  "gridthorn_assets",
+ "gridthorn_audio",
  "gridthorn_input",
  "gridthorn_render",
  "gridthorn_simulation",
@@ -1073,6 +1074,13 @@ name = "gridthorn_assets"
 version = "0.2.0"
 dependencies = [
  "image",
+ "thiserror 2.0.20",
+]
+
+[[package]]
+name = "gridthorn_audio"
+version = "0.2.0"
+dependencies = [
  "thiserror 2.0.20",
 ]
 

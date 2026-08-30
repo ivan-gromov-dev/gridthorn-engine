@@ -1,0 +1,15 @@
+[package]
+name = "gridthorn_audio"
+description = "Engine-owned audio assets and playback command services for Gridthorn"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+
+[dependencies]
+thiserror.workspace = true
+
+[lints]
+workspace = true

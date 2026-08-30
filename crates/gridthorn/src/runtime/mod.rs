@@ -4,6 +4,10 @@ pub use gridthorn_app::{
     UiButtonError, UiButtonInteraction, WindowConfig, WindowedApplication,
 };
 pub use gridthorn_assets::{TextureAsset, TextureAssetError};
+pub use gridthorn_audio::{
+    AudioClip, AudioClipError, AudioCommand, AudioCommandQueue, AudioQueueError,
+    AudioSettingsError, AudioVoiceId, PlaybackSettings, WavDecodeError,
+};
 pub use gridthorn_input::{
     ButtonState, CursorPosition, InputBuffer, InputEvent, InputState, KeyCode, MouseButton,
 };

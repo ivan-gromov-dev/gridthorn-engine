@@ -24,11 +24,12 @@ workspace_packages = [
 workspace_names = {package["name"] for package in workspace_packages}
 
 allowed_dependencies = {
-    "gridthorn": {"gridthorn_app", "gridthorn_assets", "gridthorn_input", "gridthorn_render", "gridthorn_simulation", "gridthorn_world"},
+    "gridthorn": {"gridthorn_app", "gridthorn_assets", "gridthorn_audio", "gridthorn_input", "gridthorn_render", "gridthorn_simulation", "gridthorn_world"},
     "gridthorn_app": {"gridthorn_input", "gridthorn_render", "gridthorn_simulation", "gridthorn_world"},
     "gridthorn_cli": set(),
     "gridthorn_input": set(),
     "gridthorn_assets": set(),
+    "gridthorn_audio": set(),
     "gridthorn_render": {"gridthorn_assets"},
     "gridthorn_simulation": set(),
     "gridthorn_world": set(),
