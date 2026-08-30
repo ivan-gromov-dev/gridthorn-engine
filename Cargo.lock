@@ -1118,6 +1118,7 @@ name = "gridthorn_world"
 version = "0.2.0"
 dependencies = [
  "bevy_ecs",
+ "thiserror 2.0.20",
 ]
 
 [[package]]

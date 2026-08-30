@@ -101,7 +101,7 @@ simulation:
 ```text
 Startup
    ↓
-PollEvents → Input → FixedUpdate (zero or more times)
+PollEvents → Input → SceneTransition (on scene change) → FixedUpdate (zero or more times)
                          ↓
              Update → PostUpdate → Render
 
@@ -117,6 +117,9 @@ Platform lifecycle events → Suspend / Resume / Shutdown
   frame executes no fixed tick, the command remains queued. With multiple ticks,
   an edge-triggered command is consumed once; continuous input is represented by
   an explicit tick input state rather than repeated platform events.
+- `SceneTransition` atomically removes entities owned by the exited scene and
+  constructs the newly active scene before any fixed tick. Persistent entities
+  without scene ownership remain alive across the transition.
 - `FixedUpdate` advances the integer tick index and handles economy, AI, and
   other authoritative rules. Authoritative simulation data may only change at a
   fixed-tick boundary or during explicit load/reset operations.

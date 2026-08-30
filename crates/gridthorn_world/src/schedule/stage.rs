@@ -7,6 +7,8 @@ pub enum ScheduleStage {
     PollEvents,
     /// Converts collected device state into commands for future fixed ticks.
     Input,
+    /// Rebuilds scene-owned world state after an atomic scene switch.
+    SceneTransition,
     /// Runs once for each requested authoritative fixed step.
     FixedUpdate,
     /// Runs once for each presentation frame.

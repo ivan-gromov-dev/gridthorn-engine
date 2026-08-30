@@ -63,11 +63,13 @@ Evidence, limitations, and explicit performance deferrals are recorded in the
 
 ## Milestone 2 — General-purpose 2D SDK
 
-Started on 2026-08-30. The first implemented increment adds provisional,
-engine-owned game-state identifiers and an ordered state stack. State changes
-requested by lifecycle systems are applied after `Input`, giving fixed updates
-and presentation a consistent active state for the entire host frame. Scene
-ownership and scene transitions remain planned.
+Started on 2026-08-30. The implemented provisional lifecycle foundation now
+includes engine-owned game-state identifiers, an ordered state stack, scene
+identifiers, and scene-owned entities. State changes requested by lifecycle
+systems are applied after `Input`, giving fixed updates and presentation a
+consistent active state for the entire host frame. Active-scene replacement
+removes the exited scene's entities and runs `SceneTransition` construction
+systems exactly once before fixed updates. Scene serialization remains planned.
 
 - [ ] Scenes and game states.
 - [ ] Sprite batching and 2D animation.
