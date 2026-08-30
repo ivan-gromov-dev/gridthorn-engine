@@ -7,9 +7,10 @@ mod runtime;
 mod version;
 
 pub use runtime::{
-    ApplicationError, ApplicationRuntime, EntityId, FixedStepConfig, FixedStepConfigError,
-    FixedTime, FrameTiming, LifecycleError, ScheduleBuilder, ScheduleRuntime, ScheduleStage,
-    TimeError, WindowConfig, WindowedApplication, WorldAccess,
+    ApplicationError, ApplicationRuntime, ButtonState, CursorPosition, EntityId, FixedStepConfig,
+    FixedStepConfigError, FixedTime, FrameTiming, InputEvent, InputState, KeyCode, LifecycleError,
+    MouseButton, ScheduleBuilder, ScheduleRuntime, ScheduleStage, TimeError, WindowConfig,
+    WindowedApplication, WorldAccess,
 };
 pub use version::version;
 
@@ -17,7 +18,7 @@ pub use version::version;
 ///
 pub mod prelude {
     pub use crate::{
-        ApplicationRuntime, FixedStepConfig, FixedTime, FrameTiming, ScheduleBuilder,
-        ScheduleStage, WindowConfig, WindowedApplication,
+        ApplicationRuntime, FixedStepConfig, FixedTime, FrameTiming, InputState, KeyCode,
+        MouseButton, ScheduleBuilder, ScheduleStage, WindowConfig, WindowedApplication,
     };
 }

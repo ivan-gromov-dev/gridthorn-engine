@@ -48,6 +48,7 @@ they are explicitly marked as implemented.
 | CLI                                | `new`, `run`, `check`, and `--version` implemented                     |
 | Public SDK facade                  | Version API plus provisional lifecycle and schedule APIs               |
 | App and renderer internals         | Window/surface lifecycle spike implemented                             |
+| Keyboard and mouse input           | Provisional engine-owned frame state implemented                       |
 | World and schedules                | ECS lifecycle schedule spike implemented                               |
 | Headless schedule execution        | Internal architecture spike implemented                                |
 | Cross-layer diagnostics            | CLI/app/renderer tracing spike implemented                             |

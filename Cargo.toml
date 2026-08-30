@@ -3,6 +3,7 @@ members = [
     "crates/gridthorn",
     "crates/gridthorn_app",
     "crates/gridthorn_cli",
+    "crates/gridthorn_input",
     "crates/gridthorn_render",
     "crates/gridthorn_simulation",
     "crates/gridthorn_world",

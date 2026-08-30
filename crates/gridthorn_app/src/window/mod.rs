@@ -2,6 +2,7 @@ mod application;
 mod config;
 mod control;
 mod error;
+mod input;
 mod lifecycle;
 mod runtime;
 

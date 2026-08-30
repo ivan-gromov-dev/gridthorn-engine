@@ -1,5 +1,6 @@
 use crate::prelude::*;
 
+mod input;
 mod time;
 
 #[derive(Default)]

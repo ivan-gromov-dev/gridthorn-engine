@@ -1,6 +1,7 @@
 use std::time::{Duration, Instant};
 
 use crate::ApplicationRuntime;
+use gridthorn_input::{InputBuffer, InputEvent};
 
 use super::{ApplicationError, WindowApplication, WindowConfig, WindowControl, WindowLifecycle};
 
@@ -30,6 +31,7 @@ impl WindowedApplication {
 struct RuntimeWindowLifecycle {
     runtime: ApplicationRuntime,
     frame_timer: FrameTimer,
+    input: InputBuffer,
 }
 
 impl RuntimeWindowLifecycle {
@@ -37,10 +39,12 @@ impl RuntimeWindowLifecycle {
         Self {
             runtime,
             frame_timer: FrameTimer::default(),
+            input: InputBuffer::new(),
         }
     }
 
     fn run_elapsed_frame(&mut self, elapsed: Duration) -> Result<(), ApplicationError> {
+        self.runtime.world().insert_resource(self.input.snapshot());
         self.runtime.run_timed_frame(elapsed)?;
         Ok(())
     }
@@ -56,6 +60,11 @@ impl WindowLifecycle for RuntimeWindowLifecycle {
     fn idle(&mut self, _control: &mut WindowControl) -> Result<(), ApplicationError> {
         let elapsed = self.frame_timer.advance(Instant::now());
         self.run_elapsed_frame(elapsed)
+    }
+
+    fn input(&mut self, event: InputEvent) -> Result<(), ApplicationError> {
+        self.input.push(event);
+        Ok(())
     }
 
     fn suspended(&mut self) {

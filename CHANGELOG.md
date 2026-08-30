@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   per-frame catch-up, observable overload, and preserved backlog.
 - A provisional `WindowedApplication` that drives timed runtime frames from the
   native event loop, excludes suspended time, and guarantees runtime shutdown.
+- Engine-owned keyboard and mouse events with held and frame-edge state,
+  cursor position, focus-loss release, and native window-loop delivery.
 
 ## [0.1.0] - 2026-08-28
 

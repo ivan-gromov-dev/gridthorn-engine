@@ -11,6 +11,7 @@ use winit::window::{Window, WindowId};
 use super::config::WindowConfig;
 use super::control::WindowControl;
 use super::error::ApplicationError;
+use super::input::map_window_input;
 use super::lifecycle::WindowLifecycle;
 
 /// Application runner that owns the platform window lifecycle.
@@ -169,6 +170,13 @@ where
         event: WindowEvent,
     ) {
         if !self.matches_window(window_id) {
+            return;
+        }
+
+        if let Some(input) = map_window_input(&event)
+            && let Err(error) = self.lifecycle.input(input)
+        {
+            self.fail(event_loop, error);
             return;
         }
 

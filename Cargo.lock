@@ -1007,6 +1007,7 @@ name = "gridthorn"
 version = "0.1.0"
 dependencies = [
  "gridthorn_app",
+ "gridthorn_input",
  "gridthorn_simulation",
  "gridthorn_world",
 ]
@@ -1015,6 +1016,7 @@ dependencies = [
 name = "gridthorn_app"
 version = "0.1.0"
 dependencies = [
+ "gridthorn_input",
  "gridthorn_render",
  "gridthorn_simulation",
  "gridthorn_world",
@@ -1035,6 +1037,10 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
 ]
+
+[[package]]
+name = "gridthorn_input"
+version = "0.1.0"
 
 [[package]]
 name = "gridthorn_render"

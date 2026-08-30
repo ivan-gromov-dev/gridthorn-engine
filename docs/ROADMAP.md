@@ -31,7 +31,9 @@ application lifecycle, ordered frame schedules, and fixed-time accumulation
 through the SDK facade. The timed runtime is now integrated with the native
 window loop, including suspend/resume and shutdown behavior. A documented
 end-to-end runtime example remains before the lifecycle and time items are
-complete.
+complete. Native keyboard and mouse events now cross an engine-owned boundary
+into frame-scoped `InputState`; command mapping and a controllable example
+remain before the input item is complete.
 
 - [ ] Application lifecycle and schedules.
 - [ ] Time, `Update`, and fixed-step `FixedUpdate`.

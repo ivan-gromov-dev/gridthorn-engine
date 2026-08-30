@@ -7,6 +7,8 @@ use crate::{ApplicationRuntime, WindowControl, WindowLifecycle};
 
 use super::{FrameTimer, RuntimeWindowLifecycle};
 
+mod input;
+
 #[derive(Default)]
 struct StageCounts {
     startup: u32,

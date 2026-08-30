@@ -1,0 +1,12 @@
+[package]
+name = "gridthorn_input"
+description = "Engine-owned keyboard and mouse input state for Gridthorn"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+
+[lints]
+workspace = true
