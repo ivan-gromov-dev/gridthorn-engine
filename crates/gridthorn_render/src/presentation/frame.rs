@@ -1,4 +1,4 @@
-use super::{Camera2d, Sprite, TexturedSprite, TimingOverlay};
+use super::{Camera2d, Sprite, TexturedSprite, TimingOverlay, UiPrimitive};
 
 /// Immutable presentation snapshot consumed by the renderer.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -7,6 +7,7 @@ pub struct RenderFrame {
     sprites: Vec<Sprite>,
     textured_sprites: Vec<TexturedSprite>,
     timing_overlay: Option<TimingOverlay>,
+    ui: Vec<UiPrimitive>,
 }
 
 impl RenderFrame {
@@ -18,6 +19,7 @@ impl RenderFrame {
             sprites,
             textured_sprites: Vec::new(),
             timing_overlay: None,
+            ui: Vec::new(),
         }
     }
 
@@ -57,5 +59,18 @@ impl RenderFrame {
     #[must_use]
     pub fn timing_overlay(&self) -> Option<TimingOverlay> {
         self.timing_overlay
+    }
+
+    /// Attach ordered screen-space UI rendered after world presentation.
+    #[must_use]
+    pub fn with_ui(mut self, ui: Vec<UiPrimitive>) -> Self {
+        self.ui = ui;
+        self
+    }
+
+    /// Ordered screen-space UI primitives.
+    #[must_use]
+    pub fn ui(&self) -> &[UiPrimitive] {
+        &self.ui
     }
 }

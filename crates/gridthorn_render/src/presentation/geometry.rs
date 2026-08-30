@@ -61,47 +61,129 @@ impl FrameGeometry {
         reason = "surface dimensions become f32 GPU clip-space coordinates"
     )]
     pub(crate) fn new(frame: &RenderFrame, width: u32, height: u32) -> Self {
-        let camera = frame.camera();
-        let viewport_height = camera.viewport_height();
-        if width == 0 || height == 0 || !viewport_height.is_finite() || viewport_height <= 0.0 {
+        if width == 0 || height == 0 {
             return Self {
                 vertices: Vec::new(),
             };
         }
-        let aspect = width as f32 / height as f32;
-        let half_height = viewport_height * 0.5;
-        let half_width = half_height * aspect;
-        let center = camera.center();
+        let camera = frame.camera();
+        let viewport_height = camera.viewport_height();
         let mut vertices = Vec::with_capacity(frame.sprites().len() * 6);
-        for sprite in frame.sprites() {
-            let position = sprite.position();
-            let size = sprite.size();
-            if !position.into_iter().all(f32::is_finite)
-                || !size
-                    .into_iter()
-                    .all(|value| value.is_finite() && value > 0.0)
-            {
-                continue;
+        if viewport_height.is_finite() && viewport_height > 0.0 {
+            let aspect = width as f32 / height as f32;
+            let half_height = viewport_height * 0.5;
+            let half_width = half_height * aspect;
+            let center = camera.center();
+            for sprite in frame.sprites() {
+                let position = sprite.position();
+                let size = sprite.size();
+                if !position.into_iter().all(f32::is_finite)
+                    || !size
+                        .into_iter()
+                        .all(|value| value.is_finite() && value > 0.0)
+                {
+                    continue;
+                }
+                let left = (position[0] - size[0] * 0.5 - center[0]) / half_width;
+                let right = (position[0] + size[0] * 0.5 - center[0]) / half_width;
+                let top = -(position[1] - size[1] * 0.5 - center[1]) / half_height;
+                let bottom = -(position[1] + size[1] * 0.5 - center[1]) / half_height;
+                let color = sprite.color().components();
+                vertices.extend([
+                    vertex(left, top, color, [0.0, 0.0]),
+                    vertex(left, bottom, color, [0.0, 1.0]),
+                    vertex(right, bottom, color, [1.0, 1.0]),
+                    vertex(left, top, color, [0.0, 0.0]),
+                    vertex(right, bottom, color, [1.0, 1.0]),
+                    vertex(right, top, color, [1.0, 0.0]),
+                ]);
             }
-            let left = (position[0] - size[0] * 0.5 - center[0]) / half_width;
-            let right = (position[0] + size[0] * 0.5 - center[0]) / half_width;
-            let top = -(position[1] - size[1] * 0.5 - center[1]) / half_height;
-            let bottom = -(position[1] + size[1] * 0.5 - center[1]) / half_height;
-            let color = sprite.color().components();
-            vertices.extend([
-                vertex(left, top, color, [0.0, 0.0]),
-                vertex(left, bottom, color, [0.0, 1.0]),
-                vertex(right, bottom, color, [1.0, 1.0]),
-                vertex(left, top, color, [0.0, 0.0]),
-                vertex(right, bottom, color, [1.0, 1.0]),
-                vertex(right, top, color, [1.0, 0.0]),
-            ]);
         }
         if let Some(overlay) = frame.timing_overlay() {
             vertices.extend(timing_overlay_vertices(overlay));
         }
+        vertices.extend(ui_vertices(frame.ui(), width, height));
         Self { vertices }
     }
+}
+
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "surface dimensions and bitmap coordinates become f32 GPU clip-space coordinates"
+)]
+fn ui_vertices(ui: &[super::UiPrimitive], width: u32, height: u32) -> Vec<SpriteVertex> {
+    let mut vertices = Vec::new();
+    for primitive in ui {
+        match primitive {
+            super::UiPrimitive::Rect(rect) => vertices.extend(screen_rect_vertices(
+                rect.position(),
+                rect.size(),
+                rect.color().components(),
+                width as f32,
+                height as f32,
+            )),
+            super::UiPrimitive::Text(label) => {
+                vertices.extend(text_vertices(label, width as f32, height as f32));
+            }
+        }
+    }
+    vertices
+}
+
+fn text_vertices(label: &super::TextLabel, width: f32, height: f32) -> Vec<SpriteVertex> {
+    let origin = label.position();
+    let scale = label.pixel_scale();
+    let color = label.color().components();
+    let mut cursor = origin;
+    let mut vertices = Vec::new();
+    for character in label.text().chars() {
+        if character == '\n' {
+            cursor[0] = origin[0];
+            cursor[1] += 8.0 * scale;
+            continue;
+        }
+        let rows = super::font::glyph_rows(character);
+        let mut y = cursor[1];
+        for bits in rows {
+            let mut x = cursor[0];
+            for column in 0..5 {
+                if bits & (1 << (4 - column)) != 0 {
+                    vertices.extend(screen_rect_vertices(
+                        [x, y],
+                        [scale, scale],
+                        color,
+                        width,
+                        height,
+                    ));
+                }
+                x += scale;
+            }
+            y += scale;
+        }
+        cursor[0] += 6.0 * scale;
+    }
+    vertices
+}
+
+fn screen_rect_vertices(
+    position: [f32; 2],
+    size: [f32; 2],
+    color: [f32; 4],
+    width: f32,
+    height: f32,
+) -> [SpriteVertex; 6] {
+    let left = position[0] / width * 2.0 - 1.0;
+    let right = (position[0] + size[0]) / width * 2.0 - 1.0;
+    let top = 1.0 - position[1] / height * 2.0;
+    let bottom = 1.0 - (position[1] + size[1]) / height * 2.0;
+    [
+        vertex(left, top, color, [0.0, 0.0]),
+        vertex(left, bottom, color, [0.0, 0.0]),
+        vertex(right, bottom, color, [0.0, 0.0]),
+        vertex(left, top, color, [0.0, 0.0]),
+        vertex(right, bottom, color, [0.0, 0.0]),
+        vertex(right, top, color, [0.0, 0.0]),
+    ]
 }
 
 #[expect(

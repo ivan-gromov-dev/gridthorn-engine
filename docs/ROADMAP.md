@@ -74,6 +74,10 @@ The renderer now submits adjacent textured sprites sharing one cloned texture
 asset as a single ordered GPU batch. Normalized sprite-sheet regions feed that
 same batch path, while provisional uniform-frame animation clips support
 looping, one-shot completion, pause, resume, and restart in presentation time.
+The provisional runtime UI path now renders ordered colored rectangles and
+5x7 bitmap text in top-left-origin screen pixels through the same colored GPU
+batch. The built-in font covers Latin letters, digits, and common diagnostics
+punctuation; richer font assets, layout, and interactive widgets remain planned.
 
 - [ ] Scenes and game states.
 - [ ] Sprite batching and 2D animation.

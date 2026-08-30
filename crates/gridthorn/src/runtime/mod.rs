@@ -9,7 +9,8 @@ pub use gridthorn_input::{
 };
 pub use gridthorn_render::{
     AnimationClip, AnimationClipError, AnimationPlayback, AnimationPlayer, Camera2d, Color,
-    RenderFrame, Sprite, SpriteRegion, SpriteRegionError, TexturedSprite, TimingOverlay,
+    RenderFrame, Sprite, SpriteRegion, SpriteRegionError, TextLabel, TexturedSprite, TimingOverlay,
+    UiError, UiPrimitive, UiRect,
 };
 pub use gridthorn_simulation::{
     FixedStepConfig, FixedStepConfigError, FixedTime, FrameTiming, GameCommandQueue, TimeError,

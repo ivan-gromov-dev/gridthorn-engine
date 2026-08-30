@@ -13,8 +13,8 @@ pub use runtime::{
     GameStateChange, GameStateError, GameStateId, GameStateStack, InputBuffer, InputEvent,
     InputState, KeyCode, LifecycleError, MouseButton, RenderFrame, SceneChange, SceneController,
     SceneId, SceneIdError, ScheduleBuilder, ScheduleRuntime, ScheduleStage, Sprite, SpriteRegion,
-    SpriteRegionError, TextureAsset, TextureAssetError, TexturedSprite, TimeError, TimingOverlay,
-    WindowConfig, WindowedApplication, WorldAccess,
+    SpriteRegionError, TextLabel, TextureAsset, TextureAssetError, TexturedSprite, TimeError,
+    TimingOverlay, UiError, UiPrimitive, UiRect, WindowConfig, WindowedApplication, WorldAccess,
 };
 pub use version::version;
 
@@ -25,7 +25,7 @@ pub mod prelude {
         AnimationClip, AnimationPlayback, AnimationPlayer, ApplicationRuntime, Camera2d, Color,
         ExitRequest, FixedStepConfig, FixedTime, FrameTiming, GameCommandQueue, GameStateId,
         GameStateStack, InputState, KeyCode, MouseButton, RenderFrame, SceneController, SceneId,
-        ScheduleBuilder, ScheduleStage, Sprite, SpriteRegion, TextureAsset, TexturedSprite,
-        TimingOverlay, WindowConfig, WindowedApplication,
+        ScheduleBuilder, ScheduleStage, Sprite, SpriteRegion, TextLabel, TextureAsset,
+        TexturedSprite, TimingOverlay, UiPrimitive, UiRect, WindowConfig, WindowedApplication,
     };
 }
