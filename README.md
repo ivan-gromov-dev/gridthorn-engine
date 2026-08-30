@@ -5,7 +5,8 @@ games. It is suitable for traditional 2D genres while providing a particularly
 strong foundation for tile-based, isometric, management, tycoon, and
 simulation-heavy games.
 
-The project has completed its Milestone 1 runtime vertical slice. It has a
+The project has completed its Milestone 1 runtime vertical slice and started
+Milestone 2 with a provisional frame-boundary game-state stack. It has a
 reproducible Cargo workspace, a working CLI, native window and input handling,
 fixed-step world updates, sprite presentation, texture loading, and runtime
 timing diagnostics. A visual editor will later be built on the same public APIs
@@ -58,6 +59,7 @@ they are explicitly marked as implemented.
 | Runtime timing overlay             | Frame time, fixed work, lag, and overload bars implemented             |
 | Deterministic fixed-step replay    | Seeded RNG and state fingerprint spike implemented                     |
 | Runtime and public SDK             | Milestone 1 vertical slice complete; APIs remain provisional           |
+| Scenes and game states             | Game-state stack implemented; scene ownership remains planned          |
 | Current source release             | `0.2.0`                                                                |
 | Stable API                         | Not available; APIs remain pre-1.0 and provisional                     |
 

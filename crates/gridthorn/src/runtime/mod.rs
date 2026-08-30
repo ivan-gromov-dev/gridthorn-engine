@@ -1,6 +1,6 @@
 pub use gridthorn_app::{
-    ApplicationError, ApplicationRuntime, ExitRequest, LifecycleError, WindowConfig,
-    WindowedApplication,
+    ApplicationError, ApplicationRuntime, ExitRequest, GameStateChange, GameStateError,
+    GameStateId, GameStateStack, LifecycleError, WindowConfig, WindowedApplication,
 };
 pub use gridthorn_assets::{TextureAsset, TextureAssetError};
 pub use gridthorn_input::{
