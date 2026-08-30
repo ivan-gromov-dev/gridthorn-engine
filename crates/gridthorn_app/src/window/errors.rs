@@ -15,18 +15,15 @@ pub enum ApplicationError {
         #[source]
         source: BoxedError,
     },
-
     /// The platform window could not be created.
     #[error("window creation failed")]
     WindowCreation {
         #[source]
         source: BoxedError,
     },
-
     /// Renderer initialization or frame presentation failed.
     #[error(transparent)]
     Renderer(#[from] RenderSurfaceError),
-
     /// Runtime lifecycle or fixed-time execution failed.
     #[error(transparent)]
     Runtime(#[from] LifecycleError),

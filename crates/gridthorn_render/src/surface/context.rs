@@ -6,7 +6,7 @@ use wgpu::{
 
 use crate::RenderFrame;
 
-use super::error::RenderSurfaceError;
+use super::errors::RenderSurfaceError;
 use super::lifecycle::{SurfaceChange, SurfaceExtent, SurfaceLifecycle};
 use super::pipeline::SpritePipeline;
 use super::target::WindowSurfaceTarget;

@@ -10,7 +10,7 @@ use winit::window::{Window, WindowId};
 
 use super::config::WindowConfig;
 use super::control::WindowControl;
-use super::error::ApplicationError;
+use super::errors::ApplicationError;
 use super::input::map_window_input;
 use super::lifecycle::WindowLifecycle;
 

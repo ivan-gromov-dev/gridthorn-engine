@@ -1,4 +1,4 @@
-mod error;
+mod errors;
 mod exit;
 
 use std::time::Duration;
@@ -7,7 +7,7 @@ use gridthorn_simulation::{FixedStepClock, FixedStepConfig, FixedTime, FrameTimi
 use gridthorn_world::{ScheduleRuntime, WorldAccess};
 use tracing::warn;
 
-pub use error::LifecycleError;
+pub use errors::LifecycleError;
 pub use exit::ExitRequest;
 
 /// Drives Gridthorn schedules through one explicit application lifecycle.
