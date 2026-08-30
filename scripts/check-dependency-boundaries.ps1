@@ -21,11 +21,12 @@ try {
     )
 
     $allowedDependencies = @{
-        gridthorn = @("gridthorn_app", "gridthorn_input", "gridthorn_render", "gridthorn_simulation", "gridthorn_world")
+        gridthorn = @("gridthorn_app", "gridthorn_assets", "gridthorn_input", "gridthorn_render", "gridthorn_simulation", "gridthorn_world")
         gridthorn_app = @("gridthorn_input", "gridthorn_render", "gridthorn_simulation", "gridthorn_world")
         gridthorn_cli = @()
         gridthorn_input = @()
-        gridthorn_render = @()
+        gridthorn_assets = @()
+        gridthorn_render = @("gridthorn_assets")
         gridthorn_simulation = @()
         gridthorn_world = @()
     }

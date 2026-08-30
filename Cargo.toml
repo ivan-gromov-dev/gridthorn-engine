@@ -2,6 +2,7 @@
 members = [
     "crates/gridthorn",
     "crates/gridthorn_app",
+    "crates/gridthorn_assets",
     "crates/gridthorn_cli",
     "crates/gridthorn_input",
     "crates/gridthorn_render",
@@ -29,6 +30,7 @@ anyhow = "1.0.99"
 bevy_ecs = { version = "0.19.1", default-features = false, features = ["multi_threaded", "std"] }
 bytemuck = { version = "1.25.0", features = ["derive"] }
 clap = { version = "4.5.46", features = ["derive"] }
+image = { version = "0.25.8", default-features = false, features = ["png", "pnm"] }
 semver = "1.0.26"
 serde = { version = "1.0.219", features = ["derive"] }
 pollster = "1.0.1"

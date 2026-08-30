@@ -51,6 +51,7 @@ they are explicitly marked as implemented.
 | Keyboard and mouse input           | Provisional engine-owned frame state implemented                       |
 | World and schedules                | ECS lifecycle schedule spike implemented                               |
 | Game commands and world control    | Ordered commands and controllable entity example implemented           |
+| Texture assets                     | PNG/PNM decoding and textured-sprite presentation implemented           |
 | Headless schedule execution        | Internal architecture spike implemented                                |
 | Cross-layer diagnostics            | CLI/app/renderer tracing spike implemented                             |
 | Deterministic fixed-step replay    | Seeded RNG and state fingerprint spike implemented                     |
@@ -91,7 +92,7 @@ Run the provisional ECS schedule example:
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_schedule_loop
 ```
 
-Run the provisional keyboard-controlled colored-sprite example (WASD or
+Run the provisional keyboard-controlled textured-sprite example (WASD or
 arrows; Space resets and Escape exits):
 
 ```console

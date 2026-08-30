@@ -36,13 +36,15 @@ into frame-scoped `InputState`; command mapping and a controllable example
 now drive a world entity through continuous tick input and ordered one-shot
 `GameCommand` values. The same example now presents that entity through an
 engine-owned orthographic camera, colored sprite frame, and GPU pipeline.
+Texture files now decode into engine-owned RGBA assets and can be presented by
+the same example as textured sprites.
 
 - [ ] Application lifecycle and schedules.
 - [ ] Time, `Update`, and fixed-step `FixedUpdate`.
 - [x] Window and keyboard/mouse input.
 - [x] Minimal world model through the Gridthorn API.
 - [x] Basic 2D renderer, camera, and sprite.
-- [ ] Texture loading as an asset.
+- [x] Texture loading as an asset.
 - [ ] Diagnostic timing overlay.
 - [ ] Extend CLI checks with engine/project compatibility validation.
 - [ ] Build and run one documented example through the CLI.

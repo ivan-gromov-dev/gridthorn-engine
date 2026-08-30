@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   direct component reads, and a keyboard-controlled world entity example.
 - An engine-owned orthographic `Camera2d`, colored `Sprite` presentation frame,
   and basic GPU pipeline used by the keyboard-controlled example.
+- A provisional `TextureAsset` loader for PNG and PNM images plus textured
+  sprite presentation through the public SDK facade.
 
 ## [0.1.0] - 2026-08-28
 

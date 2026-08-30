@@ -141,7 +141,14 @@ impl SurfaceRenderer {
             .sprite_pipeline
             .as_ref()
             .ok_or(RenderSurfaceError::UnsupportedConfiguration)?;
-        pipeline.encode(&self.device, &mut encoder, &view, &self.frame, extent);
+        pipeline.encode(
+            &self.device,
+            &self.queue,
+            &mut encoder,
+            &view,
+            &self.frame,
+            extent,
+        );
         self.queue.submit([encoder.finish()]);
         self.queue.present(frame);
 
