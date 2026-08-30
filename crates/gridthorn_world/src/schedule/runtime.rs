@@ -14,6 +14,7 @@ pub(crate) struct LifecycleSchedules {
     pub(super) startup: Schedule,
     pub(super) poll_events: Schedule,
     pub(super) input: Schedule,
+    pub(super) scene_transition: Schedule,
     pub(super) fixed_update: Schedule,
     pub(super) update: Schedule,
     pub(super) post_update: Schedule,
@@ -39,6 +40,11 @@ impl ScheduleRuntime {
     /// Run the input-to-command mapping schedule once.
     pub fn run_input(&mut self) {
         self.schedules.input.run(&mut self.world);
+    }
+
+    /// Run scene construction systems after an active-scene change.
+    pub fn run_scene_transition(&mut self) {
+        self.schedules.scene_transition.run(&mut self.world);
     }
 
     /// Borrow world state for setup or inspection between schedule runs.

@@ -3,6 +3,9 @@ use std::time::Duration;
 use super::FrameGeometry;
 use crate::{Camera2d, Color, RenderFrame, Sprite, TimingOverlay};
 
+mod batch;
+mod ui;
+
 #[test]
 fn projects_centered_sprite_into_clip_space() {
     let frame = RenderFrame::new(

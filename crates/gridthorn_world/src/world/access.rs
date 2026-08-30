@@ -1,5 +1,7 @@
 use bevy_ecs::world::World;
 
+use crate::{SceneId, scene::SceneOwner};
+
 use super::{EntityId, StoredComponent, StoredResource};
 
 /// Borrowed access to Gridthorn-owned ECS state.
@@ -14,6 +16,36 @@ impl WorldAccess<'_> {
         T: Send + Sync + 'static,
     {
         EntityId(self.backend.spawn(StoredComponent(component)).id())
+    }
+
+    /// Spawn an entity owned by one scene.
+    ///
+    /// Scene-owned entities are removed together when that scene exits. Plain
+    /// entities created with [`Self::spawn`] remain persistent across scenes.
+    pub fn spawn_in_scene<T>(&mut self, scene: SceneId, component: T) -> EntityId
+    where
+        T: Send + Sync + 'static,
+    {
+        EntityId(
+            self.backend
+                .spawn((StoredComponent(component), SceneOwner(scene)))
+                .id(),
+        )
+    }
+
+    /// Remove every entity owned by a scene and return the number removed.
+    pub fn despawn_scene(&mut self, scene: &SceneId) -> usize {
+        let mut query = self
+            .backend
+            .query::<(bevy_ecs::entity::Entity, &SceneOwner)>();
+        let entities = query
+            .iter(self.backend)
+            .filter_map(|(entity, owner)| (owner.0 == *scene).then_some(entity))
+            .collect::<Vec<_>>();
+        entities
+            .into_iter()
+            .filter(|entity| self.backend.despawn(*entity))
+            .count()
     }
 
     /// Apply a mutation to one component when the entity and type exist.
@@ -74,10 +106,17 @@ impl WorldAccess<'_> {
     where
         T: Send + Sync + 'static,
     {
-        let Some(mut resource) = self.backend.get_resource_mut::<StoredResource<T>>() else {
-            return false;
-        };
-        update(&mut resource.0);
-        true
+        self.update_resource_with(|resource| update(resource))
+            .is_some()
+    }
+
+    /// Mutate a typed resource and return a value produced by the callback.
+    pub fn update_resource_with<T, R>(&mut self, update: impl FnOnce(&mut T) -> R) -> Option<R>
+    where
+        T: Send + Sync + 'static,
+    {
+        self.backend
+            .get_resource_mut::<StoredResource<T>>()
+            .map(|mut resource| update(&mut resource.0))
     }
 }

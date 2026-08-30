@@ -63,6 +63,34 @@ Evidence, limitations, and explicit performance deferrals are recorded in the
 
 ## Milestone 2 — General-purpose 2D SDK
 
+Started on 2026-08-30. The implemented provisional lifecycle foundation now
+includes engine-owned game-state identifiers, an ordered state stack, scene
+identifiers, and scene-owned entities. State changes requested by lifecycle
+systems are applied after `Input`, giving fixed updates and presentation a
+consistent active state for the entire host frame. Active-scene replacement
+removes the exited scene's entities and runs `SceneTransition` construction
+systems exactly once before fixed updates. Scene serialization remains planned.
+The renderer now submits adjacent textured sprites sharing one cloned texture
+asset as a single ordered GPU batch. Normalized sprite-sheet regions feed that
+same batch path, while provisional uniform-frame animation clips support
+looping, one-shot completion, pause, resume, and restart in presentation time.
+The provisional runtime UI path now renders ordered colored rectangles and
+5x7 bitmap text in top-left-origin screen pixels through the same colored GPU
+batch. The built-in font covers Latin letters, digits, and common diagnostics
+punctuation; richer font assets, layout, and interactive widgets remain planned.
+Mouse-driven runtime buttons now consume the engine-owned frame input boundary,
+report hover and held visuals, and emit one activation only after an inside
+press completes with an inside release. Focus loss or dragging outside cancels
+the pending activation; keyboard focus and higher-level layout remain planned.
+The provisional audio foundation decodes interleaved PCM16 WAV clips without an
+output device and exposes an ordered queue for play, stop, and normalized volume
+commands with stable voice identifiers. An opt-in `native-output` feature now
+provides a Kira-backed service that mixes mono and stereo clips, applies queued
+voice controls, and supports suspend/resume; the same command path is tested
+through Kira's mock backend without native audio development libraries.
+Application-loop integration, streaming, device recovery, latency validation,
+and broader formats remain planned.
+
 - [ ] Scenes and game states.
 - [ ] Sprite batching and 2D animation.
 - [ ] Text and basic runtime UI.

@@ -7,6 +7,8 @@ use gridthorn_simulation::{FixedStepClock, FixedStepConfig, FixedTime, FrameTimi
 use gridthorn_world::{ScheduleRuntime, WorldAccess};
 use tracing::warn;
 
+use crate::{GameStateStack, SceneController};
+
 pub use errors::LifecycleError;
 pub use exit::ExitRequest;
 
@@ -100,6 +102,20 @@ impl ApplicationRuntime {
         self.schedules.run_startup();
         self.schedules.run_poll_events();
         self.schedules.run_input();
+        self.schedules
+            .world()
+            .update_resource(GameStateStack::apply_pending);
+        let scene_change = self
+            .schedules
+            .world()
+            .update_resource_with(SceneController::apply_pending)
+            .flatten();
+        if let Some(change) = scene_change {
+            if let Some(exited) = change.exited() {
+                self.schedules.world().despawn_scene(exited);
+            }
+            self.schedules.run_scene_transition();
+        }
         self.schedules.world().insert_resource(timing);
         for offset in 0..timing.fixed_steps() {
             let tick_index = timing.first_tick_index() + u64::from(offset);

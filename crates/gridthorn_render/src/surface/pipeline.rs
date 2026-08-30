@@ -9,7 +9,7 @@ use wgpu::{
 };
 
 use crate::RenderFrame;
-use crate::presentation::{FrameGeometry, SpriteVertex, textured_sprite_vertices};
+use crate::presentation::{FrameGeometry, SpriteVertex, textured_sprite_batches};
 
 use super::lifecycle::SurfaceExtent;
 
@@ -139,15 +139,10 @@ impl SpritePipeline {
                 usage: wgpu::BufferUsages::VERTEX,
             })
         });
-        let textured = frame
-            .textured_sprites()
-            .iter()
-            .filter_map(|sprite| {
-                let vertices = textured_sprite_vertices(frame, sprite, extent.width, extent.height);
-                if vertices.is_empty() {
-                    return None;
-                }
-                let dimensions = sprite.texture().dimensions();
+        let textured = textured_sprite_batches(frame, extent.width, extent.height)
+            .into_iter()
+            .map(|batch| {
+                let dimensions = batch.texture.dimensions();
                 let texture = device.create_texture_with_data(
                     queue,
                     &wgpu::TextureDescriptor {
@@ -165,7 +160,7 @@ impl SpritePipeline {
                         view_formats: &[],
                     },
                     TextureDataOrder::LayerMajor,
-                    sprite.texture().rgba8(),
+                    batch.texture.rgba8(),
                 );
                 let texture_view = texture.create_view(&wgpu::TextureViewDescriptor::default());
                 let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
@@ -189,12 +184,13 @@ impl SpritePipeline {
                 });
                 let buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                     label: Some("gridthorn textured sprite vertices"),
-                    contents: bytemuck::cast_slice(&vertices),
+                    contents: bytemuck::cast_slice(&batch.vertices),
                     usage: wgpu::BufferUsages::VERTEX,
                 });
-                Some((buffer, bind_group))
+                let vertex_count = u32::try_from(batch.vertices.len()).unwrap_or(u32::MAX);
+                (buffer, bind_group, vertex_count)
             })
-            .collect::<Vec<(wgpu::Buffer, BindGroup)>>();
+            .collect::<Vec<(wgpu::Buffer, BindGroup, u32)>>();
         let color_attachment = RenderPassColorAttachment {
             view,
             depth_slice: None,
@@ -220,11 +216,11 @@ impl SpritePipeline {
             render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
             render_pass.draw(0..vertex_count, 0..1);
         }
-        for (buffer, bind_group) in &textured {
+        for (buffer, bind_group, vertex_count) in &textured {
             render_pass.set_pipeline(&self.textured_pipeline);
             render_pass.set_bind_group(0, bind_group, &[]);
             render_pass.set_vertex_buffer(0, buffer.slice(..));
-            render_pass.draw(0..6, 0..1);
+            render_pass.draw(0..*vertex_count, 0..1);
         }
     }
 }

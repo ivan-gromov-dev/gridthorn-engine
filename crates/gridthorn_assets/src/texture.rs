@@ -57,6 +57,15 @@ impl TextureAsset {
     pub fn rgba8(&self) -> &[u8] {
         &self.pixels
     }
+
+    /// Return whether two handles share the same decoded pixel allocation.
+    ///
+    /// Cloned handles share storage and can reuse one renderer texture upload.
+    /// Separately loaded assets remain distinct even when their pixels match.
+    #[must_use]
+    pub fn shares_data_with(&self, other: &Self) -> bool {
+        self.dimensions == other.dimensions && Arc::ptr_eq(&self.pixels, &other.pixels)
+    }
 }
 
 #[cfg(test)]

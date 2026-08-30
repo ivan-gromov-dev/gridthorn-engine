@@ -87,7 +87,7 @@ These choices are intentionally not Milestone 0 dependencies.
 | ---------------------- | -------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------- |
 | Debug/editor UI        | `egui`                                 | Provisional | Integrate the first runtime debug overlay without coupling game UI to it.                                  |
 | Text shaping/rendering | `glyphon` / `cosmic-text`              | Candidate   | Validate version alignment with `wgpu`, font fallback, and atlas behavior.                                 |
-| Audio                  | `kira`                                 | Provisional | Validate native backends, streaming, latency, mixing, and lifecycle.                                       |
+| Audio                  | `kira`                                 | Provisional | Opt-in native adapter implemented; validate streaming, latency, and cross-platform recovery.                |
 | File watching          | `notify`                               | Candidate   | Add with asset hot reload and CLI development mode.                                                        |
 | Cargo integration      | `cargo_metadata`                       | Candidate   | Add when CLI project discovery requires structured Cargo metadata.                                         |
 | Reflection             | `bevy_reflect` or a Gridthorn registry | Candidate   | Decide after the ECS spike and before scene/inspector work; keep reflection out of Milestone 0 public API. |
