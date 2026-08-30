@@ -52,7 +52,7 @@ they are explicitly marked as implemented.
 | Headless schedule execution        | Internal architecture spike implemented                                |
 | Cross-layer diagnostics            | CLI/app/renderer tracing spike implemented                             |
 | Deterministic fixed-step replay    | Seeded RNG and state fingerprint spike implemented                     |
-| Runtime and public SDK             | Milestone 1 started; lifecycle runner and fixed-step clock implemented |
+| Runtime and public SDK             | Milestone 1; timed native window-loop integration implemented          |
 | Current source release             | `0.1.0`                                                                |
 | Stable API                         | Not available; APIs remain pre-1.0 and provisional                     |
 

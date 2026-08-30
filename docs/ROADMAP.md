@@ -28,9 +28,10 @@ deferrals are recorded in the
 
 Started on 2026-08-30. The first implemented increment exposes the provisional
 application lifecycle, ordered frame schedules, and fixed-time accumulation
-through the SDK facade. Window-loop integration remains before the lifecycle
-and schedules item is complete; timing diagnostics and an end-to-end example
-remain before the time item is complete.
+through the SDK facade. The timed runtime is now integrated with the native
+window loop, including suspend/resume and shutdown behavior. A documented
+end-to-end runtime example remains before the lifecycle and time items are
+complete.
 
 - [ ] Application lifecycle and schedules.
 - [ ] Time, `Update`, and fixed-step `FixedUpdate`.

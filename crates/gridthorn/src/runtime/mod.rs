@@ -1,4 +1,6 @@
-pub use gridthorn_app::{ApplicationRuntime, LifecycleError};
+pub use gridthorn_app::{
+    ApplicationError, ApplicationRuntime, LifecycleError, WindowConfig, WindowedApplication,
+};
 pub use gridthorn_simulation::{
     FixedStepConfig, FixedStepConfigError, FixedTime, FrameTiming, TimeError,
 };

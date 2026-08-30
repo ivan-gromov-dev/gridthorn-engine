@@ -39,10 +39,10 @@ where
         event_loop.set_control_flow(ControlFlow::Wait);
 
         let mut state = WinitApplication::new(self.config, self.lifecycle);
-        event_loop
+        let event_result = event_loop
             .run_app(&mut state)
-            .map_err(ApplicationError::event_loop)?;
-        state.finish()
+            .map_err(ApplicationError::event_loop);
+        state.finish(event_result)
     }
 }
 
@@ -68,7 +68,12 @@ where
         }
     }
 
-    fn finish(self) -> Result<(), ApplicationError> {
+    fn finish(
+        mut self,
+        event_result: Result<(), ApplicationError>,
+    ) -> Result<(), ApplicationError> {
+        self.lifecycle.shutdown();
+        event_result?;
         self.error.map_or(Ok(()), Err)
     }
 
@@ -88,7 +93,7 @@ where
         self.renderer = Some(renderer);
 
         let mut control = WindowControl::default();
-        self.lifecycle.started(&mut control);
+        self.lifecycle.started(&mut control)?;
         self.apply_control(event_loop, &control);
         info!(
             component = "app",
@@ -146,10 +151,12 @@ where
             }
         } else if let Some(renderer) = self.renderer.as_mut() {
             renderer.set_occluded(false);
+            self.lifecycle.resumed();
         }
     }
 
     fn suspended(&mut self, _event_loop: &ActiveEventLoop) {
+        self.lifecycle.suspended();
         if let Some(renderer) = self.renderer.as_mut() {
             renderer.set_occluded(true);
         }
@@ -191,11 +198,20 @@ where
     }
 
     fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
+        if self.error.is_some() {
+            return;
+        }
         let mut control = WindowControl::default();
-        self.lifecycle.idle(&mut control);
+        if let Err(error) = self.lifecycle.idle(&mut control) {
+            self.fail(event_loop, error);
+            return;
+        }
         self.apply_control(event_loop, &control);
         if let Some(window) = self.window.as_ref() {
             window.request_redraw();
         }
     }
 }
+
+#[cfg(test)]
+mod test;

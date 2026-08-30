@@ -16,3 +16,11 @@ fn prelude_configures_and_observes_fixed_time() {
     assert_eq!(timing.fixed_steps(), 2);
     assert_eq!(timing.completed_ticks(), 2);
 }
+
+#[test]
+fn prelude_builds_a_windowed_timed_runtime() {
+    let schedules = ScheduleBuilder::new();
+    let runtime = ApplicationRuntime::new(schedules.build());
+
+    let _application = WindowedApplication::new(WindowConfig::default(), runtime);
+}

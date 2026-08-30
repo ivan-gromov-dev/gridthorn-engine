@@ -1,5 +1,6 @@
 use std::error::Error;
 
+use crate::LifecycleError;
 use gridthorn_render::RenderSurfaceError;
 use thiserror::Error;
 
@@ -25,6 +26,10 @@ pub enum ApplicationError {
     /// Renderer initialization or frame presentation failed.
     #[error(transparent)]
     Renderer(#[from] RenderSurfaceError),
+
+    /// Runtime lifecycle or fixed-time execution failed.
+    #[error(transparent)]
+    Runtime(#[from] LifecycleError),
 }
 
 impl ApplicationError {

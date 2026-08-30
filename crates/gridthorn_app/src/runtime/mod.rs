@@ -37,6 +37,17 @@ impl ApplicationRuntime {
         self.schedules.world()
     }
 
+    /// Run `Startup` once without advancing a host frame.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`LifecycleError::AlreadyShutdown`] after shutdown begins.
+    pub fn startup(&mut self) -> Result<(), LifecycleError> {
+        self.ensure_running()?;
+        self.schedules.run_startup();
+        Ok(())
+    }
+
     /// Run one host frame with an explicit number of fixed simulation steps.
     ///
     /// `Startup` runs once before the first frame. Every frame then executes
