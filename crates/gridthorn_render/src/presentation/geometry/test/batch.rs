@@ -4,7 +4,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use gridthorn_assets::TextureAsset;
 
 use super::super::textured_sprite_batches;
-use crate::{Camera2d, RenderFrame, TexturedSprite};
+use crate::{Camera2d, RenderFrame, SpriteRegion, TexturedSprite};
 
 #[test]
 fn combines_adjacent_sprites_that_share_one_texture_handle() {
@@ -18,6 +18,25 @@ fn combines_adjacent_sprites_that_share_one_texture_handle() {
 
     assert_eq!(batches.len(), 1);
     assert_eq!(batches[0].vertices.len(), 12);
+}
+
+#[test]
+fn maps_sprite_sheet_regions_into_batch_uv_coordinates() {
+    let region = SpriteRegion::new([0.25, 0.5], [0.5, 1.0]).expect("region should be valid");
+    let frame = RenderFrame::new(Camera2d::default(), Vec::new()).with_textured_sprites(vec![
+        TexturedSprite::new(
+            [0.0, 0.0],
+            [8.0, 8.0],
+            load_texture("region", [255, 255, 255]),
+        )
+        .with_region(region),
+    ]);
+
+    let batches = textured_sprite_batches(&frame, 800, 600);
+
+    assert_slice_close(&batches[0].vertices[0].uv, &[0.25, 0.5]);
+    assert_slice_close(&batches[0].vertices[2].uv, &[0.5, 1.0]);
+    assert_slice_close(&batches[0].vertices[5].uv, &[0.5, 0.5]);
 }
 
 #[test]
@@ -50,4 +69,13 @@ fn load_texture(label: &str, rgb: [u8; 3]) -> TextureAsset {
     let texture = TextureAsset::load(&path).expect("load texture fixture");
     fs::remove_file(path).expect("remove texture fixture");
     texture
+}
+
+fn assert_slice_close(actual: &[f32], expected: &[f32]) {
+    assert!(
+        actual
+            .iter()
+            .zip(expected)
+            .all(|(actual, expected)| (actual - expected).abs() < f32::EPSILON)
+    );
 }

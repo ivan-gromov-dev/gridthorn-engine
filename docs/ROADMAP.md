@@ -71,7 +71,9 @@ consistent active state for the entire host frame. Active-scene replacement
 removes the exited scene's entities and runs `SceneTransition` construction
 systems exactly once before fixed updates. Scene serialization remains planned.
 The renderer now submits adjacent textured sprites sharing one cloned texture
-asset as a single ordered GPU batch; animation remains planned.
+asset as a single ordered GPU batch. Normalized sprite-sheet regions feed that
+same batch path, while provisional uniform-frame animation clips support
+looping, one-shot completion, pause, resume, and restart in presentation time.
 
 - [ ] Scenes and game states.
 - [ ] Sprite batching and 2D animation.

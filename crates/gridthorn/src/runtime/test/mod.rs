@@ -1,5 +1,6 @@
 use crate::prelude::*;
 
+mod animation;
 mod command;
 mod input;
 mod presentation;

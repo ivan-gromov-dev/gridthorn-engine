@@ -33,6 +33,7 @@ pub(crate) fn textured_sprite_batches(
             sprite.position(),
             sprite.size(),
             sprite.tint().components(),
+            sprite.region(),
             width,
             height,
         );
@@ -150,6 +151,7 @@ fn projected_vertices(
     position: [f32; 2],
     size: [f32; 2],
     color: [f32; 4],
+    region: super::SpriteRegion,
     width: u32,
     height: u32,
 ) -> Vec<SpriteVertex> {
@@ -172,13 +174,15 @@ fn projected_vertices(
     let right = (position[0] + size[0] * 0.5 - center[0]) / half_width;
     let top = -(position[1] - size[1] * 0.5 - center[1]) / half_height;
     let bottom = -(position[1] + size[1] * 0.5 - center[1]) / half_height;
+    let uv_min = region.min();
+    let uv_max = region.max();
     vec![
-        vertex(left, top, color, [0.0, 0.0]),
-        vertex(left, bottom, color, [0.0, 1.0]),
-        vertex(right, bottom, color, [1.0, 1.0]),
-        vertex(left, top, color, [0.0, 0.0]),
-        vertex(right, bottom, color, [1.0, 1.0]),
-        vertex(right, top, color, [1.0, 0.0]),
+        vertex(left, top, color, uv_min),
+        vertex(left, bottom, color, [uv_min[0], uv_max[1]]),
+        vertex(right, bottom, color, uv_max),
+        vertex(left, top, color, uv_min),
+        vertex(right, bottom, color, uv_max),
+        vertex(right, top, color, [uv_max[0], uv_min[1]]),
     ]
 }
 

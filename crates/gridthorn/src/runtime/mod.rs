@@ -7,7 +7,10 @@ pub use gridthorn_assets::{TextureAsset, TextureAssetError};
 pub use gridthorn_input::{
     ButtonState, CursorPosition, InputBuffer, InputEvent, InputState, KeyCode, MouseButton,
 };
-pub use gridthorn_render::{Camera2d, Color, RenderFrame, Sprite, TexturedSprite, TimingOverlay};
+pub use gridthorn_render::{
+    AnimationClip, AnimationClipError, AnimationPlayback, AnimationPlayer, Camera2d, Color,
+    RenderFrame, Sprite, SpriteRegion, SpriteRegionError, TexturedSprite, TimingOverlay,
+};
 pub use gridthorn_simulation::{
     FixedStepConfig, FixedStepConfigError, FixedTime, FrameTiming, GameCommandQueue, TimeError,
 };
