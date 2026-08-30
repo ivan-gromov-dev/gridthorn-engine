@@ -33,12 +33,14 @@ window loop, including suspend/resume and shutdown behavior. A documented
 end-to-end runtime example remains before the lifecycle and time items are
 complete. Native keyboard and mouse events now cross an engine-owned boundary
 into frame-scoped `InputState`; command mapping and a controllable example
-remain before the input item is complete.
+now drive a world entity through continuous tick input and ordered one-shot
+`GameCommand` values. Rendering that entity remains the next vertical-slice
+gap.
 
 - [ ] Application lifecycle and schedules.
 - [ ] Time, `Update`, and fixed-step `FixedUpdate`.
-- [ ] Window and keyboard/mouse input.
-- [ ] Minimal world model through the Gridthorn API.
+- [x] Window and keyboard/mouse input.
+- [x] Minimal world model through the Gridthorn API.
 - [ ] Basic 2D renderer, camera, and sprite.
 - [ ] Texture loading as an asset.
 - [ ] Diagnostic timing overlay.

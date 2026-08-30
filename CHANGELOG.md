@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   native event loop, excludes suspended time, and guarantees runtime shutdown.
 - Engine-owned keyboard and mouse events with held and frame-edge state,
   cursor position, focus-loss release, and native window-loop delivery.
+- Ordered generic `GameCommandQueue` consumption, engine-owned exit requests,
+  direct component reads, and a keyboard-controlled world entity example.
 
 ## [0.1.0] - 2026-08-28
 

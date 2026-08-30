@@ -1,6 +1,6 @@
 use std::time::{Duration, Instant};
 
-use crate::ApplicationRuntime;
+use crate::{ApplicationRuntime, ExitRequest};
 use gridthorn_input::{InputBuffer, InputEvent};
 
 use super::{ApplicationError, WindowApplication, WindowConfig, WindowControl, WindowLifecycle};
@@ -57,9 +57,18 @@ impl WindowLifecycle for RuntimeWindowLifecycle {
         Ok(())
     }
 
-    fn idle(&mut self, _control: &mut WindowControl) -> Result<(), ApplicationError> {
+    fn idle(&mut self, control: &mut WindowControl) -> Result<(), ApplicationError> {
         let elapsed = self.frame_timer.advance(Instant::now());
-        self.run_elapsed_frame(elapsed)
+        self.run_elapsed_frame(elapsed)?;
+        if self
+            .runtime
+            .world()
+            .read_resource(|exit: &ExitRequest| exit.is_requested())
+            .unwrap_or(false)
+        {
+            control.exit();
+        }
+        Ok(())
     }
 
     fn input(&mut self, event: InputEvent) -> Result<(), ApplicationError> {

@@ -50,6 +50,7 @@ they are explicitly marked as implemented.
 | App and renderer internals         | Window/surface lifecycle spike implemented                             |
 | Keyboard and mouse input           | Provisional engine-owned frame state implemented                       |
 | World and schedules                | ECS lifecycle schedule spike implemented                               |
+| Game commands and world control    | Ordered commands and controllable entity example implemented           |
 | Headless schedule execution        | Internal architecture spike implemented                                |
 | Cross-layer diagnostics            | CLI/app/renderer tracing spike implemented                             |
 | Deterministic fixed-step replay    | Seeded RNG and state fingerprint spike implemented                     |
@@ -88,6 +89,13 @@ Run the provisional ECS schedule example:
 
 ```console
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_schedule_loop
+```
+
+Run the provisional keyboard-controlled world example (WASD or arrows; Space
+resets and Escape exits):
+
+```console
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_runtime_input
 ```
 
 Run the same fixed-update boundary without a window or renderer:

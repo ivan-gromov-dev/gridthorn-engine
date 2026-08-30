@@ -1,4 +1,5 @@
 mod error;
+mod exit;
 
 use std::time::Duration;
 
@@ -7,6 +8,7 @@ use gridthorn_world::{ScheduleRuntime, WorldAccess};
 use tracing::warn;
 
 pub use error::LifecycleError;
+pub use exit::ExitRequest;
 
 /// Drives Gridthorn schedules through one explicit application lifecycle.
 pub struct ApplicationRuntime {
@@ -24,7 +26,8 @@ impl ApplicationRuntime {
 
     /// Create an application runtime with explicit fixed-step configuration.
     #[must_use]
-    pub fn with_fixed_step(schedules: ScheduleRuntime, fixed_step: FixedStepConfig) -> Self {
+    pub fn with_fixed_step(mut schedules: ScheduleRuntime, fixed_step: FixedStepConfig) -> Self {
+        schedules.world().insert_resource(ExitRequest::default());
         Self {
             schedules,
             fixed_clock: FixedStepClock::new(fixed_step),

@@ -1,5 +1,6 @@
 use crate::prelude::*;
 
+mod command;
 mod input;
 mod time;
 

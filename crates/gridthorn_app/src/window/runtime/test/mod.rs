@@ -7,6 +7,7 @@ use crate::{ApplicationRuntime, WindowControl, WindowLifecycle};
 
 use super::{FrameTimer, RuntimeWindowLifecycle};
 
+mod exit;
 mod input;
 
 #[derive(Default)]

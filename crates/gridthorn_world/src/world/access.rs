@@ -28,6 +28,16 @@ impl WorldAccess<'_> {
         true
     }
 
+    /// Read one component through a short-lived callback when it exists.
+    pub fn read_component<T, R>(&self, entity: EntityId, read: impl FnOnce(&T) -> R) -> Option<R>
+    where
+        T: Send + Sync + 'static,
+    {
+        self.backend
+            .get::<StoredComponent<T>>(entity.0)
+            .map(|component| read(&component.0))
+    }
+
     /// Visit every component of one domain type.
     pub fn for_each_component_mut<T>(&mut self, mut visit: impl FnMut(EntityId, &mut T))
     where
