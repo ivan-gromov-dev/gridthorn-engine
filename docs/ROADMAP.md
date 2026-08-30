@@ -26,6 +26,11 @@ deferrals are recorded in the
 
 ## Milestone 1 — Runtime vertical slice
 
+Started on 2026-08-30. The first implemented increment exposes the provisional
+application lifecycle and ordered frame schedules through the SDK facade.
+Window-loop integration and fixed-time accumulation remain before the lifecycle
+and schedules item is complete.
+
 - [ ] Application lifecycle and schedules.
 - [ ] Time, `Update`, and fixed-step `FixedUpdate`.
 - [ ] Window and keyboard/mouse input.

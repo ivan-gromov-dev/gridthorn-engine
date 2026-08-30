@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Provisional public application runtime with ordered `Startup`, `PollEvents`,
+  `Input`, `FixedUpdate`, `Update`, `PostUpdate`, `Render`, and `Shutdown`
+  schedules exposed through the `gridthorn` facade.
+
 ## [0.1.0] - 2026-08-28
 
 ### Added

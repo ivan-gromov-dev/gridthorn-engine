@@ -8,6 +8,9 @@ license.workspace = true
 authors.workspace = true
 publish = false
 
+[dependencies]
+gridthorn_app = { path = "../gridthorn_app" }
+gridthorn_world = { path = "../gridthorn_world" }
+
 [lints]
 workspace = true
-

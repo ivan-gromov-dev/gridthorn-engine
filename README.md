@@ -46,13 +46,13 @@ they are explicitly marked as implemented.
 | Milestone 0 foundation | Complete; runtime deferrals recorded |
 | Cargo workspace and CI | Implemented foundation |
 | CLI | `new`, `run`, `check`, and `--version` implemented |
-| Public SDK facade | Version API only; runtime APIs planned |
+| Public SDK facade | Version API plus provisional lifecycle and schedule APIs |
 | App and renderer internals | Window/surface lifecycle spike implemented |
 | World and schedules | ECS lifecycle schedule spike implemented |
 | Headless schedule execution | Internal architecture spike implemented |
 | Cross-layer diagnostics | CLI/app/renderer tracing spike implemented |
 | Deterministic fixed-step replay | Seeded RNG and state fingerprint spike implemented |
-| Runtime and public SDK | Planned for Milestone 1 and later |
+| Runtime and public SDK | Milestone 1 started; ordered lifecycle frame runner implemented |
 | Current source release | `0.1.0` |
 | Stable API | Not available; APIs remain pre-1.0 and provisional |
 

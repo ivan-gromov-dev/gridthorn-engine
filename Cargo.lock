@@ -1005,12 +1005,17 @@ dependencies = [
 [[package]]
 name = "gridthorn"
 version = "0.1.0"
+dependencies = [
+ "gridthorn_app",
+ "gridthorn_world",
+]
 
 [[package]]
 name = "gridthorn_app"
 version = "0.1.0"
 dependencies = [
  "gridthorn_render",
+ "gridthorn_world",
  "thiserror 2.0.20",
  "tracing",
  "winit",
