@@ -2,6 +2,7 @@ use crate::prelude::*;
 
 mod animation;
 mod audio;
+mod collision;
 mod command;
 mod input;
 mod presentation;

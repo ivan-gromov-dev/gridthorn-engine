@@ -63,6 +63,7 @@ they are explicitly marked as implemented.
 | Sprite batching and animation      | Provisional ordered texture batches and sprite-sheet playback            |
 | Text and runtime UI                | Provisional bitmap text, screen panels, and mouse buttons                |
 | Audio                              | Provisional PCM16 WAV assets, queue, and opt-in Kira output adapter      |
+| Basic 2D collision                 | Provisional circle/AABB overlap and minimum-translation queries          |
 | Current source release             | `0.2.0`                                                                |
 | Stable API                         | Not available; APIs remain pre-1.0 and provisional                     |
 
@@ -130,6 +131,12 @@ fingerprint:
 
 ```console
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_deterministic_replay
+```
+
+Run the headless basic collision query example:
+
+```console
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_collision_basics
 ```
 
 ## Repository workflows

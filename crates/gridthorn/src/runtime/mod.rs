@@ -8,6 +8,9 @@ pub use gridthorn_audio::{
     AudioClip, AudioClipError, AudioCommand, AudioCommandQueue, AudioQueueError,
     AudioSettingsError, AudioVoiceId, PlaybackSettings, WavDecodeError,
 };
+pub use gridthorn_collision::{
+    Aabb2d, Circle2d, Collider2d, ColliderError, Contact2d, Vec2, contact, overlaps,
+};
 pub use gridthorn_input::{
     ButtonState, CursorPosition, InputBuffer, InputEvent, InputState, KeyCode, MouseButton,
 };

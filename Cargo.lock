@@ -1141,6 +1141,7 @@ dependencies = [
  "gridthorn_app",
  "gridthorn_assets",
  "gridthorn_audio",
+ "gridthorn_collision",
  "gridthorn_input",
  "gridthorn_render",
  "gridthorn_simulation",
@@ -1187,6 +1188,13 @@ dependencies = [
  "toml",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "gridthorn_collision"
+version = "0.2.0"
+dependencies = [
+ "thiserror 2.0.20",
 ]
 
 [[package]]
