@@ -90,12 +90,18 @@ voice controls, and supports suspend/resume; the same command path is tested
 through Kira's mock backend without native audio development libraries.
 Application-loop integration, streaming, device recovery, latency validation,
 and broader formats remain planned.
+The provisional basic 2D collision boundary now validates engine-owned circles
+and axis-aligned boxes and provides deterministic-order overlap and minimum
+translation queries for box-box, circle-circle, and circle-box pairs. It is a
+narrow-phase query API rather than a rigid-body simulation; broad-phase spatial
+indexing, collision layers, continuous collision, and physics response remain
+planned for proven game requirements.
 
 - [ ] Scenes and game states.
 - [ ] Sprite batching and 2D animation.
 - [ ] Text and basic runtime UI.
 - [ ] Audio.
-- [ ] Basic 2D collision.
+- [x] Basic 2D collision.
 - [ ] Asset dependencies and hot reload.
 - [ ] Reflection for components and resources.
 - [ ] Versioned scene serialization.

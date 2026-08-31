@@ -4,6 +4,7 @@ members = [
     "crates/gridthorn_app",
     "crates/gridthorn_assets",
     "crates/gridthorn_audio",
+    "crates/gridthorn_collision",
     "crates/gridthorn_cli",
     "crates/gridthorn_input",
     "crates/gridthorn_render",
