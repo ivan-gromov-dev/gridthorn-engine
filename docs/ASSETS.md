@@ -29,8 +29,7 @@ and indirect cycles are rejected without changing the previous graph.
 Replacing a dependency list does not itself reload data. Dependencies are
 explicit invalidation edges, not a parser or custom-loader system.
 
-Call `reload_changed` at a chosen frame boundary, before presentation extraction.
-The runnable sibling `asset-reload` example uses `PollEvents`. The service reads
+The synchronous `reload_changed` path reads
 each registered file once, compares bytes, collects transitive dependents, and
 prepares replacement textures. It commits all replacements only after every
 read and decode succeeds. One broken file blocks the whole batch, including
@@ -50,13 +49,50 @@ frames retain their old allocation. Unaffected textures retain allocation
 identity for batching. The store is `Send + Sync` and reload requires exclusive
 mutable access. It starts no worker threads and introduces no new dependencies.
 
-Current limits: synchronous polling reads all registered contents on every
-call; preparation temporarily holds old and new bytes/textures. Graph traversal
-uses straightforward ordered scans. Large-project latency, memory, and platform
-watcher performance are explicitly unvalidated. Native watching, background
-loading, debounce, unloading, custom derived-asset loaders, and audio reload
-remain deferred. The roadmap item remains open until the broader workflow is
-validated against representative game content.
+## Background preparation and frame publication
+
+Transfer a fully registered store to `gridthorn::AssetReloader::new(store)` to
+move subsequent content scans and decoding off the frame thread. Initial loads
+remain synchronous. This uses one standard-library thread and no new dependency.
+The registration set and dependency graph are fixed for the worker's lifetime.
+`assets()` provides read-only access to the last published store.
+
+- `request_reload()` starts one scan and returns `true`; while a request is
+  running or a result awaits publication it returns `false` without queueing.
+- `poll()` performs no file reads or decoding and returns immediately when no
+  result is ready. At a chosen presentation boundary, it publishes a complete
+  successful snapshot and returns `Some(changed_ids)`. An empty vector denotes
+  a completed scan with no changes; `None` denotes no ready result.
+- Failed scans return `AssetReloadError::Prepare` and leave the published
+  snapshot and retry baseline intact. A new request retries the scan.
+- `shutdown()` closes the request channel, joins the worker, and discards any
+  unpublished result. It is idempotent; the published store remains readable.
+  Dropping the service also joins. Shutdown may wait for active disk I/O, which
+  cannot be cancelled; run it outside latency-sensitive frame processing.
+
+Thread creation failures and unexpected worker termination have typed errors.
+After termination, recreate the service to resume loading. `AssetReloader` is
+`Send + Sync`; request, publication, and shutdown require exclusive mutable
+access. Old texture and source snapshots remain valid across publication.
+
+The caller chooses the request cadence. Busy requests are not remembered: after
+consuming a result, issue another request to observe later changes. There is
+at most one pending request/result, and snapshot publication never performs
+disk I/O. It may release old allocations, so it is not a hard real-time bound.
+
+The sibling `asset-reload` example requests scans every 250 ms and publishes
+ready results in `PollEvents` before extracting render snapshots. Its shutdown
+system joins the worker. Tests gate a worker to verify frame calls continue
+without waiting, reject duplicate outstanding requests, verify publication only
+on `poll`, and cover retry, panic diagnostics, idle/busy shutdown, and drop.
+
+The roadmap item is complete for dependency-aware reload of raw sources and
+PNG/PNM textures. Content polling still reads all registered files per scan;
+preparation holds old and new data plus graph snapshots. Graph traversal uses
+ordered scans. Large-project latency, memory, and cross-platform performance
+measurements are explicitly deferred. Native file watching, debounce, dynamic
+registration, unloading, custom derived-asset loaders, and audio reload remain
+future extensions. No stable API or authoritative data-reload guarantee is made.
 
 Run the external facade example and its headless file-edit smoke from the engine:
 

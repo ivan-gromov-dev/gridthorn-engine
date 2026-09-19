@@ -3,7 +3,10 @@ pub use gridthorn_app::{
     GameStateId, GameStateStack, LifecycleError, SceneChange, SceneController, UiButton,
     UiButtonError, UiButtonInteraction, WindowConfig, WindowedApplication,
 };
-pub use gridthorn_assets::{AssetId, AssetStore, AssetStoreError, TextureAsset, TextureAssetError};
+pub use gridthorn_assets::{
+    AssetId, AssetReloadError, AssetReloader, AssetStore, AssetStoreError, TextureAsset,
+    TextureAssetError,
+};
 pub use gridthorn_audio::{
     AudioClip, AudioClipError, AudioCommand, AudioCommandQueue, AudioQueueError,
     AudioSettingsError, AudioVoiceId, PlaybackSettings, WavDecodeError,

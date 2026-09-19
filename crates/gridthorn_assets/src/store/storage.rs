@@ -5,7 +5,7 @@ use std::sync::Arc;
 use super::{AssetId, AssetStoreError};
 use crate::TextureAsset;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct Entry {
     bytes: Arc<[u8]>,
     texture: Option<TextureAsset>,
@@ -32,6 +32,13 @@ pub struct AssetStore {
 }
 
 impl AssetStore {
+    pub(crate) fn snapshot(&self) -> Self {
+        Self {
+            root: self.root.clone(),
+            entries: self.entries.clone(),
+        }
+    }
+
     /// Create an empty store rooted at the supplied asset directory.
     #[must_use]
     pub fn new(root: impl Into<PathBuf>) -> Self {
