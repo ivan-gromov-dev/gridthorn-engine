@@ -1,11 +1,15 @@
+mod fixture;
 mod lifecycle;
 mod publication;
 
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use super::{AssetReloadError, AssetReloader};
 use crate::{AssetId, AssetStore};
+
+static NEXT_FIXTURE: AtomicU64 = AtomicU64::new(0);
 
 struct Fixture(PathBuf);
 
@@ -15,12 +19,22 @@ impl Fixture {
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        let root = std::env::temp_dir().join(format!(
-            "gridthorn-background-{}-{unique}",
-            std::process::id()
-        ));
-        std::fs::create_dir(&root).unwrap();
-        let fixture = Self(root);
+        Self::at_timestamp(unique)
+    }
+
+    fn at_timestamp(timestamp: u128) -> Self {
+        let fixture = loop {
+            let sequence = NEXT_FIXTURE.fetch_add(1, Ordering::Relaxed);
+            let root = std::env::temp_dir().join(format!(
+                "gridthorn-background-{}-{timestamp}-{sequence}",
+                std::process::id()
+            ));
+            match std::fs::create_dir(&root) {
+                Ok(()) => break Self(root),
+                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
+                Err(error) => panic!("could not create fixture '{}': {error}", root.display()),
+            }
+        };
         fixture.write("sprite.ppm", b"P3\n1 1\n255\n255 0 0\n");
         fixture.write("scene.txt", b"sprite.ppm");
         fixture
