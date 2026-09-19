@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Provisional `AssetId` and `AssetStore` APIs for raw sources and textures,
+  validated dependency edges, deterministic invalidation, and atomic content
+  polling with last-good-data recovery. A sibling `asset-reload` example
+  demonstrates frame-boundary texture updates and a headless smoke workflow.
 - Provisional engine-owned circle and axis-aligned box colliders with overlap
   and minimum-translation contact queries through the public SDK facade.
 

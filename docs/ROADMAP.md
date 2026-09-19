@@ -97,6 +97,17 @@ narrow-phase query API rather than a rigid-body simulation; broad-phase spatial
 indexing, collision layers, continuous collision, and physics response remain
 planned for proven game requirements.
 
+The provisional asset store now uses stable relative-path identities for raw
+sources and decoded textures, validates explicit dependency edges, and reports
+transitive invalidation in deterministic dependency-first order. Synchronous
+content polling commits a complete reload batch only after all reads and texture
+decodes succeed; existing snapshots and last-good data survive failed edits.
+The sibling `asset-reload` example applies reloads at `PollEvents` and resolves
+fresh textures for rendering, with a headless file-edit and recovery smoke.
+Native file watching, asynchronous loading, custom derived-asset loaders,
+unloading, and large-project performance validation remain planned. This is a
+development presentation service, not authoritative game-data hot reload.
+
 - [ ] Scenes and game states.
 - [ ] Sprite batching and 2D animation.
 - [ ] Text and basic runtime UI.
@@ -190,19 +201,18 @@ A milestone result is complete only when:
 
 ## Immediate target
 
-The immediate target spans Milestones 0 and 1:
+The immediate target is the Milestone 2 general-purpose 2D SDK. Its next asset
+increment follows the implemented synchronous reload foundation:
 
 ```text
-Install gridthorn CLI
-→ create a Cargo project
-→ run Game::new().run()
-→ receive window and input events
-→ spawn a world entity
-→ render a camera and sprite
-→ execute Update and FixedUpdate
-→ inspect timing diagnostics
-→ run the documented example through the CLI
+Validate asset watching and loading costs with representative game content
+→ extend the asset development workflow as needed
+→ introduce component and resource reflection
+→ add versioned scene serialization
+→ add CLI development watching and release builds
+→ complete a small traditional 2D game
 ```
 
-Until this target is complete, a new major subsystem is added only when the
-vertical slice requires it.
+Complete the remaining scene, animation, UI, and audio work against that game.
+Keep each increment buildable and distinguish provisional foundations from
+completed milestone capabilities.
