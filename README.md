@@ -54,6 +54,7 @@ they are explicitly marked as implemented.
 | World and schedules                | ECS lifecycle schedule spike implemented                               |
 | Game commands and world control    | Ordered commands and controllable entity example implemented           |
 | Texture assets                     | PNG/PNM decoding and textured-sprite presentation implemented           |
+| Asset dependencies and hot reload  | Provisional path IDs, dependency graph, and atomic content-poll reloads |
 | Headless schedule execution        | Internal architecture spike implemented                                |
 | Cross-layer diagnostics            | CLI/app/renderer tracing spike implemented                             |
 | Runtime timing overlay             | Frame time, fixed work, lag, and overload bars implemented             |
@@ -132,6 +133,18 @@ fingerprint:
 ```console
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_deterministic_replay
 ```
+
+Run the texture hot-reload example, then edit its plain-text
+`asset-reload/assets/sprite.ppm` fixture while the window is open:
+
+```console
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_asset_reload
+```
+
+Add `-- --smoke` for a headless file-edit/recovery check. The provisional
+`AssetStore` service reloads at an explicit frame boundary, reports transitive
+dependents, and keeps the last good data on errors. See the
+[asset reload contract](docs/ASSETS.md) for polling costs and current limits.
 
 Run the headless basic collision query example:
 

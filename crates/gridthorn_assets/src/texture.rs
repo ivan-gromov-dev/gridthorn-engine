@@ -15,6 +15,19 @@ pub struct TextureAsset {
 }
 
 impl TextureAsset {
+    pub(crate) fn decode(bytes: &[u8], path: &Path) -> Result<Self, TextureAssetError> {
+        let rgba = image::load_from_memory(bytes)
+            .map_err(|source| TextureAssetError::Decode {
+                path: path.to_path_buf(),
+                source,
+            })?
+            .into_rgba8();
+        Ok(Self {
+            dimensions: [rgba.width(), rgba.height()],
+            pixels: Arc::from(rgba.into_raw()),
+        })
+    }
+
     /// Load and decode an image file as RGBA8 texture data.
     ///
     /// # Errors
