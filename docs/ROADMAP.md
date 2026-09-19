@@ -102,18 +102,25 @@ sources and decoded textures, validates explicit dependency edges, and reports
 transitive invalidation in deterministic dependency-first order. Synchronous
 content polling commits a complete reload batch only after all reads and texture
 decodes succeed; existing snapshots and last-good data survive failed edits.
-The sibling `asset-reload` example applies reloads at `PollEvents` and resolves
-fresh textures for rendering, with a headless file-edit and recovery smoke.
-Native file watching, asynchronous loading, custom derived-asset loaders,
-unloading, and large-project performance validation remain planned. This is a
-development presentation service, not authoritative game-data hot reload.
+The `AssetReloader` service now performs polling and decoding on one background
+worker, bounds outstanding work to one request/result, and publishes only when
+the caller polls at a frame boundary. Failed batches preserve last-good data;
+shutdown joins the worker and discards unapplied results. The sibling
+`asset-reload` example requests a scan every 250 ms, publishes at `PollEvents`,
+and resolves fresh textures for rendering. Its headless smoke covers file edits,
+dependency propagation, rollback, recovery, and shutdown. The asset dependency
+and hot-reload milestone item is complete for raw sources and PNG/PNM textures.
+Native file watching, custom derived-asset loaders, dynamic registration,
+unloading, and audio reload are deferred extensions. Large-project performance,
+memory, and cross-platform watcher measurements remain explicitly deferred.
+This is a development presentation service, not authoritative game-data reload.
 
 - [ ] Scenes and game states.
 - [ ] Sprite batching and 2D animation.
 - [ ] Text and basic runtime UI.
 - [ ] Audio.
 - [x] Basic 2D collision.
-- [ ] Asset dependencies and hot reload.
+- [x] Asset dependencies and hot reload.
 - [ ] Reflection for components and resources.
 - [ ] Versioned scene serialization.
 - [ ] Extend the CLI with development watching and release builds.
@@ -201,13 +208,12 @@ A milestone result is complete only when:
 
 ## Immediate target
 
-The immediate target is the Milestone 2 general-purpose 2D SDK. Its next asset
-increment follows the implemented synchronous reload foundation:
+The immediate target is the Milestone 2 general-purpose 2D SDK. Asset
+dependencies and background hot reload are implemented; the next roadmap item
+is component and resource reflection:
 
 ```text
-Validate asset watching and loading costs with representative game content
-→ extend the asset development workflow as needed
-→ introduce component and resource reflection
+Introduce component and resource reflection
 → add versioned scene serialization
 → add CLI development watching and release builds
 → complete a small traditional 2D game
