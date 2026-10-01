@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Provisional `gridthorn check --watch` with configurable content polling of
+  project-local compilation inputs, serialized Cargo checks, failure recovery,
+  and preserved snapshots after scan failures.
+- `gridthorn build` and `build --release` with compatibility validation and
+  Cargo debug/release profile delegation.
+
 - Provisional `gridthorn_scene` service with schema 1 TOML, explicit engine
   compatibility, registered scalar authoritative data, prepared transactional
   scene loading, migration hooks, and a headless public SDK usage example.

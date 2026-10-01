@@ -9,6 +9,15 @@ pub(crate) fn check(project_root: &Path) -> Result<()> {
     execute("check", project_root, &[])
 }
 
+pub(crate) fn build(project_root: &Path, release: bool) -> Result<()> {
+    let arguments = if release {
+        vec![OsString::from("--release")]
+    } else {
+        Vec::new()
+    };
+    execute("build", project_root, &arguments)
+}
+
 pub(crate) fn run(project_root: &Path, game_args: &[OsString]) -> Result<()> {
     let mut command = cargo_command("run", project_root);
     if !game_args.is_empty() {

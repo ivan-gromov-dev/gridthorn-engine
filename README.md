@@ -47,7 +47,7 @@ they are explicitly marked as implemented.
 | Product and architecture direction | Design baseline                                                        |
 | Milestone 0 foundation             | Complete; runtime deferrals recorded                                   |
 | Cargo workspace and CI             | Implemented foundation                                                 |
-| CLI                                | Commands plus cross-manifest engine compatibility checks implemented   |
+| CLI                                | Project commands, compatibility checks, source watch and release builds |
 | Public SDK facade                  | Version API plus provisional lifecycle and schedule APIs               |
 | App and renderer internals         | Window/surface lifecycle and basic colored-sprite pipeline implemented |
 | Keyboard and mouse input           | Provisional engine-owned frame state implemented                       |
@@ -87,6 +87,18 @@ cargo run -p gridthorn_cli -- new ../hello-gridthorn --engine-path ./crates/grid
 cargo run -p gridthorn_cli -- check ../hello-gridthorn
 cargo run -p gridthorn_cli -- run ../hello-gridthorn
 ```
+
+Watch compilation inputs or produce an optimized build:
+
+```console
+cargo run -p gridthorn_cli -- check ../hello-gridthorn --watch
+cargo run -p gridthorn_cli -- build ../hello-gridthorn --release
+```
+
+Watch retries after source/configuration edits and remains active after failed
+checks. It checks compilation inputs; game-process restart remains planned.
+See the [CLI workflow contract](docs/DEVELOPMENT_WORKFLOW.md) for polling scope,
+profile behavior, and deferred packaging.
 
 Use WASD or arrows to move, Space to reset, and Escape to exit. The generated
 project includes fixed updates and the three-bar timing overlay.

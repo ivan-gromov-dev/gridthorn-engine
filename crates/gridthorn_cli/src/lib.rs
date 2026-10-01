@@ -5,6 +5,7 @@ mod cli;
 mod commands;
 mod diagnostics;
 mod project;
+mod watching;
 
 pub use cli::Cli;
 pub use diagnostics::init_diagnostics;
