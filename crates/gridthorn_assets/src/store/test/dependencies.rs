@@ -29,7 +29,10 @@ fn propagates_transitive_diamond_dependencies_once_in_stable_order() {
         store.reload_changed().unwrap(),
         vec![id("z"), id("b"), id("c"), id("a")]
     );
-    assert!(store.reload_changed().unwrap().is_empty());
+    assert_eq!(
+        store.reload_changed().unwrap(),
+        Vec::<crate::AssetId>::new()
+    );
 }
 
 #[test]

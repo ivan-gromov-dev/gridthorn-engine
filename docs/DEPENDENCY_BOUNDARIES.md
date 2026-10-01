@@ -42,10 +42,10 @@ workspace's internal dependency allowlist.
 
 ## Rust versions
 
-The minimum supported Rust version is **1.97.1**. Packages declare this through
-the workspace `rust-version` field. Local development follows the latest stable
-toolchain, while CI separately checks the complete workspace with the exact
-MSRV.
+The minimum supported Rust version is **1.99.0**. Packages declare this through
+the workspace `rust-version` field. Local development is pinned to Rust 1.99.0
+in `rust-toolchain.toml`, including the sibling examples workspace. CI verifies
+the latest stable toolchain and separately checks all targets with the exact MSRV.
 
 Raising the MSRV requires a documented reason, a changelog entry, and a CI
 change in the same pull request.

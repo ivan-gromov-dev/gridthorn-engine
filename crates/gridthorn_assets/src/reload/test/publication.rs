@@ -102,7 +102,7 @@ fn completed_batches_are_invisible_until_polled_and_later_edits_need_new_request
         .unwrap()
         .clone();
     reloader.request_reload().unwrap();
-    assert!(finish(&mut reloader).unwrap().is_empty());
+    assert_eq!(finish(&mut reloader).unwrap(), Vec::<crate::AssetId>::new());
     assert!(unchanged.shares_data_with(reloader.assets().texture(&id("sprite.ppm")).unwrap()));
 }
 

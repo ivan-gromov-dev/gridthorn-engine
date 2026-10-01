@@ -73,6 +73,9 @@ The first implementation target is a foundation and runtime vertical slice with
 a usable CLI, window, game loop, world, sprite, input, fixed-step simulation,
 diagnostics, and a documented example.
 
+Local development and the MSRV use Rust 1.99.0; rustup selects the pinned
+toolchain from `rust-toolchain.toml`.
+
 ## Try the implemented foundation
 
 From this source checkout, generate a controllable sprite project against the
