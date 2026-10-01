@@ -115,13 +115,18 @@ unloading, and audio reload are deferred extensions. Large-project performance,
 memory, and cross-platform watcher measurements remain explicitly deferred.
 This is a development presentation service, not authoritative game-data reload.
 
+The provisional [reflection contract](REFLECTION.md) provides explicit type
+registration, deterministic scalar field metadata, and validated read-only
+component/resource snapshots. Nested data, editing, derive macros, and
+performance measurements remain deferred; serialization remains planned.
+
 - [ ] Scenes and game states.
 - [ ] Sprite batching and 2D animation.
 - [ ] Text and basic runtime UI.
 - [ ] Audio.
 - [x] Basic 2D collision.
 - [x] Asset dependencies and hot reload.
-- [ ] Reflection for components and resources.
+- [x] Reflection for components and resources.
 - [ ] Versioned scene serialization.
 - [ ] Extend the CLI with development watching and release builds.
 - [ ] Complete a small traditional 2D game.
@@ -209,12 +214,11 @@ A milestone result is complete only when:
 ## Immediate target
 
 The immediate target is the Milestone 2 general-purpose 2D SDK. Asset
-dependencies and background hot reload are implemented; the next roadmap item
-is component and resource reflection:
+dependencies, background hot reload, and provisional scalar component/resource
+reflection are implemented; the next roadmap item is versioned scene serialization:
 
 ```text
-Introduce component and resource reflection
-→ add versioned scene serialization
+Add versioned scene serialization
 → add CLI development watching and release builds
 → complete a small traditional 2D game
 ```

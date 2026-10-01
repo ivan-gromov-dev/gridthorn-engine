@@ -31,3 +31,7 @@ pub use gridthorn_world::{
 
 #[cfg(test)]
 mod test;
+pub use gridthorn_world::{
+    FieldMetadata, Reflect, ReflectValue, ReflectedType, ReflectionError, ReflectionRegistry,
+    ReflectionRole, ValueKind,
+};

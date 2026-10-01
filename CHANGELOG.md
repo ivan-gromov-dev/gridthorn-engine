@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Provisional component/resource reflection with explicit stable type registration,
+  scalar field metadata, validated read-only snapshots, and a headless SDK example.
+
 - Provisional `AssetReloader` for background file polling and texture decoding,
   one outstanding request, explicit atomic frame-boundary publication, typed
   worker failures, and joined shutdown. The asset example now polls every

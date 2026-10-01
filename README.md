@@ -64,6 +64,7 @@ they are explicitly marked as implemented.
 | Sprite batching and animation      | Provisional ordered texture batches and sprite-sheet playback            |
 | Text and runtime UI                | Provisional bitmap text, screen panels, and mouse buttons                |
 | Audio                              | Provisional PCM16 WAV assets, queue, and opt-in Kira output adapter      |
+| Component/resource reflection      | Provisional explicit registration, scalar metadata and read-only snapshots |
 | Basic 2D collision                 | Provisional circle/AABB overlap and minimum-translation queries          |
 | Current source release             | `0.2.0`                                                                |
 | Stable API                         | Not available; APIs remain pre-1.0 and provisional                     |
@@ -166,3 +167,7 @@ Codex discovers project workflows under `.agents/skills`:
 ## License
 
 See [LICENSE](LICENSE).
+
+Component/resource reflection is available through the public SDK; see the
+[provisional reflection contract](docs/REFLECTION.md) and the sibling
+reflection-basics example.
