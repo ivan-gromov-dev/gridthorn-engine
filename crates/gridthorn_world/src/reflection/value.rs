@@ -29,7 +29,9 @@ pub enum ReflectValue {
 }
 
 impl ReflectValue {
-    pub(crate) fn kind(&self) -> ValueKind {
+    /// Return the scalar kind represented by this value.
+    #[must_use]
+    pub fn kind(&self) -> ValueKind {
         match self {
             Self::Bool(_) => ValueKind::Bool,
             Self::Integer(_) => ValueKind::Integer,

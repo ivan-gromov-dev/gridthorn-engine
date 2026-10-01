@@ -7,6 +7,11 @@ mod runtime;
 mod version;
 
 pub use runtime::{
+    PreparedScene, SceneData, SceneDocument, SceneEntityData, SceneError, SceneLoad,
+    SceneMigrations, SceneRecord, SceneRegistry, SceneScalar, SceneValueError,
+};
+
+pub use runtime::{
     Aabb2d, AnimationClip, AnimationClipError, AnimationPlayback, AnimationPlayer,
     ApplicationError, ApplicationRuntime, AssetId, AssetReloadError, AssetReloader, AssetStore,
     AssetStoreError, AudioClip, AudioClipError, AudioCommand, AudioCommandQueue, AudioQueueError,

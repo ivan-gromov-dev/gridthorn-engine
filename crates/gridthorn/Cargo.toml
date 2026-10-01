@@ -15,6 +15,7 @@ gridthorn_audio = { path = "../gridthorn_audio" }
 gridthorn_collision = { path = "../gridthorn_collision" }
 gridthorn_input = { path = "../gridthorn_input" }
 gridthorn_render = { path = "../gridthorn_render" }
+gridthorn_scene = { path = "../gridthorn_scene" }
 gridthorn_simulation = { path = "../gridthorn_simulation" }
 gridthorn_world = { path = "../gridthorn_world" }
 

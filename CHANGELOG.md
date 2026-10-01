@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Provisional `gridthorn_scene` service with schema 1 TOML, explicit engine
+  compatibility, registered scalar authoritative data, prepared transactional
+  scene loading, migration hooks, and a headless public SDK usage example.
+- World APIs for ordered scene entity enumeration, empty scene-owned entities,
+  and inserting additional components without exposing ECS backend types.
+
 - Provisional component/resource reflection with explicit stable type registration,
   scalar field metadata, validated read-only snapshots, and a headless SDK example.
 

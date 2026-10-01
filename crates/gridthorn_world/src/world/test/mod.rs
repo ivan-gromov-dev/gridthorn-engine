@@ -2,6 +2,8 @@ use bevy_ecs::world::World;
 
 use super::WorldAccess;
 
+mod scene_storage;
+
 #[derive(Debug, Eq, PartialEq)]
 struct Position(i32);
 
