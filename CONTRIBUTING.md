@@ -1,7 +1,8 @@
 # Contributing to Gridthorn
 
-Gridthorn requires stable Rust for normal development and supports Rust 1.97.1
-as its MSRV.
+Gridthorn uses Rust 1.99.0 for local development and as its MSRV.
+`rust-toolchain.toml` selects that toolchain with Clippy and rustfmt; rustup
+installs it automatically. CI also verifies the latest stable toolchain.
 
 ## Common commands
 

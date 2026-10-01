@@ -7,7 +7,10 @@ fn same_length_edits_replace_current_texture_but_preserve_old_snapshots() {
     let mut store = AssetStore::new(&fixture.0);
     store.load_texture(id("sprite.ppm")).unwrap();
     let old = store.texture(&id("sprite.ppm")).unwrap().clone();
-    assert!(store.reload_changed().unwrap().is_empty());
+    assert_eq!(
+        store.reload_changed().unwrap(),
+        Vec::<crate::AssetId>::new()
+    );
     assert!(old.shares_data_with(store.texture(&id("sprite.ppm")).unwrap()));
     fixture.texture("sprite.ppm", [0, 255, 0]);
     assert_eq!(store.reload_changed().unwrap(), vec![id("sprite.ppm")]);

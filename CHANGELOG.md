@@ -7,7 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Raised the MSRV and pinned local engine/example toolchains to Rust 1.99.0
+  to align local Clippy diagnostics with current stable CI; updated the MSRV job
+  and generated project manifest.
+
 ### Added
+
+- Provisional component/resource reflection with explicit stable type registration,
+  scalar field metadata, validated read-only snapshots, and a headless SDK example.
 
 - Provisional `AssetReloader` for background file polling and texture decoding,
   one outstanding request, explicit atomic frame-boundary publication, typed
