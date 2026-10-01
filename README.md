@@ -65,6 +65,7 @@ they are explicitly marked as implemented.
 | Text and runtime UI                | Provisional bitmap text, screen panels, and mouse buttons                |
 | Audio                              | Provisional PCM16 WAV assets, queue, and opt-in Kira output adapter      |
 | Component/resource reflection      | Provisional explicit registration, scalar metadata and read-only snapshots |
+| Versioned scene serialization      | Provisional schema 1 TOML, validated prepared loading and migration hooks |
 | Basic 2D collision                 | Provisional circle/AABB overlap and minimum-translation queries          |
 | Current source release             | `0.2.0`                                                                |
 | Stable API                         | Not available; APIs remain pre-1.0 and provisional                     |
@@ -156,6 +157,15 @@ Run the headless basic collision query example:
 ```console
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_collision_basics
 ```
+
+Run the headless versioned scene round-trip, rollback, and migration example:
+
+```console
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_scene_serialization
+```
+
+The [provisional scene contract](docs/SCENES.md) covers registered scalar data,
+compatibility checks, and prepared loading at an explicit load/reset boundary.
 
 ## Repository workflows
 

@@ -45,5 +45,6 @@ preferred direction.
 
 ## Index
 
-No project decisions have been accepted yet. The current technology baseline is
-provisional design input for the Milestone 0 spikes.
+No project decisions have been accepted yet.
+
+- [0001: Explicit scalar scene persistence with prepared loading](0001-scene-persistence.md) — Proposed.

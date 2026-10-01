@@ -69,7 +69,8 @@ identifiers, and scene-owned entities. State changes requested by lifecycle
 systems are applied after `Input`, giving fixed updates and presentation a
 consistent active state for the entire host frame. Active-scene replacement
 removes the exited scene's entities and runs `SceneTransition` construction
-systems exactly once before fixed updates. Scene serialization remains planned.
+systems exactly once before fixed updates. The separate scalar scene persistence
+service now provides explicit versioned documents and prepared loading.
 The renderer now submits adjacent textured sprites sharing one cloned texture
 asset as a single ordered GPU batch. Normalized sprite-sheet regions feed that
 same batch path, while provisional uniform-frame animation clips support
@@ -118,7 +119,15 @@ This is a development presentation service, not authoritative game-data reload.
 The provisional [reflection contract](REFLECTION.md) provides explicit type
 registration, deterministic scalar field metadata, and validated read-only
 component/resource snapshots. Nested data, editing, derive macros, and
-performance measurements remain deferred; serialization remains planned.
+performance measurements remain deferred.
+
+The provisional [scene persistence contract](SCENES.md) now provides strict schema 1
+TOML documents, engine compatibility requirements, registered scalar components
+and resource overlays, explicit migrations, and off-world validation/construction
+before atomic load-boundary application. A public headless example covers
+round-trip, reconstruction of transient fields, rejected edits, and legacy field
+migration. Entity references, nested data, filesystem/user-save durability,
+automatic scene-loop integration, and large-scene measurements remain deferred.
 
 - [ ] Scenes and game states.
 - [ ] Sprite batching and 2D animation.
@@ -127,7 +136,7 @@ performance measurements remain deferred; serialization remains planned.
 - [x] Basic 2D collision.
 - [x] Asset dependencies and hot reload.
 - [x] Reflection for components and resources.
-- [ ] Versioned scene serialization.
+- [x] Versioned scene serialization.
 - [ ] Extend the CLI with development watching and release builds.
 - [ ] Complete a small traditional 2D game.
 
@@ -213,13 +222,13 @@ A milestone result is complete only when:
 
 ## Immediate target
 
-The immediate target is the Milestone 2 general-purpose 2D SDK. Asset
-dependencies, background hot reload, and provisional scalar component/resource
-reflection are implemented; the next roadmap item is versioned scene serialization:
+The immediate target is the Milestone 2 general-purpose 2D SDK. Asset dependencies
+and background hot reload, provisional component/resource reflection, and
+versioned scalar scene persistence are implemented. The next roadmap item is
+CLI development watching and release builds:
 
 ```text
-Add versioned scene serialization
-→ add CLI development watching and release builds
+Add CLI development watching and release builds
 → complete a small traditional 2D game
 ```
 

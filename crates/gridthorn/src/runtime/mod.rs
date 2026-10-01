@@ -22,6 +22,10 @@ pub use gridthorn_render::{
     RenderFrame, Sprite, SpriteRegion, SpriteRegionError, TextLabel, TexturedSprite, TimingOverlay,
     UiError, UiPrimitive, UiRect,
 };
+pub use gridthorn_scene::{
+    PreparedScene, SceneData, SceneDocument, SceneEntityData, SceneError, SceneLoad,
+    SceneMigrations, SceneRecord, SceneRegistry, SceneScalar, SceneValueError,
+};
 pub use gridthorn_simulation::{
     FixedStepConfig, FixedStepConfigError, FixedTime, FrameTiming, GameCommandQueue, TimeError,
 };

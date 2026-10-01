@@ -29,8 +29,10 @@ cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_
 
 This is a provisional scalar inspection foundation for future scene persistence.
 Derive macros, nested collections, enums, dynamic field editing, automatic type
-registration, scene serialization, and custom editor representations remain
-planned. No persistence wire format or migration contract is established here.
+registration and custom editor representations remain planned. The separate
+[provisional scene service](SCENES.md) now provides explicit authoritative opt-in,
+schema 1 scalar persistence, prepared loading, and migration hooks; read-only
+reflection registration by itself does not enable serialization.
 Large-world inspection latency, snapshot allocations, binary size, and platform
 measurements are explicitly deferred until a concrete inspector/scene workload.
 Registration scans registered types; inspection currently scans metadata for the

@@ -1,5 +1,6 @@
 mod access;
 mod entity;
+mod scene_storage;
 mod storage;
 
 pub use access::WorldAccess;

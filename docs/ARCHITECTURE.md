@@ -221,6 +221,10 @@ platform permits it. Snapshots and replays may have a narrower compatibility
 window than user saves, but that window must be stated in their metadata and
 public documentation.
 
+The provisional scalar implementation and its deferred user-save/identity work
+are described in [SCENES.md](SCENES.md). Its persistence boundary remains a
+[proposed decision](adr/0001-scene-persistence.md) pending game validation.
+
 ### Command API
 
 Tools modify a world through `WorldEditCommand` values. This is the basis for
