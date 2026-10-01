@@ -137,7 +137,7 @@ automatic scene-loop integration, and large-scene measurements remain deferred.
 - [x] Asset dependencies and hot reload.
 - [x] Reflection for components and resources.
 - [x] Versioned scene serialization.
-- [ ] Extend the CLI with development watching and release builds.
+- [x] Extend the CLI with development watching and release builds.
 - [ ] Complete a small traditional 2D game.
 
 **Result:** the SDK can build a small, complete traditional 2D game.
@@ -223,15 +223,26 @@ A milestone result is complete only when:
 ## Immediate target
 
 The immediate target is the Milestone 2 general-purpose 2D SDK. Asset dependencies
-and background hot reload, provisional component/resource reflection, and
-versioned scalar scene persistence are implemented. The next roadmap item is
-CLI development watching and release builds:
+and background hot reload, provisional component/resource reflection, versioned
+scalar scene persistence, and CLI compilation-input watching/release builds are
+implemented. The next increment is the small traditional 2D game, which must close
+the remaining scene, animation, UI, and audio capabilities:
 
 ```text
-Add CLI development watching and release builds
-→ complete a small traditional 2D game
+Build a small traditional 2D game
+→ close scenes/game states, batching/animation, runtime UI, and audio
+→ review Milestone 2 completion evidence
 ```
 
-Complete the remaining scene, animation, UI, and audio work against that game.
-Keep each increment buildable and distinguish provisional foundations from
-completed milestone capabilities.
+The provisional watch path detects project-local compilation/configuration edits
+through content polling, preserves its baseline after failed scans, and retries
+validation/compilation after invalid edits are corrected. Release builds validate
+compatibility before delegating to Cargo. Native watching, external dependency
+discovery, automatic restart, packaging, and large-project scan/memory measurements
+remain deferred; see [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md).
+
+The four earlier Milestone 2 items remain open. The game's completion evidence
+must demonstrate scene/state lifecycle integration, game-used sprite batching and
+animation, playable UI screens, and application-loop audio lifecycle. Define each
+supported subset against the game, keep each increment buildable, and distinguish
+provisional foundations from completed milestone capabilities.

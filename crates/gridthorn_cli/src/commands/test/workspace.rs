@@ -8,12 +8,12 @@ use anyhow::{Context, Result};
 
 static WORKSPACE_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
-pub(super) struct ProjectWorkspace {
-    pub(super) root: PathBuf,
+pub(crate) struct ProjectWorkspace {
+    pub(crate) root: PathBuf,
 }
 
 impl ProjectWorkspace {
-    pub(super) fn create() -> Result<Self> {
+    pub(crate) fn create() -> Result<Self> {
         let timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()

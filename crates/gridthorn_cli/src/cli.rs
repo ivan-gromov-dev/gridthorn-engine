@@ -47,6 +47,25 @@ enum CliCommand {
         /// Project directory.
         #[arg(default_value = ".")]
         path: PathBuf,
+
+        /// Recheck changed Rust sources and project/Cargo configuration until Ctrl+C.
+        #[arg(long)]
+        watch: bool,
+
+        /// Content polling interval in milliseconds (watch mode only).
+        #[arg(long, requires = "watch", default_value = "500", value_parser = clap::value_parser!(u64).range(1..))]
+        interval_ms: u64,
+    },
+
+    /// Compile a validated Gridthorn project through Cargo.
+    Build {
+        /// Project directory.
+        #[arg(default_value = ".")]
+        path: PathBuf,
+
+        /// Produce an optimized release build instead of the default debug build.
+        #[arg(long)]
+        release: bool,
     },
 }
 
@@ -65,7 +84,18 @@ impl Cli {
                 engine_path,
             } => commands::create::execute(&project, template, engine_path.as_deref()),
             CliCommand::Run { path, game_args } => commands::run::execute(&path, &game_args),
-            CliCommand::Check { path } => commands::check::execute(&path),
+            CliCommand::Check {
+                path,
+                watch,
+                interval_ms,
+            } => {
+                if watch {
+                    commands::watch::execute(&path, std::time::Duration::from_millis(interval_ms))
+                } else {
+                    commands::check::execute(&path)
+                }
+            }
+            CliCommand::Build { path, release } => commands::build::execute(&path, release),
         }
     }
 }
