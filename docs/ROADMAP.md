@@ -173,7 +173,7 @@ documented behavior, diagnostics, and tests.
 - [x] Square and isometric coordinate systems.
 - [x] Tilemaps, layers, chunks, and picking.
 - [x] Grid-based object placement.
-- [ ] Pathfinding and diagnostic visualization.
+- [x] Pathfinding and diagnostic visualization.
 - [ ] Simulation clock, pause, and speed control.
 - [ ] Headless simulation.
 - [ ] Scenarios, snapshots, and controlled random-number generation.
@@ -248,8 +248,10 @@ Grid-based object placement is complete on 2026-10-02 for the provisional
 integer-footprint and exclusive-occupancy subset documented in [GRIDS.md](GRIDS.md).
 The public `grid-placement` example and domain tests validate preview, picking,
 atomic placement/movement, removal, and rejected edits.
-The immediate target is Milestone 3: pathfinding and diagnostic visualization,
-building on the provisional coordinate, tilemap, picking, and placement contracts.
+Pathfinding and diagnostic visualization are complete on 2026-10-02 for the
+bounded four-neighbor weighted-search subset documented in [GRIDS.md](GRIDS.md).
+The public `pathfinding` example generates square/isometric SVG diagnostics.
+The immediate target is Milestone 3: simulation clock, pause, and speed control.
 Milestone 2 is complete for the supported subsets documented in the
 [completion review](milestone-2-review.md); its APIs remain provisional.
 

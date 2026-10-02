@@ -73,13 +73,15 @@ they are explicitly marked as implemented.
 | Grid coordinates | Provisional opt-in square/isometric projection and inverse conversion |
 | Tilemaps | Provisional sparse layers/chunks and camera-aware occupied-cell picking |
 | Grid-based object placement | Provisional integer footprints, exclusive occupancy, atomic moves and removal |
+| Pathfinding and diagnostics | Provisional deterministic four-neighbor weighted search, budgets, visited/frontier data and SVG example |
 | Current source release             | `0.2.0`                                                                                    |
 | Stable API                         | Not available; APIs remain pre-1.0 and provisional                                         |
 
 Milestone 3 is underway: provisional square and isometric coordinates are
 implemented behind the `grid` feature; see [the grid contract](docs/GRIDS.md).
 Sparse tilemaps, layers, chunks, picking, and grid-based object placement are
-also implemented; the next target is pathfinding and diagnostic visualization.
+also implemented, along with bounded weighted pathfinding and SVG diagnostics.
+The next target is simulation clock, pause, and speed control.
 
 Run the headless placement example through the public SDK:
 
