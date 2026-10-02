@@ -86,16 +86,20 @@ These choices are intentionally not Milestone 0 dependencies.
 | Area                   | Current direction                      | Status      | Decision point                                                                                             |
 | ---------------------- | -------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------- |
 | Debug/editor UI        | `egui`                                 | Provisional | Integrate the first runtime debug overlay without coupling game UI to it.                                  |
-| Text shaping/rendering | `glyphon` / `cosmic-text`              | Candidate   | Validate version alignment with `wgpu`, font fallback, and atlas behavior.                                 |
+| Text shaping/rendering | `glyphon` / `cosmic-text`              | Candidate   | Milestone 4: validate shaping, bidi, fallback, DPI, atlas behavior and `wgpu` compatibility.                                 |
 | Audio                  | `kira`                                 | Provisional | Opt-in native adapter implemented; validate streaming, latency, and cross-platform recovery.                |
 | File watching          | `notify`                               | Candidate   | Add with asset hot reload and CLI development mode.                                                        |
 | Cargo integration      | `cargo_metadata`                       | Candidate   | Add when CLI project discovery requires structured Cargo metadata.                                         |
 | Reflection             | `bevy_reflect` or a Gridthorn registry | Candidate   | Decide after the ECS spike and before scene/inspector work; keep reflection out of Milestone 0 public API. |
-| Gamepad input          | `gilrs`                                | Candidate   | Validate platform support when controller input enters the roadmap.                                        |
+| Gamepad input          | `gilrs`                                | Candidate   | Milestone 5: validate discovery, input, device loss and platform support.                                        |
 | Parallel jobs          | `rayon`                                | Candidate   | Add only for work not adequately scheduled through the ECS or renderer.                                    |
 | 2D physics             | `rapier2d` behind a plugin             | Candidate   | Evaluate against the collision needs of both showcase games.                                               |
 | Compression/archive    | Undecided                              | Candidate   | Choose when packaged asset bundles are designed.                                                           |
 | IPC/dev protocol       | Undecided                              | Candidate   | Design protocol and transport during the professional debugging milestone.                                 |
+
+Milestones 4 and 5 schedule these runtime APIs before debugging/editor work;
+see [RUNTIME_APIS.md](RUNTIME_APIS.md). Localization, layout and device backends
+remain undecided until focused validation. No dependency is added by this plan.
 
 ## Systems Gridthorn owns
 

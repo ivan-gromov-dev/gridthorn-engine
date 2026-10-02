@@ -1,4 +1,4 @@
-# Milestone 3 integrated showcase candidate
+# Milestone 3 completion review â€” Timber Harbor
 
 Implemented on 2026-10-02 in the sibling `tycoon_slice` example. Timber Harbor
 combines all implemented Milestone 3 areas with Milestone 2 rendering, input,
@@ -14,7 +14,7 @@ construction/hiring cost gold and warehouse dispatch rotates fairly among
 waiting porters. The starting state includes 120 gold and four housed workers.
 
 A generated textured UI provides resource/site/worker counts, a game timer,
-pause and 0.5×/1×/2×/4× speeds, selection/staff inspection and a menu toggled by
+pause and 0.5ï¿½/1ï¿½/2ï¿½/4ï¿½ speeds, selection/staff inspection and a menu toggled by
 button or Escape. Save/load, world/camera snapshots, restart, sandbox and quit
 are menu actions. Menu entry pauses simulation and resume preserves the player's
 previous speed/manual pause. Three RGBA atlases and original PCM16 music/effects
@@ -62,16 +62,17 @@ CLI project check, scenario listing and headless launch passed. At seed 42/tick
 `a06206981f3ebecd`. The expanded two-port test hires multiple plank porters while
 preserving the original raw-log port and sells both resource streams.
 
-Remote CI, clean-checkout verification, cross-platform native output and a full
-manual playthrough have not been independently observed in this session.
+The maintainer confirmed on 2026-10-02 that Timber Harbor is finished and working,
+accepting the playable showcase and closing Milestone 3. Remote CI, clean-checkout
+verification and cross-platform native output have not been independently
+observed in this session.
 
-## Remaining acceptance and deferrals
+## Completion and deferrals
 
-This is an implemented showcase candidate. Final Milestone 3 completion awaits
-the maintainer's playable review and milestone signoff; its roadmap checkbox
-remains open.
+Milestone 3 is complete for the documented supported scope following maintainer
+acceptance on 2026-10-02. Public APIs remain provisional.
 
-Scope is a finite 12×12 map, one-cell buildings, two tile layers, two economic
+Scope is a finite 12ï¿½12 map, one-cell buildings, two tile layers, two economic
 scenarios and up to 64 workers. Square projection is a diagnostic view using
 isometric building art. API stability, large-world frame/memory/compile-size
 benchmarks, cross-platform output, arbitrary ECS snapshots, replay files,
