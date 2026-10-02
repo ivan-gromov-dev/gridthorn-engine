@@ -6,12 +6,13 @@
 mod runtime;
 mod version;
 
-/// Provisional coordinates, tilemaps, and picking; enable the `grid` feature.
+/// Provisional coordinates, tilemaps, picking, and placement; enable the `grid` feature.
 #[cfg(feature = "grid")]
 pub mod grid {
     pub use gridthorn_grid::{
-        ChunkSize, GridCell, GridError, GridPoint, GridProjection, GridView, TileLayer,
-        TileLayerId, TileMap, TileMapError, TilePick,
+        ChunkSize, GridCell, GridError, GridFootprint, GridObjectId, GridPlacement, GridPoint,
+        GridProjection, GridView, PlacementError, PlacementMap, TileLayer, TileLayerId, TileMap,
+        TileMapError, TilePick,
     };
 }
 

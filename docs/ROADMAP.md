@@ -172,7 +172,7 @@ documented behavior, diagnostics, and tests.
 
 - [x] Square and isometric coordinate systems.
 - [x] Tilemaps, layers, chunks, and picking.
-- [ ] Grid-based object placement.
+- [x] Grid-based object placement.
 - [ ] Pathfinding and diagnostic visualization.
 - [ ] Simulation clock, pause, and speed control.
 - [ ] Headless simulation.
@@ -244,8 +244,12 @@ A milestone result is complete only when:
 
 ## Immediate target
 
-The immediate target is Milestone 3: grid-based object placement, building on
-the provisional coordinate, tilemap, layer, chunk, and picking contracts.
+Grid-based object placement is complete on 2026-10-02 for the provisional
+integer-footprint and exclusive-occupancy subset documented in [GRIDS.md](GRIDS.md).
+The public `grid-placement` example and domain tests validate preview, picking,
+atomic placement/movement, removal, and rejected edits.
+The immediate target is Milestone 3: pathfinding and diagnostic visualization,
+building on the provisional coordinate, tilemap, picking, and placement contracts.
 Milestone 2 is complete for the supported subsets documented in the
 [completion review](milestone-2-review.md); its APIs remain provisional.
 
@@ -253,6 +257,7 @@ Milestone 2 is complete for the supported subsets documented in the
 Square and isometric coordinate systems
 → tilemaps, layers, chunks, and picking
 → grid-based object placement
+→ pathfinding and diagnostic visualization
 ```
 
 Native development watching, external dependency discovery, automatic restart,
