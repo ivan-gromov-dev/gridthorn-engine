@@ -50,7 +50,7 @@ they are explicitly marked as implemented.
 | Product and architecture direction | Design baseline                                                                            |
 | Milestone 0 foundation             | Complete; runtime deferrals recorded                                                       |
 | Cargo workspace and CI             | Implemented foundation                                                                     |
-| CLI                                | Project commands, compatibility checks, source watch and release builds                    |
+| CLI                                | Project commands, compatibility checks, source watch, release builds, scenario listing and headless launch |
 | Public SDK facade                  | Version API plus provisional lifecycle and schedule APIs                                   |
 | App and renderer internals         | Window/surface lifecycle and basic colored-sprite pipeline implemented                     |
 | Keyboard and mouse input           | Provisional engine-owned frame state implemented                                           |
@@ -88,7 +88,14 @@ Simulation clock, pause, and speed control are implemented; see the
 [simulation contract](docs/SIMULATION.md). Headless simulation is implemented through `HeadlessSimulation`. Typed scenarios, in-memory snapshots, and named seeded RNG streams are implemented;
 see the [scenario contract](docs/SCENARIOS.md). World saving and loading are implemented
 for the typed authoritative-root subset; see [the save contract](docs/WORLD_SAVES.md).
-The next target is CLI scenario and headless simulation commands.
+CLI scenario listing and headless simulation launch are implemented through a
+dedicated game-owned binary; see [the CLI simulation contract](docs/CLI_SIMULATION.md).
+The next target is an isometric tycoon vertical slice.
+
+```console
+cargo run -p gridthorn_cli -- scenario list ../gridthorn-examples/scenarios-snapshots
+cargo run -p gridthorn_cli -- simulate ../gridthorn-examples/scenarios-snapshots --scenario economy --ticks 100 --seed 42
+```
 
 Run the public world save/load continuation and rollback example:
 

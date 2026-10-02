@@ -31,3 +31,41 @@ fn reports_cli_version() {
             .contains(concat!("gridthorn ", env!("CARGO_PKG_VERSION")))
     );
 }
+
+#[test]
+fn requires_explicit_simulation_inputs_and_rejects_invalid_counts() {
+    assert!(Cli::try_parse_from(["gridthorn", "scenario", "list"]).is_ok());
+    for args in [
+        vec!["gridthorn", "simulate"],
+        vec![
+            "gridthorn",
+            "simulate",
+            "--scenario",
+            "economy",
+            "--ticks",
+            "1",
+        ],
+        vec![
+            "gridthorn",
+            "simulate",
+            "--scenario",
+            "economy",
+            "--ticks",
+            "-1",
+            "--seed",
+            "42",
+        ],
+        vec![
+            "gridthorn",
+            "simulate",
+            "--scenario",
+            "economy",
+            "--ticks",
+            "18446744073709551616",
+            "--seed",
+            "42",
+        ],
+    ] {
+        assert!(Cli::try_parse_from(args).is_err());
+    }
+}

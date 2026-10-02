@@ -55,6 +55,7 @@ fn rejects_a_path_dependency_without_a_version_contract() {
 
 fn project(name: &str) -> ProjectManifest {
     ProjectManifest {
+        simulation: None,
         format_version: 1,
         project: ProjectSection {
             name: name.to_owned(),

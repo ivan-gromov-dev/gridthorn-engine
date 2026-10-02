@@ -32,6 +32,21 @@ fn execute(action: &str, project_root: &Path, arguments: &[OsString]) -> Result<
     execute_command(&format!("cargo {action}"), project_root, &mut command)
 }
 
+pub(crate) fn simulate(
+    project_root: &Path,
+    binary: &str,
+    release: bool,
+    arguments: &[OsString],
+) -> Result<()> {
+    let mut command = cargo_command("run", project_root);
+    command.current_dir(project_root).arg("--bin").arg(binary);
+    if release {
+        command.arg("--release");
+    }
+    command.arg("--").args(arguments);
+    execute_command("headless cargo run", project_root, &mut command)
+}
+
 fn cargo_command(action: &str, project_root: &Path) -> Command {
     let mut command = Command::new("cargo");
     command
