@@ -47,3 +47,16 @@ fn stores_typed_resources_behind_gridthorn_access() {
     assert!(world.update_resource(|value: &mut u32| *value += 2));
     assert_eq!(world.read_resource(|value: &u32| *value), Some(6));
 }
+
+#[test]
+fn removes_only_the_requested_resource_and_returns_ownership() {
+    let mut backend = World::new();
+    let mut world = WorldAccess {
+        backend: &mut backend,
+    };
+    world.insert_resource(Position(5));
+    world.insert_resource(7_u64);
+    assert_eq!(world.remove_resource::<Position>(), Some(Position(5)));
+    assert_eq!(world.remove_resource::<Position>(), None);
+    assert_eq!(world.read_resource(|number: &u64| *number), Some(7));
+}

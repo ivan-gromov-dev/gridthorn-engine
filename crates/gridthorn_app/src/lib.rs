@@ -1,6 +1,7 @@
 //! Provisional application lifecycle services for Gridthorn.
 
 mod runtime;
+mod scenario;
 mod scene;
 mod state;
 mod ui;
@@ -9,6 +10,7 @@ mod window;
 pub use runtime::{
     ApplicationRuntime, ExitRequest, HeadlessProgress, HeadlessSimulation, LifecycleError,
 };
+pub use scenario::{Scenario, ScenarioError, ScenarioRuntime, ScenarioState, SimulationSnapshot};
 pub use scene::{SceneChange, SceneController};
 pub use state::{GameStateChange, GameStateError, GameStateId, GameStateStack};
 pub use ui::{UiButton, UiButtonError, UiButtonInteraction};

@@ -24,6 +24,16 @@ impl FixedStepClock {
         }
     }
 
+    /// Reconstruct an explicit-tick clock at a snapshot boundary with no host-time backlog.
+    /// The next assigned tick has index `completed_ticks`; overflow remains a typed advancement error.
+    #[must_use]
+    pub fn at_tick(config: FixedStepConfig, completed_ticks: u64) -> Self {
+        Self {
+            completed_ticks,
+            ..Self::new(config)
+        }
+    }
+
     /// Fixed duration represented by every assigned tick.
     #[must_use]
     pub fn fixed_step(&self) -> Duration {

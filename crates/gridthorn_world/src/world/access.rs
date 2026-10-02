@@ -91,6 +91,16 @@ impl WorldAccess<'_> {
         self.backend.insert_resource(StoredResource(resource));
     }
 
+    /// Remove a typed resource and return its owned value when present.
+    pub fn remove_resource<T>(&mut self) -> Option<T>
+    where
+        T: Send + Sync + 'static,
+    {
+        self.backend
+            .remove_resource::<StoredResource<T>>()
+            .map(|resource| resource.0)
+    }
+
     /// Read a typed resource through a short-lived callback.
     pub fn read_resource<T, R>(&self, read: impl FnOnce(&T) -> R) -> Option<R>
     where
