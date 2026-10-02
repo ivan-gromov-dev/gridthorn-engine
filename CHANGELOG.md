@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Provisional versioned world saves over typed scenario roots, game-owned codecs,
+  exact tick/command/RNG continuation, validated loading, atomic file replacement,
+  typed diagnostics, and a public headless example.
+
 - Provisional bounded deterministic weighted grid pathfinding, typed errors,
   expansion budgets, visited/frontier diagnostics, and a public SVG example.
 

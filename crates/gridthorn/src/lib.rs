@@ -6,7 +6,7 @@
 mod runtime;
 pub use runtime::{
     DeterministicRng, RandomStreamError, RandomStreams, Scenario, ScenarioError, ScenarioRuntime,
-    ScenarioState, SimulationSnapshot, StateFingerprint,
+    ScenarioState, SimulationSnapshot, StateFingerprint, WorldSaveCodec, WorldSaveError,
 };
 mod version;
 

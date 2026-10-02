@@ -10,6 +10,21 @@ pub struct RandomStreams {
 }
 
 impl RandomStreams {
+    /// Reconstruct persisted stream positions without consuming random values.
+    ///
+    /// # Errors
+    /// Rejects invalid or duplicate stream names.
+    pub fn from_states(
+        seed: u64,
+        states: impl IntoIterator<Item = (String, u64)>,
+    ) -> Result<Self, RandomStreamError> {
+        let mut result = Self::new(seed);
+        for (name, state) in states {
+            result.register(&name)?;
+            result.streams.insert(name, DeterministicRng::new(state));
+        }
+        Ok(result)
+    }
     /// Create an empty registry with an explicit master seed.
     #[must_use]
     pub fn new(seed: u64) -> Self {

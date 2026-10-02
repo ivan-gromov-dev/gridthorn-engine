@@ -10,7 +10,10 @@ mod window;
 pub use runtime::{
     ApplicationRuntime, ExitRequest, HeadlessProgress, HeadlessSimulation, LifecycleError,
 };
-pub use scenario::{Scenario, ScenarioError, ScenarioRuntime, ScenarioState, SimulationSnapshot};
+pub use scenario::{
+    Scenario, ScenarioError, ScenarioRuntime, ScenarioState, SimulationSnapshot, WorldSaveCodec,
+    WorldSaveError,
+};
 pub use scene::{SceneChange, SceneController};
 pub use state::{GameStateChange, GameStateError, GameStateId, GameStateStack};
 pub use ui::{UiButton, UiButtonError, UiButtonInteraction};

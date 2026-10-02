@@ -75,6 +75,7 @@ they are explicitly marked as implemented.
 | Grid-based object placement | Provisional integer footprints, exclusive occupancy, atomic moves and removal |
 | Pathfinding and diagnostics | Provisional deterministic four-neighbor weighted search, budgets, visited/frontier data and SVG example |
 | Scenarios and snapshots | Provisional typed authoritative roots, exact-tick restoration and compatibility checks |
+| World saving and loading | Provisional versioned typed-root saves, game codecs, validated loading and atomic file replacement |
 | Simulation clock | Provisional rational speed, pause/resume, preserved backlog and explicit stepping |
 | Current source release             | `0.2.0`                                                                                    |
 | Stable API                         | Not available; APIs remain pre-1.0 and provisional                                         |
@@ -85,7 +86,15 @@ Sparse tilemaps, layers, chunks, picking, and grid-based object placement are
 also implemented, along with bounded weighted pathfinding and SVG diagnostics.
 Simulation clock, pause, and speed control are implemented; see the
 [simulation contract](docs/SIMULATION.md). Headless simulation is implemented through `HeadlessSimulation`. Typed scenarios, in-memory snapshots, and named seeded RNG streams are implemented;
-see the [scenario contract](docs/SCENARIOS.md). The next target is world saving and loading.
+see the [scenario contract](docs/SCENARIOS.md). World saving and loading are implemented
+for the typed authoritative-root subset; see [the save contract](docs/WORLD_SAVES.md).
+The next target is CLI scenario and headless simulation commands.
+
+Run the public world save/load continuation and rollback example:
+
+```console
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_world_saving
+```
 
 Run the public scenario and snapshot continuation example:
 

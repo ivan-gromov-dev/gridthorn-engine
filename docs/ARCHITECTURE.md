@@ -224,6 +224,8 @@ public documentation.
 The provisional scalar implementation and its deferred user-save/identity work
 are described in [SCENES.md](SCENES.md). Its persistence boundary remains a
 [proposed decision](adr/0001-scene-persistence.md) pending game validation.
+Typed-root world saves and their atomic filesystem/load boundary are described
+in [WORLD_SAVES.md](WORLD_SAVES.md) and [ADR 0003](adr/0003-world-save-envelope.md).
 
 ### Command API
 

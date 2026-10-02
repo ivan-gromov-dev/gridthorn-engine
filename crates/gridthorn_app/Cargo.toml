@@ -14,6 +14,8 @@ gridthorn_render = { path = "../gridthorn_render" }
 gridthorn_simulation = { path = "../gridthorn_simulation" }
 gridthorn_world = { path = "../gridthorn_world" }
 thiserror.workspace = true
+serde.workspace = true
+toml.workspace = true
 tracing.workspace = true
 winit.workspace = true
 

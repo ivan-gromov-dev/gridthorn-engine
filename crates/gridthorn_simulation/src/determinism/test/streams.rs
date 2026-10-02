@@ -69,3 +69,22 @@ fn named_seed_encoding_and_consumption_match_fixed_vectors() {
     assert_eq!(streams.next_u64("economy").unwrap(), 0x4747_29ad_eb10_0b19);
     assert_eq!(streams.next_u64("economy").unwrap(), 0xb776_a43f_6915_ee7e);
 }
+#[test]
+fn persisted_positions_preserve_future_values_and_reject_duplicate_names() {
+    let mut original = super::super::RandomStreams::new(u64::MAX);
+    original.register("economy").unwrap();
+    original.next_u64("economy").unwrap();
+    let states = original
+        .states()
+        .map(|(name, state)| (name.to_owned(), state))
+        .collect::<Vec<_>>();
+    let mut restored =
+        super::super::RandomStreams::from_states(original.seed(), states.clone()).unwrap();
+    assert_eq!(original, restored);
+    assert_eq!(original.next_u64("economy"), restored.next_u64("economy"));
+    assert!(
+        super::super::RandomStreams::from_states(0, states.clone().into_iter().chain(states))
+            .is_err()
+    );
+    assert!(super::super::RandomStreams::from_states(0, [(" padded".to_owned(), 0)]).is_err());
+}
