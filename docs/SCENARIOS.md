@@ -107,7 +107,10 @@ compiled S/C types and process/target; persisted envelopes use the separate save
 This completes the Milestone 3 item for the typed authoritative-root subset.
 Typed-root world saving/loading is now implemented through the separate
 [world save contract](WORLD_SAVES.md). Arbitrary ECS capture, engine migrations,
-interactive-clock snapshots, tooling restoration, CLI scenario commands,
+interactive-clock snapshots, tooling restoration,
 large-state clone costs/memory limits, binary size, and cross-platform/performance
 measurements are deferred. The rationale is recorded in the
 [proposed snapshot ADR](adr/0002-typed-simulation-snapshots.md).
+
+Project-declared scenario listing and headless game-process launch are now
+available through the [provisional CLI contract](CLI_SIMULATION.md).

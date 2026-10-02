@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Provisional CLI scenario listing and dedicated headless simulation launch with
+  explicit ticks/seeds, project configuration, release-profile selection,
+  contextual diagnostics, Cargo command tests, and a public SDK example.
+
 - Provisional versioned world saves over typed scenario roots, game-owned codecs,
   exact tick/command/RNG continuation, validated loading, atomic file replacement,
   typed diagnostics, and a public headless example.

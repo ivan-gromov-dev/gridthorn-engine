@@ -178,7 +178,7 @@ documented behavior, diagnostics, and tests.
 - [x] Headless simulation.
 - [x] Scenarios, snapshots, and controlled random-number generation.
 - [x] World saving and loading.
-- [ ] Extend the CLI with scenario and headless simulation commands.
+- [x] Extend the CLI with scenario and headless simulation commands.
 - [ ] Complete an isometric tycoon vertical slice.
 
 **Result:** a finished showcase validates Gridthorn's specialization.
@@ -271,7 +271,11 @@ game-owned nested-data codecs, exact continuation, validated atomic loading, and
 synced temporary-file replacement. The public world-saving example and domain
 tests validate fresh-runner continuation, queued commands/RNG, rejected edits,
 filesystem replacement, and rollback. Arbitrary ECS capture remains deferred.
-The immediate target is Milestone 3: CLI scenario and headless simulation commands.
+CLI scenario and headless simulation commands are complete on 2026-10-02 for the
+provisional game-process subset documented in [CLI_SIMULATION.md](CLI_SIMULATION.md).
+Project declarations, dedicated binary routing, explicit ticks/seeds, and failure
+diagnostics are covered by command tests and the public scenarios-snapshots example.
+The immediate target is Milestone 3: an isometric tycoon vertical slice.
 Milestone 2 is complete for the supported subsets documented in the
 [completion review](milestone-2-review.md); its APIs remain provisional.
 

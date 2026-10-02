@@ -16,6 +16,7 @@ struct ProjectManifest {
     format_version: u32,
     project: ProjectSection,
     engine: EngineSection,
+    simulation: Option<super::simulation::SimulationManifest>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -95,6 +96,9 @@ pub(crate) fn validate(project_path: &Path) -> Result<PathBuf> {
     name::validate(&manifest.project.name).context("invalid project name in gridthorn.toml")?;
     validate_engine_requirement(&manifest.engine.version)?;
     validate_cargo_compatibility(&manifest, &cargo_manifest)?;
+    if let Some(simulation) = manifest.simulation {
+        simulation.validate()?;
+    }
     Ok(root)
 }
 

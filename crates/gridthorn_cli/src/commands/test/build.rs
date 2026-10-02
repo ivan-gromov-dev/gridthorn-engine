@@ -10,7 +10,7 @@ use super::workspace::ProjectWorkspace;
 use crate::{Cli, SDK_VERSION};
 
 /// Minimal local SDK stand-in isolates Cargo profile routing from engine behavior.
-fn create_build_fixture(root: &Path) {
+pub(super) fn create_build_fixture(root: &Path) {
     fs::create_dir_all(root.join("src")).unwrap();
     fs::create_dir_all(root.join("sdk/src")).unwrap();
     fs::write(

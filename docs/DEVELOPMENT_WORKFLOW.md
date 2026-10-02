@@ -50,6 +50,9 @@ The first implemented CLI will intentionally be small but real:
 - `gridthorn build` compiles a validated project; `--release` selects Cargo's
   optimized release profile.
 - `gridthorn --version` reports SDK and CLI compatibility information.
+- `gridthorn scenario list` lists project-declared scenarios.
+- `gridthorn simulate --scenario NAME --ticks N --seed S` launches a dedicated
+  game-owned headless binary; see [the CLI simulation contract](CLI_SIMULATION.md).
 
 As engine capabilities become available, the CLI adds asset validation, file
 watching, scenarios, tests, builds, and packaging. Business logic belongs in
@@ -93,7 +96,7 @@ Build validates project/engine compatibility before starting Cargo, inherits
 Cargo's target-directory/profile configuration, and reports Cargo failures with
 their exit code. It produces normal Cargo artifacts and does not package assets,
 launch a game, or create an installer. The CLI adds no development runtime service
-to release games. Automatic restart, scenarios, and development-tool connections
+to release games. Automatic restart and development-tool connections
 remain later milestones.
 
 ## Development mode

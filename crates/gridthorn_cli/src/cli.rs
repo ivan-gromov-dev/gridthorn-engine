@@ -17,6 +17,30 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum CliCommand {
+    /// Inspect the scenarios declared by a project.
+    Scenario {
+        #[command(subcommand)]
+        command: ScenarioCommand,
+    },
+
+    /// Run exact ticks in the project's dedicated headless binary.
+    Simulate {
+        /// Project directory.
+        #[arg(default_value = ".")]
+        path: PathBuf,
+        /// Declared scenario name.
+        #[arg(long)]
+        scenario: String,
+        /// Exact requested tick count, including zero for initialization only.
+        #[arg(long)]
+        ticks: u64,
+        /// Explicit master random seed.
+        #[arg(long)]
+        seed: u64,
+        /// Compile the headless binary with the release profile.
+        #[arg(long)]
+        release: bool,
+    },
     /// Create a Gridthorn project from an embedded template.
     New {
         /// Project directory and Cargo package name.
@@ -69,6 +93,16 @@ enum CliCommand {
     },
 }
 
+#[derive(Debug, Subcommand)]
+enum ScenarioCommand {
+    /// List declared scenario names in deterministic order without running game code.
+    List {
+        /// Project directory.
+        #[arg(default_value = ".")]
+        path: PathBuf,
+    },
+}
+
 impl Cli {
     /// Execute the selected command.
     ///
@@ -78,6 +112,16 @@ impl Cli {
     /// Cargo command fails.
     pub fn execute(self) -> Result<()> {
         match self.command {
+            CliCommand::Scenario {
+                command: ScenarioCommand::List { path },
+            } => commands::scenario::execute(&path),
+            CliCommand::Simulate {
+                path,
+                scenario,
+                ticks,
+                seed,
+                release,
+            } => commands::simulate::execute(&path, &scenario, ticks, seed, release),
             CliCommand::New {
                 project,
                 template,
