@@ -24,3 +24,24 @@ fn prelude_builds_a_windowed_timed_runtime() {
 
     let _application = WindowedApplication::new(WindowConfig::default(), runtime);
 }
+
+#[test]
+fn facade_preserves_preconfigured_pause_and_reports_speed_errors() {
+    use crate::{SimulationControl, SimulationSpeed, SimulationSpeedError};
+    let mut control = SimulationControl::default();
+    control.pause();
+    control.set_speed(SimulationSpeed::new(4, 1).unwrap());
+    let mut schedules = ScheduleBuilder::new().build();
+    schedules.world().insert_resource(control);
+    let mut app = ApplicationRuntime::new(schedules);
+    assert_eq!(
+        app.world().read_resource(|c: &SimulationControl| *c),
+        Some(control)
+    );
+    let paused = app.run_timed_frame(Duration::from_secs(1)).unwrap();
+    assert_eq!(paused.fixed_steps(), 0);
+    assert_eq!(
+        SimulationSpeed::new(0, 1),
+        Err(SimulationSpeedError::ZeroRatioTerm)
+    );
+}

@@ -74,6 +74,7 @@ they are explicitly marked as implemented.
 | Tilemaps | Provisional sparse layers/chunks and camera-aware occupied-cell picking |
 | Grid-based object placement | Provisional integer footprints, exclusive occupancy, atomic moves and removal |
 | Pathfinding and diagnostics | Provisional deterministic four-neighbor weighted search, budgets, visited/frontier data and SVG example |
+| Simulation clock | Provisional rational speed, pause/resume, preserved backlog and explicit stepping |
 | Current source release             | `0.2.0`                                                                                    |
 | Stable API                         | Not available; APIs remain pre-1.0 and provisional                                         |
 
@@ -81,7 +82,14 @@ Milestone 3 is underway: provisional square and isometric coordinates are
 implemented behind the `grid` feature; see [the grid contract](docs/GRIDS.md).
 Sparse tilemaps, layers, chunks, picking, and grid-based object placement are
 also implemented, along with bounded weighted pathfinding and SVG diagnostics.
-The next target is simulation clock, pause, and speed control.
+Simulation clock, pause, and speed control are implemented; see the
+[simulation contract](docs/SIMULATION.md). The next target is headless simulation.
+
+Run the public SDK clock example:
+
+```console
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_simulation_clock
+```
 
 Run the headless placement example through the public SDK:
 

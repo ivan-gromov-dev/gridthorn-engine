@@ -60,3 +60,5 @@ fn reports_overload_and_preserves_backlog_for_later_frames() {
     assert_eq!(catch_up.first_tick_index(), 2);
     assert_eq!(catch_up.accumulated_lag(), Duration::from_millis(15));
 }
+
+mod control;

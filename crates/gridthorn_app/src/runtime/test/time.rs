@@ -49,3 +49,71 @@ fn timed_frames_expose_integer_tick_time_to_fixed_updates() {
         ])
     );
 }
+
+#[test]
+fn input_controls_affect_current_frame_and_presentation_keeps_running() {
+    use gridthorn_simulation::{SimulationControl, SimulationSpeed};
+    #[derive(Default)]
+    struct Counts {
+        input: u32,
+        fixed: u32,
+        presentation: u32,
+    }
+    let mut schedules = ScheduleBuilder::new();
+    schedules.add_system(ScheduleStage::Startup, |world| {
+        world.insert_resource(Counts::default());
+    });
+    schedules.add_system(ScheduleStage::Input, |world| {
+        let frame = world
+            .update_resource_with(|counts: &mut Counts| {
+                counts.input += 1;
+                counts.input
+            })
+            .unwrap();
+        world.update_resource(|control: &mut SimulationControl| {
+            if frame == 1 {
+                control.pause();
+            }
+            if frame == 2 {
+                control.resume();
+                control.set_speed(SimulationSpeed::new(2, 1).unwrap());
+            }
+        });
+    });
+    schedules.add_system(ScheduleStage::FixedUpdate, |world| {
+        world.update_resource(|counts: &mut Counts| counts.fixed += 1);
+    });
+    for stage in [
+        ScheduleStage::Update,
+        ScheduleStage::PostUpdate,
+        ScheduleStage::Render,
+    ] {
+        schedules.add_system(stage, |world| {
+            world.update_resource(|counts: &mut Counts| counts.presentation += 1);
+        });
+    }
+    let config = FixedStepConfig::new(Duration::from_millis(10), 4).unwrap();
+    let mut runtime = ApplicationRuntime::with_fixed_step(schedules.build(), config);
+    assert_eq!(
+        runtime
+            .run_timed_frame(Duration::from_secs(1))
+            .unwrap()
+            .fixed_steps(),
+        0
+    );
+    assert_eq!(
+        runtime
+            .run_timed_frame(Duration::from_millis(10))
+            .unwrap()
+            .fixed_steps(),
+        2
+    );
+    runtime.world().update_resource(SimulationControl::pause);
+    runtime.run_frame(3).unwrap();
+    assert_eq!(
+        runtime
+            .world()
+            .read_resource(|c: &Counts| (c.fixed, c.presentation)),
+        Some((5, 9))
+    );
+}

@@ -1,12 +1,14 @@
 use std::time::Duration;
 
-use super::{FixedStepConfig, FrameTiming, TimeError};
+use super::{FixedStepConfig, FrameTiming, SimulationControl, SimulationSpeed, TimeError};
 
 /// Accumulates host-frame time into deterministic fixed-step assignments.
 pub struct FixedStepClock {
     config: FixedStepConfig,
     accumulated: Duration,
     completed_ticks: u64,
+    speed: SimulationSpeed,
+    fractional_nanos: u128,
 }
 
 impl FixedStepClock {
@@ -17,6 +19,8 @@ impl FixedStepClock {
             config,
             accumulated: Duration::ZERO,
             completed_ticks: 0,
+            speed: SimulationSpeed::NORMAL,
+            fractional_nanos: 0,
         }
     }
 
@@ -35,9 +39,46 @@ impl FixedStepClock {
     /// Returns an error without changing the clock if elapsed time or the tick
     /// index exceeds its supported range.
     pub fn advance(&mut self, elapsed: Duration) -> Result<FrameTiming, TimeError> {
+        self.advance_controlled(elapsed, SimulationControl::default())
+    }
+
+    /// Scale host time with integer arithmetic and retain fractional nanoseconds.
+    /// A speed change discards only the old sub-nanosecond remainder.
+    /// Pause freezes backlog and ignores elapsed host time.
+    ///
+    /// # Errors
+    /// Arithmetic failures leave the clock unchanged.
+    pub fn advance_controlled(
+        &mut self,
+        elapsed: Duration,
+        control: SimulationControl,
+    ) -> Result<FrameTiming, TimeError> {
+        if control.is_paused() {
+            return Ok(FrameTiming::new(
+                elapsed,
+                0,
+                self.completed_ticks,
+                self.completed_ticks,
+                false,
+                self.accumulated,
+            ));
+        }
+        let speed = control.speed();
+        let remainder = if speed == self.speed {
+            self.fractional_nanos
+        } else {
+            0
+        };
+        let scaled = elapsed.as_nanos() * u128::from(speed.numerator()) + remainder;
+        let nanos = scaled / u128::from(speed.denominator());
+        let seconds = u64::try_from(nanos / 1_000_000_000)
+            .map_err(|_| TimeError::ElapsedArithmeticOverflow)?;
+        let subsec = u32::try_from(nanos % 1_000_000_000)
+            .map_err(|_| TimeError::ElapsedArithmeticOverflow)?;
+        let simulation_elapsed = Duration::new(seconds, subsec);
         let accumulated = self
             .accumulated
-            .checked_add(elapsed)
+            .checked_add(simulation_elapsed)
             .ok_or(TimeError::ElapsedArithmeticOverflow)?;
         let available_steps_wide = accumulated.as_nanos() / self.config.fixed_step().as_nanos();
         let available_steps = u32::try_from(available_steps_wide).unwrap_or(u32::MAX);
@@ -58,6 +99,8 @@ impl FixedStepClock {
             available_steps_wide > u128::from(self.config.max_catch_up_steps()),
             accumulated_lag,
         );
+        self.speed = speed;
+        self.fractional_nanos = scaled % u128::from(speed.denominator());
         self.accumulated = accumulated_lag;
         self.completed_ticks = completed_ticks;
         Ok(timing)
