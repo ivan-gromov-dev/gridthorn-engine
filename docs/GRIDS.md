@@ -38,7 +38,7 @@ The sibling `grid-coordinates` example compiles and runs through the facade.
 Tests cover signed center round trips, extreme cell identities at ordinary
 dimensions, axis orientation, exact edges, invalid inputs, and overflow.
 Performance, presentation precision at large world scales, and cross-platform
-measurements are explicitly deferred. Placement, navigation, elevation, and
+measurements are explicitly deferred. Navigation, elevation, and
 plugin registration remain planned.
 
 ## Sparse tilemaps, layers, and chunks
@@ -112,3 +112,60 @@ Large-map memory/performance, binary-size, and cross-platform/precision
 measurements are explicitly deferred; no scalability or stronger cross-platform
 determinism guarantee is claimed. The APIs remain provisional and introduce no
 irreversible format or stable plugin decision.
+
+## Grid-based object placement
+
+The same opt-in `grid` feature now exposes provisional `GridFootprint`,
+`GridObjectId`, `GridPlacement`, `PlacementMap`, and `PlacementError`. These are
+platform-independent integer data/query services, with no new dependencies or
+implicit systems. All placement values are `Send + Sync`.
+
+`GridFootprint::new` validates a nonempty set of unique signed offsets relative
+to an anchor. Shapes may have holes and negative offsets, and need not contain
+the anchor. `single_cell` occupies only the anchor. `offsets` sorts by
+`(column, row)` regardless of construction order. `cells_at` translates the whole
+shape using checked integer addition and returns ordered cells or a contextual
+overflow error. Games can construct rectangles or rotated shapes as offsets;
+there is no projection-specific authoritative geometry.
+
+`PlacementMap` stores exclusive sparse occupancy in ordered trees. Each instance
+is an independent occupancy space, unrelated to tilemap layer IDs. Caller-owned
+`GridObjectId(u64)` values identify objects without binding them to ECS entity
+lifetimes. Games own identity allocation, associated entity data, and cleanup.
+`objects` iterates by identity; `placement` reads an immutable anchor/footprint;
+`object_at` selects through any occupied footprint cell, including non-anchor
+cells. Holes are free for other objects.
+
+`validate(id, anchor, footprint)` returns candidate cells without reserving them
+and ignores cells owned by that identity, enabling self-overlapping moves.
+It validates all coordinate additions before testing occupancy and reports the
+first occupied cell in offset order. It does not require an existing identity.
+`place` first rejects duplicate identities; `relocate` first rejects missing
+identities. Both then validate the complete candidate before committing. Failed
+operations preserve all old object and occupancy data. `relocate` can change both
+anchor and footprint. `remove` releases every occupied cell and returns the old
+placement, or `None` for a missing identity. Removed identities may be reused.
+
+Terrain eligibility, bounded maps, costs, and game-specific adjacency rules are
+caller policy: inspect `cells_at`/`validate` results against tile data before
+committing. Preview results are not reservations; revalidate game rules at the
+fixed tick and let `place`/`relocate` recheck occupancy at commit. Integrate input
+with `GridView::screen_to_world` and `GridProjection::cell_at`, then enqueue the
+integer anchor as a game command. Picking an empty cell for construction does
+not require a tile hit. Square and isometric projections share identical
+authoritative placement semantics. Presentation queries do not mutate storage;
+edits belong at fixed-tick or explicit load/reset boundaries.
+
+The sibling `grid-placement` public SDK example runs without a GPU and covers
+terrain policy, negative anchors, both projections, preview, selection,
+conflicting-move rollback, self-overlapping movement, and removal. Focused tests
+also cover invalid footprints, both-axis integer limits, duplicate/missing IDs,
+shape replacement, holes, identity reuse, independent spaces, deterministic
+iteration/conflicts, and unchanged occupancy after rejected edits.
+
+Automatic ECS/scene synchronization, rotation convenience APIs, placement UI,
+reservations, multi-object transactions, occupancy masks/elevation, and placement
+persistence remain deferred. Memory, large-footprint/map performance, binary-size,
+and cross-platform measurements are explicitly deferred. No scalability or
+stronger determinism guarantee is claimed; this increment introduces no stable
+format or irreversible architecture decision.

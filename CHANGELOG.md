@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Provisional integer object footprints, deterministic exclusive grid occupancy,
+  read-only placement preview, atomic placement/relocation, removal, typed
+  diagnostics, and a headless public SDK example behind `grid`.
+
 - Provisional sparse `TileMap<T>` with ordered layers, signed chunks, empty-chunk
   reclamation, square/isometric occupied-cell picking, validated orthographic
   cursor conversion, and a headless public SDK example behind `grid`.
