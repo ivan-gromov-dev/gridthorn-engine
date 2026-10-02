@@ -2,7 +2,7 @@ pub use gridthorn_app::{
     ApplicationError, ApplicationRuntime, ExitRequest, GameStateChange, GameStateError,
     GameStateId, GameStateStack, HeadlessProgress, HeadlessSimulation, LifecycleError, Scenario,
     ScenarioError, ScenarioRuntime, ScenarioState, SceneChange, SceneController,
-    SimulationSnapshot, UiButton, UiButtonError, UiButtonInteraction, WindowConfig,
+    SimulationSnapshot, UiButton, UiButtonError, UiButtonInteraction, WindowConfig, WindowViewport,
     WindowedApplication, WorldSaveCodec, WorldSaveError,
 };
 pub use gridthorn_assets::{

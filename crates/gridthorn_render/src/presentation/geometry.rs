@@ -14,6 +14,7 @@ pub(crate) struct SpriteVertex {
 
 pub(crate) struct FrameGeometry {
     pub(crate) vertices: Vec<SpriteVertex>,
+    pub(crate) world_vertex_count: u32,
 }
 
 pub(crate) struct TexturedSpriteBatch<'texture> {
@@ -64,6 +65,7 @@ impl FrameGeometry {
         if width == 0 || height == 0 {
             return Self {
                 vertices: Vec::new(),
+                world_vertex_count: 0,
             };
         }
         let camera = frame.camera();
@@ -99,11 +101,15 @@ impl FrameGeometry {
                 ]);
             }
         }
+        let world_vertex_count = u32::try_from(vertices.len()).unwrap_or(u32::MAX);
+        vertices.extend(ui_vertices(frame.ui(), width, height));
         if let Some(overlay) = frame.timing_overlay() {
             vertices.extend(timing_overlay_vertices(overlay));
         }
-        vertices.extend(ui_vertices(frame.ui(), width, height));
-        Self { vertices }
+        Self {
+            vertices,
+            world_vertex_count,
+        }
     }
 }
 

@@ -92,6 +92,7 @@ where
         let renderer = SurfaceRenderer::new(target, size.width, size.height)?;
         self.window = Some(window);
         self.renderer = Some(renderer);
+        self.lifecycle.resized(size.width, size.height);
 
         let mut control = WindowControl::default();
         self.lifecycle.started(&mut control)?;
@@ -183,6 +184,7 @@ where
         match event {
             WindowEvent::CloseRequested => event_loop.exit(),
             WindowEvent::Resized(size) => {
+                self.lifecycle.resized(size.width, size.height);
                 if let Some(renderer) = self.renderer.as_mut()
                     && let Err(error) = renderer.resize(size.width, size.height)
                 {

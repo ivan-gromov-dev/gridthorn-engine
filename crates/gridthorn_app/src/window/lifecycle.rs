@@ -5,6 +5,9 @@ use super::{ApplicationError, WindowControl};
 
 /// Provisional hooks for exercising application lifecycle behavior.
 pub trait WindowLifecycle {
+    /// Publish the actual physical size after creation and every resize, including zero.
+    fn resized(&mut self, _width: u32, _height: u32) {}
+
     /// Run once after the window and renderer have initialized.
     ///
     /// # Errors

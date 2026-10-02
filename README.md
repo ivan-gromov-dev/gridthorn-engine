@@ -45,40 +45,40 @@ The Milestone 2 general-purpose 2D SDK is complete for its documented subsets. C
 outside the section below still describe target developer experience unless
 they are explicitly marked as implemented.
 
-| Area                               | Status                                                                                     |
-| ---------------------------------- | ------------------------------------------------------------------------------------------ |
-| Product and architecture direction | Design baseline                                                                            |
-| Milestone 0 foundation             | Complete; runtime deferrals recorded                                                       |
-| Cargo workspace and CI             | Implemented foundation                                                                     |
+| Area                               | Status                                                                                                     |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Product and architecture direction | Design baseline                                                                                            |
+| Milestone 0 foundation             | Complete; runtime deferrals recorded                                                                       |
+| Cargo workspace and CI             | Implemented foundation                                                                                     |
 | CLI                                | Project commands, compatibility checks, source watch, release builds, scenario listing and headless launch |
-| Public SDK facade                  | Version API plus provisional lifecycle and schedule APIs                                   |
-| App and renderer internals         | Window/surface lifecycle and basic colored-sprite pipeline implemented                     |
-| Keyboard and mouse input           | Provisional engine-owned frame state implemented                                           |
-| World and schedules                | ECS lifecycle schedule spike implemented                                                   |
-| Game commands and world control    | Ordered commands and controllable entity example implemented                               |
-| Texture assets                     | PNG/PNM decoding and textured-sprite presentation implemented                              |
-| Asset dependencies and hot reload  | Implemented provisional path IDs, dependencies, background reload and atomic frame commits |
-| Headless simulation                | Provisional exact-tick SDK runner, lifecycle, exit and repeatability implemented                                                    |
-| Cross-layer diagnostics            | CLI/app/renderer tracing spike implemented                                                 |
-| Runtime timing overlay             | Frame time, fixed work, lag, and overload bars implemented                                 |
-| Deterministic fixed-step replay    | Named seeded RNG and explicit state fingerprint API; replay files planned                                         |
-| Runtime and public SDK             | Milestone 2 complete; APIs remain provisional                                              |
-| Scenes and game states             | Provisional state stack and atomic scene-owned entity switching                            |
-| Sprite batching and animation      | Provisional ordered texture batches and sprite-sheet playback                              |
-| Text and runtime UI                | Provisional bitmap text, screen panels, and mouse buttons                                  |
-| Audio                              | Provisional PCM16 WAV assets, queue, and opt-in Kira output adapter                        |
-| Component/resource reflection      | Provisional explicit registration, scalar metadata and read-only snapshots                 |
-| Versioned scene serialization      | Provisional schema 1 TOML, validated prepared loading and migration hooks                  |
-| Basic 2D collision                 | Provisional circle/AABB overlap and minimum-translation queries                            |
-| Grid coordinates | Provisional opt-in square/isometric projection and inverse conversion |
-| Tilemaps | Provisional sparse layers/chunks and camera-aware occupied-cell picking |
-| Grid-based object placement | Provisional integer footprints, exclusive occupancy, atomic moves and removal |
-| Pathfinding and diagnostics | Provisional deterministic four-neighbor weighted search, budgets, visited/frontier data and SVG example |
-| Scenarios and snapshots | Provisional typed authoritative roots, exact-tick restoration and compatibility checks |
-| World saving and loading | Provisional versioned typed-root saves, game codecs, validated loading and atomic file replacement |
-| Simulation clock | Provisional rational speed, pause/resume, preserved backlog and explicit stepping |
-| Current source release             | `0.2.0`                                                                                    |
-| Stable API                         | Not available; APIs remain pre-1.0 and provisional                                         |
+| Public SDK facade                  | Version API plus provisional lifecycle and schedule APIs                                                   |
+| App and renderer internals         | Window/surface lifecycle and basic colored-sprite pipeline implemented                                     |
+| Keyboard and mouse input           | Provisional engine-owned frame state implemented                                                           |
+| World and schedules                | ECS lifecycle schedule spike implemented                                                                   |
+| Game commands and world control    | Ordered commands and controllable entity example implemented                                               |
+| Texture assets                     | PNG/PNM decoding and textured-sprite presentation implemented                                              |
+| Asset dependencies and hot reload  | Implemented provisional path IDs, dependencies, background reload and atomic frame commits                 |
+| Headless simulation                | Provisional exact-tick SDK runner, lifecycle, exit and repeatability implemented                           |
+| Cross-layer diagnostics            | CLI/app/renderer tracing spike implemented                                                                 |
+| Runtime timing overlay             | Frame time, fixed work, lag, and overload bars implemented                                                 |
+| Deterministic fixed-step replay    | Named seeded RNG and explicit state fingerprint API; replay files planned                                  |
+| Runtime and public SDK             | Milestone 2 complete; APIs remain provisional                                                              |
+| Scenes and game states             | Provisional state stack and atomic scene-owned entity switching                                            |
+| Sprite batching and animation      | Provisional ordered texture batches and sprite-sheet playback                                              |
+| Text and runtime UI                | Provisional bitmap text, screen panels, and mouse buttons                                                  |
+| Audio                              | Provisional PCM16 WAV assets, queue, and opt-in Kira output adapter                                        |
+| Component/resource reflection      | Provisional explicit registration, scalar metadata and read-only snapshots                                 |
+| Versioned scene serialization      | Provisional schema 1 TOML, validated prepared loading and migration hooks                                  |
+| Basic 2D collision                 | Provisional circle/AABB overlap and minimum-translation queries                                            |
+| Grid coordinates                   | Provisional opt-in square/isometric projection and inverse conversion                                      |
+| Tilemaps                           | Provisional sparse layers/chunks and camera-aware occupied-cell picking                                    |
+| Grid-based object placement        | Provisional integer footprints, exclusive occupancy, atomic moves and removal                              |
+| Pathfinding and diagnostics        | Provisional deterministic four-neighbor weighted search, budgets, visited/frontier data and SVG example    |
+| Scenarios and snapshots            | Provisional typed authoritative roots, exact-tick restoration and compatibility checks                     |
+| World saving and loading           | Provisional versioned typed-root saves, game codecs, validated loading and atomic file replacement         |
+| Simulation clock                   | Provisional rational speed, pause/resume, preserved backlog and explicit stepping                          |
+| Current source release             | `0.2.0`                                                                                                    |
+| Stable API                         | Not available; APIs remain pre-1.0 and provisional                                                         |
 
 Milestone 3 is underway: provisional square and isometric coordinates are
 implemented behind the `grid` feature; see [the grid contract](docs/GRIDS.md).
@@ -90,7 +90,12 @@ see the [scenario contract](docs/SCENARIOS.md). World saving and loading are imp
 for the typed authoritative-root subset; see [the save contract](docs/WORLD_SAVES.md).
 CLI scenario listing and headless simulation launch are implemented through a
 dedicated game-owned binary; see [the CLI simulation contract](docs/CLI_SIMULATION.md).
-The next target is an isometric tycoon vertical slice.
+The playable Timber Harbor `tycoon_slice` now integrates these features with
+Milestone 2 presentation, UI, audio, reflection, scene persistence and asset reload.
+Its workforce economy includes housing, multi-tick production, resource-specific
+ports and a pause/save/load menu with generated UI artwork.
+The [showcase candidate review](docs/milestone-3-showcase.md) records scope and
+remaining playable acceptance before Milestone 3 signoff.
 
 ```console
 cargo run -p gridthorn_cli -- scenario list ../gridthorn-examples/scenarios-snapshots
