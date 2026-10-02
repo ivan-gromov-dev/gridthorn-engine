@@ -103,9 +103,10 @@ controls, exit, zero ticks, missing roots, Shutdown, and tick overflow.
 Reproducibility requires the same engine, target, features, game rules,
 configuration, initial state, command sequence, and seeds. No stronger
 cross-target bit-identical guarantee is made. In-memory snapshots have the same
-compiled S/C types and process/target; portable serialized metadata is deferred.
+compiled S/C types and process/target; persisted envelopes use the separate save API.
 This completes the Milestone 3 item for the typed authoritative-root subset.
-Arbitrary ECS/world saving/loading, scenario/snapshot files, migrations,
+Typed-root world saving/loading is now implemented through the separate
+[world save contract](WORLD_SAVES.md). Arbitrary ECS capture, engine migrations,
 interactive-clock snapshots, tooling restoration, CLI scenario commands,
 large-state clone costs/memory limits, binary size, and cross-platform/performance
 measurements are deferred. The rationale is recorded in the

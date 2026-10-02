@@ -177,7 +177,7 @@ documented behavior, diagnostics, and tests.
 - [x] Simulation clock, pause, and speed control.
 - [x] Headless simulation.
 - [x] Scenarios, snapshots, and controlled random-number generation.
-- [ ] World saving and loading.
+- [x] World saving and loading.
 - [ ] Extend the CLI with scenario and headless simulation commands.
 - [ ] Complete an isometric tycoon vertical slice.
 
@@ -265,8 +265,13 @@ Scenarios, snapshots, and controlled random-number generation are complete on
 subset documented in [SCENARIOS.md](SCENARIOS.md). The public scenarios-snapshots
 example and domain tests validate named stream independence, fixed RNG vectors,
 queued command capture, exact tick continuation, and compatibility rollback.
-Arbitrary ECS capture and persistence remain deferred to world saving/loading.
-The immediate target is Milestone 3: world saving and loading.
+World saving and loading are complete on 2026-10-02 for the provisional typed-root
+subset documented in [WORLD_SAVES.md](WORLD_SAVES.md): strict versioned documents,
+game-owned nested-data codecs, exact continuation, validated atomic loading, and
+synced temporary-file replacement. The public world-saving example and domain
+tests validate fresh-runner continuation, queued commands/RNG, rejected edits,
+filesystem replacement, and rollback. Arbitrary ECS capture remains deferred.
+The immediate target is Milestone 3: CLI scenario and headless simulation commands.
 Milestone 2 is complete for the supported subsets documented in the
 [completion review](milestone-2-review.md); its APIs remain provisional.
 
@@ -278,6 +283,7 @@ Square and isometric coordinate systems
 → simulation clock, pause, and speed control
 → headless simulation
 → scenarios, snapshots, and controlled random-number generation
+→ world saving and loading
 ```
 
 Native development watching, external dependency discovery, automatic restart,
