@@ -8,7 +8,7 @@ pub(super) struct SurfaceExtent {
 /// Work required after a window size transition.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(super) enum SurfaceChange {
-    Configure(SurfaceExtent),
+    QueueConfiguration(SurfaceExtent),
     Suspend,
     Unchanged,
 }
@@ -18,6 +18,7 @@ pub(super) enum SurfaceChange {
 pub(super) struct SurfaceLifecycle {
     extent: Option<SurfaceExtent>,
     occluded: bool,
+    configuration_pending: bool,
 }
 
 impl SurfaceLifecycle {
@@ -29,7 +30,28 @@ impl SurfaceLifecycle {
         }
 
         self.extent = next_extent;
-        next_extent.map_or(SurfaceChange::Suspend, SurfaceChange::Configure)
+        self.configuration_pending = next_extent.is_some();
+        next_extent.map_or(SurfaceChange::Suspend, SurfaceChange::QueueConfiguration)
+    }
+
+    /// Return the latest extent requiring configuration immediately before acquisition.
+    /// Deferral avoids creating unpresented swapchains during startup or resize-only shutdown.
+    pub(super) fn configuration_required(&self) -> Option<SurfaceExtent> {
+        if self.configuration_pending && self.can_render() {
+            self.extent
+        } else {
+            None
+        }
+    }
+
+    /// Record a successful native configuration.
+    pub(super) fn mark_configured(&mut self) {
+        self.configuration_pending = false;
+    }
+
+    /// Queue recovery without creating an unpresented replacement swapchain.
+    pub(super) fn invalidate_configuration(&mut self) {
+        self.configuration_pending = self.extent.is_some();
     }
 
     /// Record whether the platform currently occludes the window.

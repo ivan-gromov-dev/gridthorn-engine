@@ -43,3 +43,9 @@ pub use gridthorn_world::{
     FieldMetadata, Reflect, ReflectValue, ReflectedType, ReflectionError, ReflectionRegistry,
     ReflectionRole, ValueKind,
 };
+
+pub use gridthorn_input::{
+    KeyLocation, KeyboardEvent, LogicalKey, Modifiers, NamedKey, NativeKey, PhysicalKey,
+    PointerCapture, PointerCaptureError, PointerCaptureMode, PointerCaptureStatus, ScrollPhase,
+    WheelDelta,
+};

@@ -192,12 +192,14 @@ supported scope, verification, maintainer acceptance and explicit deferrals.
 
 ## Milestone 4 — Complete input, multilingual text and runtime UI APIs
 
-Planned on 2026-10-02. This milestone extends the narrow Milestone 1/2 subsets;
+Started on 2026-10-02. The first desktop input increment is implemented with
+engine-owned keyboard/wheel events and native capture feedback; see [INPUT.md](INPUT.md).
+This milestone extends the narrow Milestone 1/2 subsets;
 it does not change their completion status. Implement in the order below, with
 each increment independently buildable, tested and documented. Detailed engine
 and game ownership is defined in [RUNTIME_APIS.md](RUNTIME_APIS.md).
 
-- [ ] Complete desktop keyboard coverage: physical keys, logical keys, modifiers,
+- [x] Complete desktop keyboard coverage: physical keys, logical keys, modifiers,
       repeat and ordered events; mouse wheel and pointer capture semantics.
 - [ ] Unicode text input, IME composition/commit/cancellation, clipboard access
       and focus-loss handling, separate from physical gameplay shortcuts.
@@ -349,7 +351,7 @@ Project declarations, dedicated binary routing, explicit ticks/seeds, and failur
 diagnostics are covered by command tests and the public scenarios-snapshots example.
 Milestone 3 is complete following maintainer acceptance on 2026-10-02; see
 [the completion review](milestone-3-showcase.md). The next target is Milestone 4:
-complete keyboard/pointer input first, then multilingual text and runtime UI.
+desktop keyboard/pointer input is implemented; Unicode/IME text input is next.
 Milestone 5 adds desktop platform/device controls. Professional debugging and
 the editor are deferred to Milestones 6 and 7 respectively.
 Milestone 2 is complete for the supported subsets documented in the

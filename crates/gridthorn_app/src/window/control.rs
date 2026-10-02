@@ -3,6 +3,7 @@ use std::time::Instant;
 /// Window operations available to lifecycle hooks.
 #[derive(Debug, Default)]
 pub struct WindowControl {
+    pub(super) capture: Option<gridthorn_input::PointerCaptureMode>,
     pub(super) exit_requested: bool,
     pub(super) minimized: Option<bool>,
     pub(super) requested_size: Option<(u32, u32)>,
@@ -10,6 +11,11 @@ pub struct WindowControl {
 }
 
 impl WindowControl {
+    /// Request native pointer capture; feedback arrives through input events.
+    pub fn set_pointer_capture(&mut self, mode: gridthorn_input::PointerCaptureMode) {
+        self.capture = Some(mode);
+    }
+
     /// Request application shutdown after the current hook returns.
     pub fn exit(&mut self) {
         self.exit_requested = true;

@@ -61,3 +61,9 @@ pub use runtime::{
     FieldMetadata, Reflect, ReflectValue, ReflectedType, ReflectionError, ReflectionRegistry,
     ReflectionRole, ValueKind,
 };
+
+pub use runtime::{
+    KeyLocation, KeyboardEvent, LogicalKey, Modifiers, NamedKey, NativeKey, PhysicalKey,
+    PointerCapture, PointerCaptureError, PointerCaptureMode, PointerCaptureStatus, ScrollPhase,
+    WheelDelta,
+};

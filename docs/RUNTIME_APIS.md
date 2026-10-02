@@ -68,8 +68,10 @@ retains the repository verification, documentation and boundary-check requiremen
 
 ## Existing scope retained
 
-Current input supports a small physical-key set and pointer buttons/position;
-current UI provides bitmap text, panels and buttons. Rich text, complete input,
+Desktop keyboard/pointer input is now implemented provisionally; [INPUT.md](INPUT.md)
+documents physical/logical keys, repeat, modifiers, ordered events, wheel and capture.
+
+Current UI provides bitmap text, panels and buttons. Rich text, text/IME input,
 modal UI and device selection remain planned. Existing sprite animation supports
 uniform-duration atlas frames, looping, one-shot playback and pause/restart.
 

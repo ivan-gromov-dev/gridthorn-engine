@@ -1,30 +1,4 @@
-/// Supported physical keyboard keys.
-#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub enum KeyCode {
-    /// Physical W key.
-    KeyW,
-    /// Physical A key.
-    KeyA,
-    /// Physical S key.
-    KeyS,
-    /// Physical D key.
-    KeyD,
-    /// Up arrow key.
-    ArrowUp,
-    /// Down arrow key.
-    ArrowDown,
-    /// Left arrow key.
-    ArrowLeft,
-    /// Right arrow key.
-    ArrowRight,
-    /// Space key.
-    Space,
-    /// Enter key.
-    Enter,
-    /// Escape key.
-    Escape,
-}
-
+use crate::KeyCode;
 /// Mouse button independent from a platform backend.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub enum MouseButton {
@@ -61,8 +35,30 @@ pub struct CursorPosition {
 }
 
 /// Engine-owned input event produced by a platform adapter.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum InputEvent {
+    /// Relative physical pointer motion while captured; never a window position.
+    PointerMotion {
+        /// Horizontal displacement.
+        x: f64,
+        /// Vertical displacement.
+        y: f64,
+    },
+    /// Full desktop keyboard event; logical keys are not committed text.
+    Key(crate::KeyboardEvent),
+    /// Effective modifier state changed.
+    ModifiersChanged(crate::Modifiers),
+    /// Wheel motion with explicit units and gesture phase.
+    MouseWheel {
+        /// Scroll delta.
+        delta: crate::WheelDelta,
+        /// Gesture phase.
+        phase: crate::ScrollPhase,
+    },
+    /// Result of a native pointer capture request or cancellation.
+    PointerCaptureChanged(crate::PointerCaptureStatus),
+    /// Window regained focus.
+    FocusGained,
     /// Physical keyboard state changed.
     Keyboard {
         /// Engine-owned physical key.

@@ -14,3 +14,5 @@ pub use errors::ApplicationError;
 pub use lifecycle::WindowLifecycle;
 pub use runtime::WindowedApplication;
 pub use viewport::WindowViewport;
+mod capture;
+mod key_mapping;

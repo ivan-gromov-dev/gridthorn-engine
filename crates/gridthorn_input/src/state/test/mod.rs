@@ -53,3 +53,4 @@ fn focus_loss_releases_every_held_button() {
     assert!(!released.mouse_button_down(MouseButton::Right));
     assert!(released.mouse_button_just_released(MouseButton::Right));
 }
+mod desktop;

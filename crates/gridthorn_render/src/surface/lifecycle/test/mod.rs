@@ -6,7 +6,7 @@ fn configures_for_a_non_zero_extent() {
 
     assert_eq!(
         lifecycle.resize(1280, 720),
-        SurfaceChange::Configure(SurfaceExtent {
+        SurfaceChange::QueueConfiguration(SurfaceExtent {
             width: 1280,
             height: 720
         })
@@ -50,3 +50,4 @@ fn occlusion_pauses_rendering_without_discarding_extent() {
     lifecycle.set_occluded(false);
     assert!(lifecycle.can_render());
 }
+mod configuration;

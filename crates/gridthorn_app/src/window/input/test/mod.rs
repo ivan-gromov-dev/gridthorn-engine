@@ -6,12 +6,9 @@ use super::{map_button_state, map_key_code, map_mouse_button};
 
 #[test]
 fn maps_supported_physical_keys_without_exposing_winit_types() {
-    assert_eq!(map_key_code(KeyCode::KeyW), Some(EngineKeyCode::KeyW));
-    assert_eq!(
-        map_key_code(KeyCode::ArrowRight),
-        Some(EngineKeyCode::ArrowRight)
-    );
-    assert_eq!(map_key_code(KeyCode::F12), None);
+    assert_eq!(map_key_code(KeyCode::KeyW), EngineKeyCode::KeyW);
+    assert_eq!(map_key_code(KeyCode::ArrowRight), EngineKeyCode::ArrowRight);
+    assert_eq!(map_key_code(KeyCode::F12), EngineKeyCode::F12);
 }
 
 #[test]
@@ -29,3 +26,6 @@ fn maps_mouse_buttons_and_digital_state() {
         ButtonState::Released
     );
 }
+mod coverage;
+mod logical;
+mod pointer;

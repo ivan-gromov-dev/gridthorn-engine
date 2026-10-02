@@ -54,7 +54,7 @@ they are explicitly marked as implemented.
 | CLI                                | Project commands, compatibility checks, source watch, release builds, scenario listing and headless launch |
 | Public SDK facade                  | Version API plus provisional lifecycle and schedule APIs                                                   |
 | App and renderer internals         | Window/surface lifecycle and basic colored-sprite pipeline implemented                                     |
-| Keyboard and mouse input           | Provisional engine-owned frame state implemented                                                           |
+| Keyboard and mouse input           | Provisional [desktop input](docs/INPUT.md): physical/logical keys, modifiers, repeat, ordered events, wheel and capture                                                           |
 | World and schedules                | ECS lifecycle schedule spike implemented                                                                   |
 | Game commands and world control    | Ordered commands and controllable entity example implemented                                               |
 | Texture assets                     | PNG/PNM decoding and textured-sprite presentation implemented                                              |
@@ -176,7 +176,9 @@ The `--engine-path` option selects this source checkout. Without it, the CLI
 generates a registry dependency; publishing the crates is separate from this
 source release.
 
-Run the provisional window and GPU surface lifecycle example:
+Run the provisional window and GPU surface lifecycle example. Surface configuration
+is deferred until rendering, coalescing startup/resize events and supporting
+shutdown before the first presented frame:
 
 ```console
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_window_surface
