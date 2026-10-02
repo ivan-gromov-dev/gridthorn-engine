@@ -175,7 +175,7 @@ documented behavior, diagnostics, and tests.
 - [x] Grid-based object placement.
 - [x] Pathfinding and diagnostic visualization.
 - [x] Simulation clock, pause, and speed control.
-- [ ] Headless simulation.
+- [x] Headless simulation.
 - [ ] Scenarios, snapshots, and controlled random-number generation.
 - [ ] World saving and loading.
 - [ ] Extend the CLI with scenario and headless simulation commands.
@@ -255,7 +255,12 @@ Simulation clock, pause, and speed control are complete on 2026-10-02 for the
 provisional rational-speed and frame-boundary control subset documented in
 [SIMULATION.md](SIMULATION.md). The public simulation-clock example and domain
 tests validate pause, resume, backlog, speed scaling, explicit stepping, and
-continued presentation. The immediate target is Milestone 3: headless simulation.
+continued presentation.
+Headless simulation is complete on 2026-10-02 for the provisional exact-tick
+runner documented in [SIMULATION.md](SIMULATION.md). The public headless-simulation
+example validates ordered command consumption and repeatable state across request
+partitions without presentation. The immediate target is Milestone 3: scenarios,
+snapshots, and controlled random-number generation.
 Milestone 2 is complete for the supported subsets documented in the
 [completion review](milestone-2-review.md); its APIs remain provisional.
 

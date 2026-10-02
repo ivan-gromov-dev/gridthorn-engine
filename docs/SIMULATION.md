@@ -57,5 +57,53 @@ user pause.
 Determinism remains scoped to the same engine version, target, configuration,
 and command/control sequence. Performance, large-backlog workloads, native UI
 integration, and cross-platform measurements are deferred. Control persistence,
-replay recording, remote tooling, a dedicated headless runner, scenarios,
+replay recording, remote tooling, scenarios,
 snapshots, and world persistence belong to later increments.
+
+## Provisional headless simulation
+
+Implemented on 2026-10-02. `HeadlessSimulation` and `HeadlessProgress` are
+available through the SDK facade. The runner owns the existing application
+orchestration and fixed clock; it introduces no dependencies. It never creates
+a window, renderer, GPU, input device, or audio device. The current facade and
+application manifests still compile platform/presentation dependencies; a lean
+feature-gated binary/dependency graph and binary-size measurements are deferred.
+Game callbacks are responsible for avoiding platform services themselves.
+
+`HeadlessSimulation::new(schedules, config)` takes a completed schedule set and
+validated fixed configuration. `run_ticks(u64)` runs Startup once, then Input,
+state/scene transitions, and FixedUpdate for each requested tick. PollEvents,
+Update, PostUpdate, Render, Suspend, and Resume are excluded. Tick indices are
+contiguous and zero-based, with the configured duration exposed through
+`FixedTime`. `FrameTiming` represents one explicit tick with zero host elapsed
+time, no overload, and no lag. Catch-up limits, pause, and speed are ignored:
+requests specify authoritative work directly and never silently drop ticks.
+Zero ticks runs Startup only, without Input or pending transitions.
+
+ExitRequest is checked after Startup, after Input/transitions, and after each
+complete fixed tick. An exit returns partial progress without running further
+ticks. Reports contain request-local executed ticks, total completed ticks,
+and exit status. Requests after exit return zero work until game code explicitly
+replaces the exit resource. Shutdown is explicit and idempotent, runs the
+Shutdown schedule once, and rejects subsequent requests with LifecycleError.
+Dropping the runner does not execute callbacks. All callbacks run synchronously
+on the caller thread, with the same affinity requirements as ScheduleRuntime.
+
+Between requests, `world()` supports initial configuration, explicit load/reset
+operations, inspection, and command injection. Games drain GameCommandQueue at
+a fixed boundary, exactly as in interactive execution. Requests split into
+multiple batches produce the same tick/Input sequence for the same initial
+state and commands. Wall-clock timing, cross-target bit identity, generic state
+hashing, seeded named RNG streams, snapshots, persistence, CLI simulation
+commands, and performance/large-world measurements are deferred.
+
+```console
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_headless_simulation
+```
+
+The facade example executes 100 ticks twice with differently partitioned
+requests and compares integer authoritative state, including one-shot commands.
+Domain tests verify contiguous ticks, catch-up bypass, pause bypass, excluded
+presentation, zero work, Startup/Input exits, partial progress, and idempotent
+shutdown. Existing scene/state tests continue to verify the shared transition
+boundary used by both drivers.
