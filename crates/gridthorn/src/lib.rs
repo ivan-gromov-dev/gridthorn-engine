@@ -6,10 +6,13 @@
 mod runtime;
 mod version;
 
-/// Provisional square and isometric coordinate APIs; enable the `grid` feature.
+/// Provisional coordinates, tilemaps, and picking; enable the `grid` feature.
 #[cfg(feature = "grid")]
 pub mod grid {
-    pub use gridthorn_grid::{GridCell, GridError, GridPoint, GridProjection};
+    pub use gridthorn_grid::{
+        ChunkSize, GridCell, GridError, GridPoint, GridProjection, GridView, TileLayer,
+        TileLayerId, TileMap, TileMapError, TilePick,
+    };
 }
 
 pub use runtime::{

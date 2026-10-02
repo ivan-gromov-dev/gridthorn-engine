@@ -157,14 +157,21 @@ automatic scene-loop integration, and large-scene measurements remain deferred.
 Started on 2026-10-02 with the provisional opt-in square and isometric
 [coordinate contract](GRIDS.md), signed cell identities, validated presentation
 projection/inverse conversion, focused tests, and the sibling `grid-coordinates`
-public SDK example. Tilemap picking remains a separate subsequent increment.
+public SDK example. The subsequent provisional tilemap increment now provides
+sparse generic tile data, deterministic ordered layers/chunks, signed chunk
+boundaries, empty-chunk reclamation, and square/isometric occupied-cell picking
+through validated orthographic cursor conversion. The sibling `tilemap-basics`
+example exercises the public facade without a GPU; focused tests cover storage,
+layer pass-through, camera pan/zoom, viewport edges, and invalid queries.
+The supported subset and explicit performance/presentation deferrals are
+recorded in [GRIDS.md](GRIDS.md).
 
 The earlier Milestone 0 headless spike only validates the dependency boundary.
 This milestone turns that prototype into a supported public simulation API with
 documented behavior, diagnostics, and tests.
 
 - [x] Square and isometric coordinate systems.
-- [ ] Tilemaps, layers, chunks, and picking.
+- [x] Tilemaps, layers, chunks, and picking.
 - [ ] Grid-based object placement.
 - [ ] Pathfinding and diagnostic visualization.
 - [ ] Simulation clock, pause, and speed control.
@@ -237,8 +244,8 @@ A milestone result is complete only when:
 
 ## Immediate target
 
-The immediate target is Milestone 3: tilemaps, layers, chunks, and picking,
-building on the provisional square and isometric coordinate systems.
+The immediate target is Milestone 3: grid-based object placement, building on
+the provisional coordinate, tilemap, layer, chunk, and picking contracts.
 Milestone 2 is complete for the supported subsets documented in the
 [completion review](milestone-2-review.md); its APIs remain provisional.
 
