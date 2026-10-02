@@ -5,8 +5,9 @@ games. It is suitable for traditional 2D genres while providing a particularly
 strong foundation for tile-based, isometric, management, tycoon, and
 simulation-heavy games.
 
-The project has completed Milestone 2, the general-purpose 2D SDK, with
-provisional APIs validated by a small playable game. It has a
+The project has completed Milestones 1–3: the runtime vertical slice,
+general-purpose 2D SDK and Gridthorn specialization, with provisional APIs
+validated by Crystal Trail and Timber Harbor. It has a
 reproducible Cargo workspace, a working CLI, native window and input handling,
 fixed-step world updates, sprite presentation, texture loading, and runtime
 timing diagnostics. A visual editor will later be built on the same public APIs
@@ -41,7 +42,7 @@ deferred platform and performance validation.
 
 ## Status
 
-The Milestone 2 general-purpose 2D SDK is complete for its documented subsets. Commands and Rust snippets
+Milestones 1–3 are complete for their documented supported subsets. Commands and Rust snippets
 outside the section below still describe target developer experience unless
 they are explicitly marked as implemented.
 
@@ -62,7 +63,7 @@ they are explicitly marked as implemented.
 | Cross-layer diagnostics            | CLI/app/renderer tracing spike implemented                                                                 |
 | Runtime timing overlay             | Frame time, fixed work, lag, and overload bars implemented                                                 |
 | Deterministic fixed-step replay    | Named seeded RNG and explicit state fingerprint API; replay files planned                                  |
-| Runtime and public SDK             | Milestone 2 complete; APIs remain provisional                                                              |
+| Runtime and public SDK             | Milestones 1–3 complete; APIs remain provisional                                                              |
 | Scenes and game states             | Provisional state stack and atomic scene-owned entity switching                                            |
 | Sprite batching and animation      | Provisional ordered texture batches and sprite-sheet playback                                              |
 | Text and runtime UI                | Provisional bitmap text, screen panels, and mouse buttons                                                  |
@@ -80,7 +81,7 @@ they are explicitly marked as implemented.
 | Current source release             | `0.2.0`                                                                                                    |
 | Stable API                         | Not available; APIs remain pre-1.0 and provisional                                                         |
 
-Milestone 3 is underway: provisional square and isometric coordinates are
+Milestone 3 is complete: provisional square and isometric coordinates are
 implemented behind the `grid` feature; see [the grid contract](docs/GRIDS.md).
 Sparse tilemaps, layers, chunks, picking, and grid-based object placement are
 also implemented, along with bounded weighted pathfinding and SVG diagnostics.
@@ -94,8 +95,12 @@ The playable Timber Harbor `tycoon_slice` now integrates these features with
 Milestone 2 presentation, UI, audio, reflection, scene persistence and asset reload.
 Its workforce economy includes housing, multi-tick production, resource-specific
 ports and a pause/save/load menu with generated UI artwork.
-The [showcase candidate review](docs/milestone-3-showcase.md) records scope and
-remaining playable acceptance before Milestone 3 signoff.
+The [Milestone 3 completion review](docs/milestone-3-showcase.md) records scope,
+verification, deferrals and maintainer acceptance on 2026-10-02. The next phase
+is Milestone 4: complete input, multilingual text and runtime UI APIs, followed
+by Milestone 5 desktop platform/device controls. The debugging workflow and
+editor move to Milestones 6 and 7. These additions are planned, not implemented;
+see [the runtime API scope](docs/RUNTIME_APIS.md) and [roadmap](docs/ROADMAP.md).
 
 ```console
 cargo run -p gridthorn_cli -- scenario list ../gridthorn-examples/scenarios-snapshots

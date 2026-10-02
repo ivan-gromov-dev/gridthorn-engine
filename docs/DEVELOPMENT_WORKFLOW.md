@@ -160,6 +160,14 @@ The test strategy also includes headless integration tests, serialization and
 migration tests, asset-graph validation, render smoke tests, and long-running
 simulation tests with fixed seeds.
 
+## Scheduled runtime prerequisites
+
+Milestones 4 and 5 first expand runtime input, multilingual text/UI and desktop
+platform/device APIs. Game settings screens, profiles and save-slot management
+remain game-owned; see [the runtime API scope](RUNTIME_APIS.md). Professional
+debugging is Milestone 6 and the editor is Milestone 7. All these additions are
+planned; existing implemented CLI and runtime subsets remain unchanged.
+
 ## Transition to a GUI
 
 Gridthorn Editor will present existing SDK operations:

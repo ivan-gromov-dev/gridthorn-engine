@@ -152,7 +152,7 @@ automatic scene-loop integration, and large-scene measurements remain deferred.
 
 **Result:** the SDK can build a small, complete traditional 2D game.
 
-## Milestone 3 — Gridthorn specialization
+## Milestone 3 — Gridthorn specialization (complete)
 
 Started on 2026-10-02 with the provisional opt-in square and isometric
 [coordinate contract](GRIDS.md), signed cell identities, validated presentation
@@ -183,13 +183,79 @@ documented behavior, diagnostics, and tests.
 
 **Result:** a finished showcase validates Gridthorn's specialization.
 
-The playable Timber Harbor `tycoon_slice` candidate now integrates all implemented
-items with original art/audio, housed worker roles, production and transport,
-resource-specific ports, a pause/save/load menu, snapshots and diagnostics. [Candidate evidence](milestone-3-showcase.md) records
-supported scope and verification. Final playable review and milestone signoff
-remain open.
+Completed on 2026-10-02 after the maintainer confirmed that Timber Harbor is finished and working. APIs remain provisional.
 
-## Milestone 4 — Professional debugging workflow
+The playable Timber Harbor `tycoon_slice` showcase now integrates all implemented
+items with original art/audio, housed worker roles, production and transport,
+resource-specific ports, a pause/save/load menu, snapshots and diagnostics. [Completion evidence](milestone-3-showcase.md) records
+supported scope, verification, maintainer acceptance and explicit deferrals.
+
+## Milestone 4 — Complete input, multilingual text and runtime UI APIs
+
+Planned on 2026-10-02. This milestone extends the narrow Milestone 1/2 subsets;
+it does not change their completion status. Implement in the order below, with
+each increment independently buildable, tested and documented. Detailed engine
+and game ownership is defined in [RUNTIME_APIS.md](RUNTIME_APIS.md).
+
+- [ ] Complete desktop keyboard coverage: physical keys, logical keys, modifiers,
+      repeat and ordered events; mouse wheel and pointer capture semantics.
+- [ ] Unicode text input, IME composition/commit/cancellation, clipboard access
+      and focus-loss handling, separate from physical gameplay shortcuts.
+- [ ] Font assets, fallback, Unicode shaping, bidirectional text, measurement,
+      wrapping and DPI-aware rendering, including Cyrillic and non-Latin scripts.
+- [ ] Localization runtime API: locale selection, message IDs, validated catalog
+      assets, fallback, parameters, plural/select rules and locale-aware formatting.
+- [ ] UI composition, sizing, layout, anchoring, clipping, scrolling, styling and
+      reusable controls: labels, buttons, toggles, sliders, lists and text fields.
+- [ ] UI event routing, hit testing, keyboard/controller navigation hooks, focus,
+      text editing/selection and pointer capture with explicit world-input consumption.
+- [ ] Context menus, popups and dialogs: ordered layers, modal scopes, focus
+      restoration, configurable Escape/outside-click dismissal and input blocking.
+- [ ] Presentation animation primitives for UI properties and transitions,
+      independent of authoritative simulation time.
+- [ ] Validate public APIs through sibling examples of multilingual text editing,
+      composed controls and nested modal/context windows; include headless behavior
+      tests and native rendering/IME checks with a documented language/platform matrix.
+
+**Result:** game code can compose a multilingual management-game interface using
+public APIs without implementing text shaping, input routing or window stacking.
+Game-specific screens, research trees, settings policies and translation authoring
+workflows remain game-owned. No translation-management desktop service is required.
+
+## Milestone 5 — Desktop platform, devices and presentation controls
+
+Planned; depends on the input and UI contracts from Milestone 4. Platform
+capabilities are explicit, optional and reported through engine-owned APIs.
+
+- [ ] Enumerate monitors, display modes, resolutions, refresh rates and DPI;
+      report changes and disconnection with documented identifier lifetimes.
+- [ ] Window controls: size, resizing policy, placement, monitor selection,
+      windowed/borderless/exclusive fullscreen where supported and applied-state feedback.
+- [ ] Enumerate compatible graphics adapters, select an adapter at initialization
+      or through an explicit restart/recreation contract, and report incompatibility.
+- [ ] Presentation controls: supported VSync/present modes and frame-rate caps,
+      independent of fixed simulation ticks and monitor refresh rate.
+- [ ] Controller discovery, buttons/axes, connection changes, dead-zone primitives,
+      supported feedback and device identity; integrate generic UI navigation.
+- [ ] Input-device discovery/selection where the OS supports it, capability
+      reporting for aggregate keyboard/mouse input and configurable action bindings.
+- [ ] Enumerate/select audio output and capture devices; opt-in capture API,
+      output switching, default-device changes and device-loss recovery.
+- [ ] Master/category audio buses, mute and gain controls without game-specific
+      category names or settings-screen policies.
+- [ ] Platform user-data/config/cache directory discovery and clipboard integration
+      with contextual errors; preserve the existing game-owned save-codec boundary.
+- [ ] Validate APIs through a sibling settings/device example and Windows/Linux/
+      macOS capability matrix covering unavailable devices, unsupported modes,
+      DPI/monitor changes and safe recovery. Measure pacing separately from simulation.
+
+**Result:** a game can build its own settings UI using public capability queries
+and validated platform operations. Profiles, save-slot management, settings
+persistence, confirmation countdowns and fallback preferences remain game logic.
+Unsupported platform features must produce explicit capability results or typed
+errors rather than an implied universal hardware guarantee.
+
+## Milestone 6 — Professional debugging workflow
 
 - [ ] Entity hierarchy and universal inspector.
 - [ ] Command API and runtime state editing.
@@ -205,7 +271,7 @@ remain open.
 **Result:** a complete code-first workflow from project creation to diagnosis and
 release packaging.
 
-## Milestone 5 — Minimal Gridthorn Editor
+## Milestone 7 — Minimal Gridthorn Editor
 
 - [ ] Separate desktop application.
 - [ ] Project browser and dockable layout.
@@ -281,8 +347,11 @@ CLI scenario and headless simulation commands are complete on 2026-10-02 for the
 provisional game-process subset documented in [CLI_SIMULATION.md](CLI_SIMULATION.md).
 Project declarations, dedicated binary routing, explicit ticks/seeds, and failure
 diagnostics are covered by command tests and the public scenarios-snapshots example.
-The immediate target is playable acceptance of the implemented Milestone 3
-Timber Harbor `tycoon_slice` candidate; see [the showcase review](milestone-3-showcase.md).
+Milestone 3 is complete following maintainer acceptance on 2026-10-02; see
+[the completion review](milestone-3-showcase.md). The next target is Milestone 4:
+complete keyboard/pointer input first, then multilingual text and runtime UI.
+Milestone 5 adds desktop platform/device controls. Professional debugging and
+the editor are deferred to Milestones 6 and 7 respectively.
 Milestone 2 is complete for the supported subsets documented in the
 [completion review](milestone-2-review.md); its APIs remain provisional.
 
