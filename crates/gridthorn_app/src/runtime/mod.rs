@@ -3,7 +3,9 @@ mod exit;
 
 use std::time::Duration;
 
-use gridthorn_simulation::{FixedStepClock, FixedStepConfig, FixedTime, FrameTiming};
+use gridthorn_simulation::{
+    FixedStepClock, FixedStepConfig, FixedTime, FrameTiming, SimulationControl,
+};
 use gridthorn_world::{ScheduleRuntime, WorldAccess};
 use tracing::warn;
 
@@ -30,6 +32,15 @@ impl ApplicationRuntime {
     #[must_use]
     pub fn with_fixed_step(mut schedules: ScheduleRuntime, fixed_step: FixedStepConfig) -> Self {
         schedules.world().insert_resource(ExitRequest::default());
+        if schedules
+            .world()
+            .read_resource(|control: &SimulationControl| *control)
+            .is_none()
+        {
+            schedules
+                .world()
+                .insert_resource(SimulationControl::default());
+        }
         Self {
             schedules,
             fixed_clock: FixedStepClock::new(fixed_step),
@@ -54,6 +65,7 @@ impl ApplicationRuntime {
     }
 
     /// Run one host frame with an explicit number of fixed simulation steps.
+    /// Explicit work ignores simulation pause, speed, and catch-up limits.
     ///
     /// `Startup` runs once before the first frame. Every frame then executes
     /// `PollEvents`, `Input`, zero or more `FixedUpdate` steps, `Update`,
@@ -64,12 +76,15 @@ impl ApplicationRuntime {
     /// Returns [`LifecycleError::AlreadyShutdown`] after shutdown begins.
     pub fn run_frame(&mut self, fixed_steps: u32) -> Result<(), LifecycleError> {
         self.ensure_running()?;
+        self.prepare_frame();
         let timing = self.fixed_clock.advance_steps(fixed_steps)?;
         self.execute_frame(timing);
         Ok(())
     }
 
-    /// Run one host frame using accumulated elapsed time.
+    /// Run one host frame using scaled elapsed time.
+    /// Controls are sampled after Input; paused frames still run presentation.
+    /// Startup and input may have run when time arithmetic returns an error.
     ///
     /// # Errors
     ///
@@ -77,7 +92,13 @@ impl ApplicationRuntime {
     /// supported elapsed-time or tick-index range.
     pub fn run_timed_frame(&mut self, elapsed: Duration) -> Result<FrameTiming, LifecycleError> {
         self.ensure_running()?;
-        let timing = self.fixed_clock.advance(elapsed)?;
+        self.prepare_frame();
+        let control = self
+            .schedules
+            .world()
+            .read_resource(|control: &SimulationControl| *control)
+            .unwrap_or_default();
+        let timing = self.fixed_clock.advance_controlled(elapsed, control)?;
         if timing.overloaded() {
             warn!(
                 component = "app",
@@ -98,7 +119,7 @@ impl ApplicationRuntime {
         Ok(())
     }
 
-    fn execute_frame(&mut self, timing: FrameTiming) {
+    fn prepare_frame(&mut self) {
         self.schedules.run_startup();
         self.schedules.run_poll_events();
         self.schedules.run_input();
@@ -116,6 +137,9 @@ impl ApplicationRuntime {
             }
             self.schedules.run_scene_transition();
         }
+    }
+
+    fn execute_frame(&mut self, timing: FrameTiming) {
         self.schedules.world().insert_resource(timing);
         for offset in 0..timing.fixed_steps() {
             let tick_index = timing.first_tick_index() + u64::from(offset);

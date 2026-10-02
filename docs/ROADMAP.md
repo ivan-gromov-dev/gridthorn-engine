@@ -174,7 +174,7 @@ documented behavior, diagnostics, and tests.
 - [x] Tilemaps, layers, chunks, and picking.
 - [x] Grid-based object placement.
 - [x] Pathfinding and diagnostic visualization.
-- [ ] Simulation clock, pause, and speed control.
+- [x] Simulation clock, pause, and speed control.
 - [ ] Headless simulation.
 - [ ] Scenarios, snapshots, and controlled random-number generation.
 - [ ] World saving and loading.
@@ -251,7 +251,11 @@ atomic placement/movement, removal, and rejected edits.
 Pathfinding and diagnostic visualization are complete on 2026-10-02 for the
 bounded four-neighbor weighted-search subset documented in [GRIDS.md](GRIDS.md).
 The public `pathfinding` example generates square/isometric SVG diagnostics.
-The immediate target is Milestone 3: simulation clock, pause, and speed control.
+Simulation clock, pause, and speed control are complete on 2026-10-02 for the
+provisional rational-speed and frame-boundary control subset documented in
+[SIMULATION.md](SIMULATION.md). The public simulation-clock example and domain
+tests validate pause, resume, backlog, speed scaling, explicit stepping, and
+continued presentation. The immediate target is Milestone 3: headless simulation.
 Milestone 2 is complete for the supported subsets documented in the
 [completion review](milestone-2-review.md); its APIs remain provisional.
 
@@ -260,6 +264,7 @@ Square and isometric coordinate systems
 → tilemaps, layers, chunks, and picking
 → grid-based object placement
 → pathfinding and diagnostic visualization
+→ simulation clock, pause, and speed control
 ```
 
 Native development watching, external dependency discovery, automatic restart,

@@ -30,7 +30,7 @@ impl FrameTiming {
         }
     }
 
-    /// Host time accumulated for this frame.
+    /// Unscaled host time supplied for this frame, including paused frames.
     #[must_use]
     pub fn frame_elapsed(self) -> Duration {
         self.frame_elapsed
@@ -60,7 +60,7 @@ impl FrameTiming {
         self.overloaded
     }
 
-    /// Host time still waiting to be converted into fixed ticks.
+    /// Scaled simulation time still waiting to be converted into fixed ticks.
     #[must_use]
     pub fn accumulated_lag(self) -> Duration {
         self.accumulated_lag

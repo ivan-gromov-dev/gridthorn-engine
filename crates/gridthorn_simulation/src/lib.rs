@@ -7,5 +7,6 @@ mod time;
 pub use command::GameCommandQueue;
 pub use determinism::{DeterministicRng, StateFingerprint};
 pub use time::{
-    FixedStepClock, FixedStepConfig, FixedStepConfigError, FixedTime, FrameTiming, TimeError,
+    FixedStepClock, FixedStepConfig, FixedStepConfigError, FixedTime, FrameTiming,
+    SimulationControl, SimulationSpeed, SimulationSpeedError, TimeError,
 };

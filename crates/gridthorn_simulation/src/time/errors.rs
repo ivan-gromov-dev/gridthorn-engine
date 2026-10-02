@@ -21,3 +21,11 @@ pub enum TimeError {
     #[error("authoritative fixed tick index overflowed")]
     TickIndexOverflow,
 }
+
+/// Invalid simulation speed.
+#[derive(Clone, Copy, Debug, Eq, Error, PartialEq)]
+pub enum SimulationSpeedError {
+    /// Ratio terms must be positive.
+    #[error("simulation speed numerator and denominator must be positive; use pause to stop")]
+    ZeroRatioTerm,
+}

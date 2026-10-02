@@ -31,10 +31,11 @@ pub use runtime::{
     FixedTime, FrameTiming, GameCommandQueue, GameStateChange, GameStateError, GameStateId,
     GameStateStack, InputBuffer, InputEvent, InputState, KeyCode, LifecycleError, MouseButton,
     PlaybackSettings, RenderFrame, SceneChange, SceneController, SceneId, SceneIdError,
-    ScheduleBuilder, ScheduleRuntime, ScheduleStage, Sprite, SpriteRegion, SpriteRegionError,
-    TextLabel, TextureAsset, TextureAssetError, TexturedSprite, TimeError, TimingOverlay, UiButton,
-    UiButtonError, UiButtonInteraction, UiError, UiPrimitive, UiRect, Vec2, WavDecodeError,
-    WindowConfig, WindowedApplication, WorldAccess, contact, overlaps,
+    ScheduleBuilder, ScheduleRuntime, ScheduleStage, SimulationControl, SimulationSpeed,
+    SimulationSpeedError, Sprite, SpriteRegion, SpriteRegionError, TextLabel, TextureAsset,
+    TextureAssetError, TexturedSprite, TimeError, TimingOverlay, UiButton, UiButtonError,
+    UiButtonInteraction, UiError, UiPrimitive, UiRect, Vec2, WavDecodeError, WindowConfig,
+    WindowedApplication, WorldAccess, contact, overlaps,
 };
 pub use version::version;
 

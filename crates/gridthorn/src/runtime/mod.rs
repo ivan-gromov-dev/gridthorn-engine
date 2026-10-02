@@ -27,7 +27,8 @@ pub use gridthorn_scene::{
     SceneMigrations, SceneRecord, SceneRegistry, SceneScalar, SceneValueError,
 };
 pub use gridthorn_simulation::{
-    FixedStepConfig, FixedStepConfigError, FixedTime, FrameTiming, GameCommandQueue, TimeError,
+    FixedStepConfig, FixedStepConfigError, FixedTime, FrameTiming, GameCommandQueue,
+    SimulationControl, SimulationSpeed, SimulationSpeedError, TimeError,
 };
 pub use gridthorn_world::{
     EntityId, SceneId, SceneIdError, ScheduleBuilder, ScheduleRuntime, ScheduleStage, WorldAccess,
