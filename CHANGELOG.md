@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.0] - 2026-10-02
+### Added
+
+- Provisional opt-in `gridthorn::grid` square/isometric coordinate projection,
+  signed cell identities, checked inverse conversion, and a headless SDK example.
+
+## [0.3.0] - 2026-10-02
 
 ### Changed
 

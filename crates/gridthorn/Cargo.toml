@@ -9,6 +9,7 @@ authors.workspace = true
 publish = false
 
 [dependencies]
+gridthorn_grid = { path = "../gridthorn_grid", optional = true }
 gridthorn_app = { path = "../gridthorn_app" }
 gridthorn_assets = { path = "../gridthorn_assets" }
 gridthorn_audio = { path = "../gridthorn_audio" }
@@ -21,3 +22,6 @@ gridthorn_world = { path = "../gridthorn_world" }
 
 [lints]
 workspace = true
+
+[features]
+grid = ["dep:gridthorn_grid"]

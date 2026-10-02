@@ -70,11 +70,13 @@ they are explicitly marked as implemented.
 | Component/resource reflection      | Provisional explicit registration, scalar metadata and read-only snapshots                 |
 | Versioned scene serialization      | Provisional schema 1 TOML, validated prepared loading and migration hooks                  |
 | Basic 2D collision                 | Provisional circle/AABB overlap and minimum-translation queries                            |
+| Grid coordinates | Provisional opt-in square/isometric projection and inverse conversion |
 | Current source release             | `0.2.0`                                                                                    |
 | Stable API                         | Not available; APIs remain pre-1.0 and provisional                                         |
 
-The next implementation target is Milestone 3: square and isometric coordinate
-systems, followed by tilemaps and grid-based gameplay.
+Milestone 3 is underway: provisional square and isometric coordinates are
+implemented behind the `grid` feature; see [the grid contract](docs/GRIDS.md).
+The next target is tilemaps, layers, chunks, and picking.
 
 Local development and the MSRV use Rust 1.99.0; rustup selects the pinned
 toolchain from `rust-toolchain.toml`.
