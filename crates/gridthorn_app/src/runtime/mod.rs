@@ -1,5 +1,6 @@
 mod errors;
 mod exit;
+mod headless;
 
 use std::time::Duration;
 
@@ -13,6 +14,7 @@ use crate::{GameStateStack, SceneController};
 
 pub use errors::LifecycleError;
 pub use exit::ExitRequest;
+pub use headless::{HeadlessProgress, HeadlessSimulation};
 
 /// Drives Gridthorn schedules through one explicit application lifecycle.
 pub struct ApplicationRuntime {
@@ -122,6 +124,10 @@ impl ApplicationRuntime {
     fn prepare_frame(&mut self) {
         self.schedules.run_startup();
         self.schedules.run_poll_events();
+        self.prepare_simulation();
+    }
+
+    fn prepare_simulation(&mut self) {
         self.schedules.run_input();
         self.schedules
             .world()
@@ -141,6 +147,13 @@ impl ApplicationRuntime {
 
     fn execute_frame(&mut self, timing: FrameTiming) {
         self.schedules.world().insert_resource(timing);
+        self.execute_fixed(timing);
+        self.schedules.run_update();
+        self.schedules.run_post_update();
+        self.schedules.run_render();
+    }
+
+    fn execute_fixed(&mut self, timing: FrameTiming) {
         for offset in 0..timing.fixed_steps() {
             let tick_index = timing.first_tick_index() + u64::from(offset);
             self.schedules
@@ -148,9 +161,6 @@ impl ApplicationRuntime {
                 .insert_resource(FixedTime::new(tick_index, self.fixed_clock.fixed_step()));
             self.schedules.run_fixed_update();
         }
-        self.schedules.run_update();
-        self.schedules.run_post_update();
-        self.schedules.run_render();
     }
 
     /// Run `Shutdown` once and stop accepting frames.

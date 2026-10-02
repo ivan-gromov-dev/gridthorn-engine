@@ -58,7 +58,7 @@ they are explicitly marked as implemented.
 | Game commands and world control    | Ordered commands and controllable entity example implemented                               |
 | Texture assets                     | PNG/PNM decoding and textured-sprite presentation implemented                              |
 | Asset dependencies and hot reload  | Implemented provisional path IDs, dependencies, background reload and atomic frame commits |
-| Headless schedule execution        | Internal architecture spike implemented                                                    |
+| Headless simulation                | Provisional exact-tick SDK runner, lifecycle, exit and repeatability implemented                                                    |
 | Cross-layer diagnostics            | CLI/app/renderer tracing spike implemented                                                 |
 | Runtime timing overlay             | Frame time, fixed work, lag, and overload bars implemented                                 |
 | Deterministic fixed-step replay    | Seeded RNG and state fingerprint spike implemented                                         |
@@ -83,7 +83,13 @@ implemented behind the `grid` feature; see [the grid contract](docs/GRIDS.md).
 Sparse tilemaps, layers, chunks, picking, and grid-based object placement are
 also implemented, along with bounded weighted pathfinding and SVG diagnostics.
 Simulation clock, pause, and speed control are implemented; see the
-[simulation contract](docs/SIMULATION.md). The next target is headless simulation.
+[simulation contract](docs/SIMULATION.md). Headless simulation is implemented through `HeadlessSimulation`. The next target is scenarios, snapshots, and controlled random-number generation.
+
+Run the public headless simulation example (no window or GPU initialization):
+
+```console
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_headless_simulation
+```
 
 Run the public SDK clock example:
 

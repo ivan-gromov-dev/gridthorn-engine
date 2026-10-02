@@ -6,7 +6,9 @@ mod state;
 mod ui;
 mod window;
 
-pub use runtime::{ApplicationRuntime, ExitRequest, LifecycleError};
+pub use runtime::{
+    ApplicationRuntime, ExitRequest, HeadlessProgress, HeadlessSimulation, LifecycleError,
+};
 pub use scene::{SceneChange, SceneController};
 pub use state::{GameStateChange, GameStateError, GameStateId, GameStateStack};
 pub use ui::{UiButton, UiButtonError, UiButtonInteraction};

@@ -1,7 +1,8 @@
 pub use gridthorn_app::{
     ApplicationError, ApplicationRuntime, ExitRequest, GameStateChange, GameStateError,
-    GameStateId, GameStateStack, LifecycleError, SceneChange, SceneController, UiButton,
-    UiButtonError, UiButtonInteraction, WindowConfig, WindowedApplication,
+    GameStateId, GameStateStack, HeadlessProgress, HeadlessSimulation, LifecycleError, SceneChange,
+    SceneController, UiButton, UiButtonError, UiButtonInteraction, WindowConfig,
+    WindowedApplication,
 };
 pub use gridthorn_assets::{
     AssetId, AssetReloadError, AssetReloader, AssetStore, AssetStoreError, TextureAsset,
