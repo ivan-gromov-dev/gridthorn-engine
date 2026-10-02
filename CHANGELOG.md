@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Provisional sparse `TileMap<T>` with ordered layers, signed chunks, empty-chunk
+  reclamation, square/isometric occupied-cell picking, validated orthographic
+  cursor conversion, and a headless public SDK example behind `grid`.
 - Provisional opt-in `gridthorn::grid` square/isometric coordinate projection,
   signed cell identities, checked inverse conversion, and a headless SDK example.
 

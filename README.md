@@ -71,12 +71,20 @@ they are explicitly marked as implemented.
 | Versioned scene serialization      | Provisional schema 1 TOML, validated prepared loading and migration hooks                  |
 | Basic 2D collision                 | Provisional circle/AABB overlap and minimum-translation queries                            |
 | Grid coordinates | Provisional opt-in square/isometric projection and inverse conversion |
+| Tilemaps | Provisional sparse layers/chunks and camera-aware occupied-cell picking |
 | Current source release             | `0.2.0`                                                                                    |
 | Stable API                         | Not available; APIs remain pre-1.0 and provisional                                         |
 
 Milestone 3 is underway: provisional square and isometric coordinates are
 implemented behind the `grid` feature; see [the grid contract](docs/GRIDS.md).
-The next target is tilemaps, layers, chunks, and picking.
+Sparse tilemaps, layers, chunks, and picking are also implemented; the next
+target is grid-based object placement.
+
+Run the headless tilemap example through the public SDK:
+
+```console
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_tilemap_basics
+```
 
 Local development and the MSRV use Rust 1.99.0; rustup selects the pinned
 toolchain from `rust-toolchain.toml`.
