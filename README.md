@@ -5,12 +5,15 @@ games. It is suitable for traditional 2D genres while providing a particularly
 strong foundation for tile-based, isometric, management, tycoon, and
 simulation-heavy games.
 
-The project has completed its Milestone 1 runtime vertical slice and started
-Milestone 2 with provisional frame-boundary game states and scene switching. It has a
+The project has completed Milestone 2, the general-purpose 2D SDK, with
+provisional APIs validated by a small playable game. It has a
 reproducible Cargo workspace, a working CLI, native window and input handling,
 fixed-step world updates, sprite presentation, texture loading, and runtime
 timing diagnostics. A visual editor will later be built on the same public APIs
 and development protocol.
+
+[Milestone 2 review](docs/milestone-2-review.md) records completion evidence and
+deferred platform and performance validation.
 
 ## Principles
 
@@ -38,41 +41,40 @@ and development protocol.
 
 ## Status
 
-The Milestone 1 runtime vertical slice is complete. Commands and Rust snippets
+The Milestone 2 general-purpose 2D SDK is complete for its documented subsets. Commands and Rust snippets
 outside the section below still describe target developer experience unless
 they are explicitly marked as implemented.
 
-| Area                               | Status                                                                 |
-| ---------------------------------- | ---------------------------------------------------------------------- |
-| Product and architecture direction | Design baseline                                                        |
-| Milestone 0 foundation             | Complete; runtime deferrals recorded                                   |
-| Cargo workspace and CI             | Implemented foundation                                                 |
-| CLI                                | Project commands, compatibility checks, source watch and release builds |
-| Public SDK facade                  | Version API plus provisional lifecycle and schedule APIs               |
-| App and renderer internals         | Window/surface lifecycle and basic colored-sprite pipeline implemented |
-| Keyboard and mouse input           | Provisional engine-owned frame state implemented                       |
-| World and schedules                | ECS lifecycle schedule spike implemented                               |
-| Game commands and world control    | Ordered commands and controllable entity example implemented           |
-| Texture assets                     | PNG/PNM decoding and textured-sprite presentation implemented           |
+| Area                               | Status                                                                                     |
+| ---------------------------------- | ------------------------------------------------------------------------------------------ |
+| Product and architecture direction | Design baseline                                                                            |
+| Milestone 0 foundation             | Complete; runtime deferrals recorded                                                       |
+| Cargo workspace and CI             | Implemented foundation                                                                     |
+| CLI                                | Project commands, compatibility checks, source watch and release builds                    |
+| Public SDK facade                  | Version API plus provisional lifecycle and schedule APIs                                   |
+| App and renderer internals         | Window/surface lifecycle and basic colored-sprite pipeline implemented                     |
+| Keyboard and mouse input           | Provisional engine-owned frame state implemented                                           |
+| World and schedules                | ECS lifecycle schedule spike implemented                                                   |
+| Game commands and world control    | Ordered commands and controllable entity example implemented                               |
+| Texture assets                     | PNG/PNM decoding and textured-sprite presentation implemented                              |
 | Asset dependencies and hot reload  | Implemented provisional path IDs, dependencies, background reload and atomic frame commits |
-| Headless schedule execution        | Internal architecture spike implemented                                |
-| Cross-layer diagnostics            | CLI/app/renderer tracing spike implemented                             |
-| Runtime timing overlay             | Frame time, fixed work, lag, and overload bars implemented             |
-| Deterministic fixed-step replay    | Seeded RNG and state fingerprint spike implemented                     |
-| Runtime and public SDK             | Milestone 1 vertical slice complete; APIs remain provisional           |
-| Scenes and game states             | Provisional state stack and atomic scene-owned entity switching         |
-| Sprite batching and animation      | Provisional ordered texture batches and sprite-sheet playback            |
-| Text and runtime UI                | Provisional bitmap text, screen panels, and mouse buttons                |
-| Audio                              | Provisional PCM16 WAV assets, queue, and opt-in Kira output adapter      |
-| Component/resource reflection      | Provisional explicit registration, scalar metadata and read-only snapshots |
-| Versioned scene serialization      | Provisional schema 1 TOML, validated prepared loading and migration hooks |
-| Basic 2D collision                 | Provisional circle/AABB overlap and minimum-translation queries          |
-| Current source release             | `0.2.0`                                                                |
-| Stable API                         | Not available; APIs remain pre-1.0 and provisional                     |
+| Headless schedule execution        | Internal architecture spike implemented                                                    |
+| Cross-layer diagnostics            | CLI/app/renderer tracing spike implemented                                                 |
+| Runtime timing overlay             | Frame time, fixed work, lag, and overload bars implemented                                 |
+| Deterministic fixed-step replay    | Seeded RNG and state fingerprint spike implemented                                         |
+| Runtime and public SDK             | Milestone 2 complete; APIs remain provisional                                              |
+| Scenes and game states             | Provisional state stack and atomic scene-owned entity switching                            |
+| Sprite batching and animation      | Provisional ordered texture batches and sprite-sheet playback                              |
+| Text and runtime UI                | Provisional bitmap text, screen panels, and mouse buttons                                  |
+| Audio                              | Provisional PCM16 WAV assets, queue, and opt-in Kira output adapter                        |
+| Component/resource reflection      | Provisional explicit registration, scalar metadata and read-only snapshots                 |
+| Versioned scene serialization      | Provisional schema 1 TOML, validated prepared loading and migration hooks                  |
+| Basic 2D collision                 | Provisional circle/AABB overlap and minimum-translation queries                            |
+| Current source release             | `0.2.0`                                                                                    |
+| Stable API                         | Not available; APIs remain pre-1.0 and provisional                                         |
 
-The first implementation target is a foundation and runtime vertical slice with
-a usable CLI, window, game loop, world, sprite, input, fixed-step simulation,
-diagnostics, and a documented example.
+The next implementation target is Milestone 3: square and isometric coordinate
+systems, followed by tilemaps and grid-based gameplay.
 
 Local development and the MSRV use Rust 1.99.0; rustup selects the pinned
 toolchain from `rust-toolchain.toml`.

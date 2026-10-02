@@ -61,7 +61,15 @@ one cohesive workflow.
 Evidence, limitations, and explicit performance deferrals are recorded in the
 [Milestone 1 review](milestone-1-review.md).
 
-## Milestone 2 — General-purpose 2D SDK
+## Milestone 2 — General-purpose 2D SDK (complete)
+
+The sibling `classic_2d` Crystal Trail game now exercises scenes/game states,
+shared-atlas sprites and animation, playable menu/pause/victory UI, and native
+audio through an example-owned worker. Headless tests cover collision pickups,
+pause, victory cleanup, and restart. Completed on 2026-10-02 after the maintainer
+confirmed the playable result and corrected vertical input. Supported subsets,
+verification evidence, and explicit deferrals are recorded in the
+[Milestone 2 review](milestone-2-review.md).
 
 Started on 2026-08-30. The implemented provisional lifecycle foundation now
 includes engine-owned game-state identifiers, an ordered state stack, scene
@@ -89,8 +97,10 @@ commands with stable voice identifiers. An opt-in `native-output` feature now
 provides a Kira-backed service that mixes mono and stereo clips, applies queued
 voice controls, and supports suspend/resume; the same command path is tested
 through Kira's mock backend without native audio development libraries.
-Application-loop integration, streaming, device recovery, latency validation,
-and broader formats remain planned.
+Crystal Trail integrates playback, game pause/resume, and shutdown in its
+application schedules through an example-owned worker. Automatic native platform
+suspend/resume, streaming, device recovery, latency validation, and broader
+formats remain deferred.
 The provisional basic 2D collision boundary now validates engine-owned circles
 and axis-aligned boxes and provides deterministic-order overlap and minimum
 translation queries for box-box, circle-circle, and circle-box pairs. It is a
@@ -129,16 +139,16 @@ round-trip, reconstruction of transient fields, rejected edits, and legacy field
 migration. Entity references, nested data, filesystem/user-save durability,
 automatic scene-loop integration, and large-scene measurements remain deferred.
 
-- [ ] Scenes and game states.
-- [ ] Sprite batching and 2D animation.
-- [ ] Text and basic runtime UI.
-- [ ] Audio.
+- [x] Scenes and game states.
+- [x] Sprite batching and 2D animation.
+- [x] Text and basic runtime UI.
+- [x] Audio.
 - [x] Basic 2D collision.
 - [x] Asset dependencies and hot reload.
 - [x] Reflection for components and resources.
 - [x] Versioned scene serialization.
 - [x] Extend the CLI with development watching and release builds.
-- [ ] Complete a small traditional 2D game.
+- [x] Complete a small traditional 2D game.
 
 **Result:** the SDK can build a small, complete traditional 2D game.
 
@@ -222,27 +232,17 @@ A milestone result is complete only when:
 
 ## Immediate target
 
-The immediate target is the Milestone 2 general-purpose 2D SDK. Asset dependencies
-and background hot reload, provisional component/resource reflection, versioned
-scalar scene persistence, and CLI compilation-input watching/release builds are
-implemented. The next increment is the small traditional 2D game, which must close
-the remaining scene, animation, UI, and audio capabilities:
+The immediate target is Milestone 3, starting with square and isometric
+coordinate systems before tilemaps, picking, placement, and navigation.
+Milestone 2 is complete for the supported subsets documented in the
+[completion review](milestone-2-review.md); its APIs remain provisional.
 
 ```text
-Build a small traditional 2D game
-→ close scenes/game states, batching/animation, runtime UI, and audio
-→ review Milestone 2 completion evidence
+Square and isometric coordinate systems
+→ tilemaps, layers, chunks, and picking
+→ grid-based object placement
 ```
 
-The provisional watch path detects project-local compilation/configuration edits
-through content polling, preserves its baseline after failed scans, and retries
-validation/compilation after invalid edits are corrected. Release builds validate
-compatibility before delegating to Cargo. Native watching, external dependency
-discovery, automatic restart, packaging, and large-project scan/memory measurements
-remain deferred; see [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md).
-
-The four earlier Milestone 2 items remain open. The game's completion evidence
-must demonstrate scene/state lifecycle integration, game-used sprite batching and
-animation, playable UI screens, and application-loop audio lifecycle. Define each
-supported subset against the game, keep each increment buildable, and distinguish
-provisional foundations from completed milestone capabilities.
+Native development watching, external dependency discovery, automatic restart,
+packaging, and large-project scan/memory measurements remain deferred; see
+[DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md).
