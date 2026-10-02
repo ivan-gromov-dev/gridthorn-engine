@@ -48,3 +48,4 @@ preferred direction.
 No project decisions have been accepted yet.
 
 - [0001: Explicit scalar scene persistence with prepared loading](0001-scene-persistence.md) — Proposed.
+- [0002: Typed authoritative roots for provisional simulation snapshots](0002-typed-simulation-snapshots.md) — Proposed.

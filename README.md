@@ -61,7 +61,7 @@ they are explicitly marked as implemented.
 | Headless simulation                | Provisional exact-tick SDK runner, lifecycle, exit and repeatability implemented                                                    |
 | Cross-layer diagnostics            | CLI/app/renderer tracing spike implemented                                                 |
 | Runtime timing overlay             | Frame time, fixed work, lag, and overload bars implemented                                 |
-| Deterministic fixed-step replay    | Seeded RNG and state fingerprint spike implemented                                         |
+| Deterministic fixed-step replay    | Named seeded RNG and explicit state fingerprint API; replay files planned                                         |
 | Runtime and public SDK             | Milestone 2 complete; APIs remain provisional                                              |
 | Scenes and game states             | Provisional state stack and atomic scene-owned entity switching                            |
 | Sprite batching and animation      | Provisional ordered texture batches and sprite-sheet playback                              |
@@ -74,6 +74,7 @@ they are explicitly marked as implemented.
 | Tilemaps | Provisional sparse layers/chunks and camera-aware occupied-cell picking |
 | Grid-based object placement | Provisional integer footprints, exclusive occupancy, atomic moves and removal |
 | Pathfinding and diagnostics | Provisional deterministic four-neighbor weighted search, budgets, visited/frontier data and SVG example |
+| Scenarios and snapshots | Provisional typed authoritative roots, exact-tick restoration and compatibility checks |
 | Simulation clock | Provisional rational speed, pause/resume, preserved backlog and explicit stepping |
 | Current source release             | `0.2.0`                                                                                    |
 | Stable API                         | Not available; APIs remain pre-1.0 and provisional                                         |
@@ -83,7 +84,14 @@ implemented behind the `grid` feature; see [the grid contract](docs/GRIDS.md).
 Sparse tilemaps, layers, chunks, picking, and grid-based object placement are
 also implemented, along with bounded weighted pathfinding and SVG diagnostics.
 Simulation clock, pause, and speed control are implemented; see the
-[simulation contract](docs/SIMULATION.md). Headless simulation is implemented through `HeadlessSimulation`. The next target is scenarios, snapshots, and controlled random-number generation.
+[simulation contract](docs/SIMULATION.md). Headless simulation is implemented through `HeadlessSimulation`. Typed scenarios, in-memory snapshots, and named seeded RNG streams are implemented;
+see the [scenario contract](docs/SCENARIOS.md). The next target is world saving and loading.
+
+Run the public scenario and snapshot continuation example:
+
+```console
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_scenarios_snapshots
+```
 
 Run the public headless simulation example (no window or GPU initialization):
 

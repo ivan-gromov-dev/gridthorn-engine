@@ -4,6 +4,10 @@
 //! under construction.
 
 mod runtime;
+pub use runtime::{
+    DeterministicRng, RandomStreamError, RandomStreams, Scenario, ScenarioError, ScenarioRuntime,
+    ScenarioState, SimulationSnapshot, StateFingerprint,
+};
 mod version;
 
 /// Provisional coordinates, tilemaps, picking, placement, and navigation; enable `grid`.

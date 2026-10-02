@@ -176,7 +176,7 @@ documented behavior, diagnostics, and tests.
 - [x] Pathfinding and diagnostic visualization.
 - [x] Simulation clock, pause, and speed control.
 - [x] Headless simulation.
-- [ ] Scenarios, snapshots, and controlled random-number generation.
+- [x] Scenarios, snapshots, and controlled random-number generation.
 - [ ] World saving and loading.
 - [ ] Extend the CLI with scenario and headless simulation commands.
 - [ ] Complete an isometric tycoon vertical slice.
@@ -259,8 +259,14 @@ continued presentation.
 Headless simulation is complete on 2026-10-02 for the provisional exact-tick
 runner documented in [SIMULATION.md](SIMULATION.md). The public headless-simulation
 example validates ordered command consumption and repeatable state across request
-partitions without presentation. The immediate target is Milestone 3: scenarios,
-snapshots, and controlled random-number generation.
+partitions without presentation.
+Scenarios, snapshots, and controlled random-number generation are complete on
+2026-10-02 for the provisional typed authoritative-root and in-memory snapshot
+subset documented in [SCENARIOS.md](SCENARIOS.md). The public scenarios-snapshots
+example and domain tests validate named stream independence, fixed RNG vectors,
+queued command capture, exact tick continuation, and compatibility rollback.
+Arbitrary ECS capture and persistence remain deferred to world saving/loading.
+The immediate target is Milestone 3: world saving and loading.
 Milestone 2 is complete for the supported subsets documented in the
 [completion review](milestone-2-review.md); its APIs remain provisional.
 
@@ -270,6 +276,8 @@ Square and isometric coordinate systems
 → grid-based object placement
 → pathfinding and diagnostic visualization
 → simulation clock, pause, and speed control
+→ headless simulation
+→ scenarios, snapshots, and controlled random-number generation
 ```
 
 Native development watching, external dependency discovery, automatic restart,

@@ -36,6 +36,12 @@ impl HeadlessSimulation {
         self.runtime.world()
     }
 
+    /// Total completed ticks, also available after an advancement error.
+    #[must_use]
+    pub fn completed_ticks(&self) -> u64 {
+        self.completed_ticks
+    }
+
     /// Run Startup once, then up to the requested number of exact ticks.
     /// Each tick runs Input and state/scene transitions before `FixedUpdate`.
     /// Exit is checked after Startup, after Input, and after each complete tick.
@@ -76,6 +82,22 @@ impl HeadlessSimulation {
     /// Run Shutdown once, including when no ticks were requested.
     pub fn shutdown(&mut self) {
         self.runtime.shutdown();
+    }
+
+    pub(crate) fn reset_tick(
+        &mut self,
+        config: FixedStepConfig,
+        completed_ticks: u64,
+    ) -> Result<(), LifecycleError> {
+        self.runtime.ensure_running()?;
+        self.runtime.fixed_clock =
+            gridthorn_simulation::FixedStepClock::at_tick(config, completed_ticks);
+        self.completed_ticks = completed_ticks;
+        self.world()
+            .remove_resource::<gridthorn_simulation::FixedTime>();
+        self.world()
+            .remove_resource::<gridthorn_simulation::FrameTiming>();
+        Ok(())
     }
 }
 

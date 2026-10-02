@@ -1,6 +1,7 @@
 use std::collections::VecDeque;
 
 /// Ordered one-shot game commands waiting for a fixed-tick boundary.
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct GameCommandQueue<C> {
     commands: VecDeque<C>,
 }

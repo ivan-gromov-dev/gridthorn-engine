@@ -35,7 +35,7 @@ runtime overload diagnostic. No ticks are dropped or durations stretched.
 `ApplicationRuntime::run_frame(n)` assigns exactly n ticks regardless of pause,
 speed, or catch-up limits, without consuming lag. This allows explicit stepping
 while paused and still runs input and presentation. This existing execution
-boundary does not implement the planned headless simulation service.
+boundary remains distinct from the dedicated headless service below.
 
 Clock arithmetic errors leave clock state unchanged. Startup, input, and scene
 transitions may already have executed when a runtime returns a time error;
@@ -57,8 +57,9 @@ user pause.
 Determinism remains scoped to the same engine version, target, configuration,
 and command/control sequence. Performance, large-backlog workloads, native UI
 integration, and cross-platform measurements are deferred. Control persistence,
-replay recording, remote tooling, scenarios,
-snapshots, and world persistence belong to later increments.
+replay recording, remote tooling, and world persistence belong to later increments.
+Typed headless scenarios and in-memory snapshots are now documented in
+[SCENARIOS.md](SCENARIOS.md).
 
 ## Provisional headless simulation
 
@@ -94,8 +95,10 @@ operations, inspection, and command injection. Games drain GameCommandQueue at
 a fixed boundary, exactly as in interactive execution. Requests split into
 multiple batches produce the same tick/Input sequence for the same initial
 state and commands. Wall-clock timing, cross-target bit identity, generic state
-hashing, seeded named RNG streams, snapshots, persistence, CLI simulation
+hashing, persistence, CLI simulation
 commands, and performance/large-world measurements are deferred.
+Named RNG and typed scenario snapshots are available through
+[ScenarioRuntime](SCENARIOS.md).
 
 ```console
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_headless_simulation

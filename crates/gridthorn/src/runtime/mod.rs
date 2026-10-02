@@ -1,7 +1,8 @@
 pub use gridthorn_app::{
     ApplicationError, ApplicationRuntime, ExitRequest, GameStateChange, GameStateError,
-    GameStateId, GameStateStack, HeadlessProgress, HeadlessSimulation, LifecycleError, SceneChange,
-    SceneController, UiButton, UiButtonError, UiButtonInteraction, WindowConfig,
+    GameStateId, GameStateStack, HeadlessProgress, HeadlessSimulation, LifecycleError, Scenario,
+    ScenarioError, ScenarioRuntime, ScenarioState, SceneChange, SceneController,
+    SimulationSnapshot, UiButton, UiButtonError, UiButtonInteraction, WindowConfig,
     WindowedApplication,
 };
 pub use gridthorn_assets::{
@@ -28,8 +29,9 @@ pub use gridthorn_scene::{
     SceneMigrations, SceneRecord, SceneRegistry, SceneScalar, SceneValueError,
 };
 pub use gridthorn_simulation::{
-    FixedStepConfig, FixedStepConfigError, FixedTime, FrameTiming, GameCommandQueue,
-    SimulationControl, SimulationSpeed, SimulationSpeedError, TimeError,
+    DeterministicRng, FixedStepConfig, FixedStepConfigError, FixedTime, FrameTiming,
+    GameCommandQueue, RandomStreamError, RandomStreams, SimulationControl, SimulationSpeed,
+    SimulationSpeedError, StateFingerprint, TimeError,
 };
 pub use gridthorn_world::{
     EntityId, SceneId, SceneIdError, ScheduleBuilder, ScheduleRuntime, ScheduleStage, WorldAccess,
