@@ -7,6 +7,7 @@ members = [
     "crates/gridthorn_collision",
     "crates/gridthorn_cli",
     "crates/gridthorn_input",
+    "crates/gridthorn_grid",
     "crates/gridthorn_render",
     "crates/gridthorn_scene",
     "crates/gridthorn_simulation",

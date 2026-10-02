@@ -6,6 +6,12 @@
 mod runtime;
 mod version;
 
+/// Provisional square and isometric coordinate APIs; enable the `grid` feature.
+#[cfg(feature = "grid")]
+pub mod grid {
+    pub use gridthorn_grid::{GridCell, GridError, GridPoint, GridProjection};
+}
+
 pub use runtime::{
     PreparedScene, SceneData, SceneDocument, SceneEntityData, SceneError, SceneLoad,
     SceneMigrations, SceneRecord, SceneRegistry, SceneScalar, SceneValueError,

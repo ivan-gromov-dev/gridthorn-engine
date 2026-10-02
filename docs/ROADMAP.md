@@ -154,11 +154,16 @@ automatic scene-loop integration, and large-scene measurements remain deferred.
 
 ## Milestone 3 — Gridthorn specialization
 
+Started on 2026-10-02 with the provisional opt-in square and isometric
+[coordinate contract](GRIDS.md), signed cell identities, validated presentation
+projection/inverse conversion, focused tests, and the sibling `grid-coordinates`
+public SDK example. Tilemap picking remains a separate subsequent increment.
+
 The earlier Milestone 0 headless spike only validates the dependency boundary.
 This milestone turns that prototype into a supported public simulation API with
 documented behavior, diagnostics, and tests.
 
-- [ ] Square and isometric coordinate systems.
+- [x] Square and isometric coordinate systems.
 - [ ] Tilemaps, layers, chunks, and picking.
 - [ ] Grid-based object placement.
 - [ ] Pathfinding and diagnostic visualization.
@@ -232,8 +237,8 @@ A milestone result is complete only when:
 
 ## Immediate target
 
-The immediate target is Milestone 3, starting with square and isometric
-coordinate systems before tilemaps, picking, placement, and navigation.
+The immediate target is Milestone 3: tilemaps, layers, chunks, and picking,
+building on the provisional square and isometric coordinate systems.
 Milestone 2 is complete for the supported subsets documented in the
 [completion review](milestone-2-review.md); its APIs remain provisional.
 
