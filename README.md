@@ -92,6 +92,8 @@ CLI scenario listing and headless simulation launch are implemented through a
 dedicated game-owned binary; see [the CLI simulation contract](docs/CLI_SIMULATION.md).
 The playable Timber Harbor `tycoon_slice` now integrates these features with
 Milestone 2 presentation, UI, audio, reflection, scene persistence and asset reload.
+Its workforce economy includes housing, multi-tick production, resource-specific
+ports and a pause/save/load menu with generated UI artwork.
 The [showcase candidate review](docs/milestone-3-showcase.md) records scope and
 remaining playable acceptance before Milestone 3 signoff.
 

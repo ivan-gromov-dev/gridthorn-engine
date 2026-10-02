@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-02
+
 ### Added
+
+- Expanded the sibling Timber Harbor showcase with housed lumberjack/carpenter/porter
+  jobs, fair warehouse dispatch, player-selected port resources, construction/hiring
+  costs, pause/save/load menu, half speed and generated workforce/UI artwork.
 
 - Provisional `WindowViewport` resource with actual physical creation/resize
   extents for windowed camera picking and screen-space UI.

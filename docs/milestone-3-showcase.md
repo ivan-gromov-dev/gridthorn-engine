@@ -1,62 +1,78 @@
 # Milestone 3 integrated showcase candidate
 
-Implemented on 2026-10-02 in the sibling `tycoon_slice` example. Timber Harbor is
-a playable isometric production/harbor game consuming public SDK APIs. It combines
-all implemented Milestone 3 areas with Milestone 2 presentation, UI, audio,
-reflection, scalar scene persistence and development asset reload.
+Implemented on 2026-10-02 in the sibling `tycoon_slice` example. Timber Harbor
+combines all implemented Milestone 3 areas with Milestone 2 rendering, input,
+UI, audio, reflection, scalar scenes and development asset reload through
+public SDK APIs.
 
-The game has construction costs, connected production, routed deliveries, rent
-and upkeep, seeded market prices, a concrete win condition, restart, and a sandbox.
-Its generated RGBA art, procedural PCM16 music/effects and source provenance live
-with the example. The [example guide](../../gridthorn-examples/tycoon_slice/README.md)
-maps each milestone capability to gameplay and describes every control.
+The current playable revision has a continuous workforce economy: renewable
+forest plots, log/plank warehouses, sawmills, ports, four-person houses,
+individually assigned lumberjacks/carpenters/porters and physical road transport.
+Chopping/processing take multiple authoritative ticks. Each port sells exactly
+one player-selected resource; the initial port sells logs. Sales earn gold,
+construction/hiring cost gold and warehouse dispatch rotates fairly among
+waiting porters. The starting state includes 120 gold and four housed workers.
+
+A generated textured UI provides resource/site/worker counts, a game timer,
+pause and 0.5×/1×/2×/4× speeds, selection/staff inspection and a menu toggled by
+button or Escape. Save/load, world/camera snapshots, restart, sandbox and quit
+are menu actions. Menu entry pauses simulation and resume preserves the player's
+previous speed/manual pause. Three RGBA atlases and original PCM16 music/effects
+are included with provenance. The [example guide](../../gridthorn-examples/tycoon_slice/README.md)
+contains rules, costs, controls and the feature integration matrix.
 
 ## Integration decisions
 
-The complete integer authoritative world resides in one typed scenario root.
-A nested ScenarioRuntime executes one exact tick from each outer FixedUpdate.
-The outer runtime remains a non-authoritative owner of window input, camera,
-UI, presentation, audio and the host frame accumulator. This uses the current
-supported snapshot/save subset without claiming arbitrary ECS or interactive
-clock restoration.
+The integer authoritative world belongs to one typed scenario root. A nested
+ScenarioRuntime executes one exact tick from each outer FixedUpdate. The outer
+runtime owns input, UI, camera, presentation, audio and the host accumulator.
+No device/worker/presentation clock is serialized into the world save.
 
-Two integration gaps were corrected in the engine: screen-space UI/timing now
-draws after textured world sprites, and WindowViewport publishes actual physical
-creation/resize/zero extents to frame systems for correct camera picking. Neither
-change introduces dependencies or exposes platform/backend types. Domain tests
-cover geometry partition and viewport publication; the game tests resized picking.
+The original candidate corrected two engine integration gaps: screen-space UI
+and timing draw after textured world sprites; WindowViewport publishes physical
+creation/resize/zero extents for picking. The workforce revision adds no engine
+crate dependency edges. Textured UI frames use public sprites anchored to the
+viewport, composed after world artwork and before screen-space text. Nine-slice
+frames, labels and button bounds scale together. Building roof picking and UI
+interaction exclusion use the real camera/viewport.
 
-## Evidence
+Scenario revision 2 and `harbor-v2` save worker homes/jobs/positions, reserved and
+carried resources, work counters, stocks, dispatch cursors and port resource
+settings. Invalid jobs, cargo phases, overfull houses, stock counters, scenario
+mismatches and missing market RNG are rejected without replacing the live world.
+Revision-1 automatic-workshop saves are explicitly incompatible. In-memory
+snapshots include a separate scalar camera bookmark; disk saves do not restore
+camera state or the outer host frame accumulator.
 
-Focused game tests cover a winnable contract, rejected placement/move rollback,
-road-break recovery, deterministic request partitioning, fresh-runner snapshot
-and save continuation, queued commands/RNG, invalid-load rollback, atomic file
-replacement and reconstructed maps, menu/pause/step, resized input, and validated
-camera scene round-trip.
+## Local evidence
 
-The local verification includes engine `scripts/verify.ps1`, examples workspace
-format/Clippy/tests, the no-device integration smoke, the native window/GPU smoke,
-and CLI project check, scenario listing, headless launch and graphical launch.
-Detailed check results and the native smoke output belong to the implementation
-handoff; remote CI and a clean-checkout run have not been independently observed
-in this session.
+All 22 focused game tests passed. Coverage includes initial staffing, housing and
+costs, protected edits, multi-tick processing, resource-specific ports, shared
+porters, starvation-free dispatch, broken-road recovery, exact partition/snapshot/
+save continuation, pending commands and RNG, malformed jobs/cargo/stocks,
+atomic file replacement, reconstructed maps, load rollback, every speed option,
+Escape/menu transitions, save/load during work, roof selection, blocked map
+input, resized picking and camera scene validation.
 
-Local results: the full engine verifier passed with `CARGO_NET_OFFLINE=true`
-after the existing generated-project test attempted inaccessible crates.io.
-Examples workspace Clippy and tests passed. All 11 focused tycoon tests passed,
-along with both smoke modes and the four CLI workflows above. The harbor CLI run
-at seed 42/tick 1000 reported 99 shipments, 1,287 coins and fingerprint
-`288d555e869c5503`; this default scenario needs player-built cottages to win.
+Engine `scripts/verify.ps1` passed with `CARGO_NET_OFFLINE=true`, including the
+boundary checker. Examples workspace format, Clippy and tests passed. The
+no-device integration smoke and real window/GPU/audio smoke exited successfully.
+CLI project check, scenario listing and headless launch passed. At seed 42/tick
+1000, the default harbor produced 14 sales, 219 gold and canonical fingerprint
+`a06206981f3ebecd`. The expanded two-port test hires multiple plank porters while
+preserving the original raw-log port and sells both resource streams.
+
+Remote CI, clean-checkout verification, cross-platform native output and a full
+manual playthrough have not been independently observed in this session.
 
 ## Remaining acceptance and deferrals
 
-This is an implemented showcase candidate. Final Milestone 3 completion remains
-pending the maintainer's playable review and milestone signoff; the roadmap must
-not label that acceptance complete prematurely.
+This is an implemented showcase candidate. Final Milestone 3 completion awaits
+the maintainer's playable review and milestone signoff; its roadmap checkbox
+remains open.
 
-Supported showcase scale is 12Ã—12 cells, single-cell buildings, two tile layers,
-64 concurrent couriers, and a small economic contract. API stability, large-world
-frame time/memory/compile-size benchmarks, cross-platform native output, wider
-footprints in this particular game, arbitrary ECS snapshots, cross-release save
-migrations, replay files, responsive UI layout and distributable packaging remain
-explicitly deferred. The square toggle is a diagnostic view with isometric art.
+Scope is a finite 12×12 map, one-cell buildings, two tile layers, two economic
+scenarios and up to 64 workers. Square projection is a diagnostic view using
+isometric building art. API stability, large-world frame/memory/compile-size
+benchmarks, cross-platform output, arbitrary ECS snapshots, replay files,
+cross-release migrations and distributable packaging remain deferred.

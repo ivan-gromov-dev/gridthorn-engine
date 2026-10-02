@@ -179,13 +179,13 @@ documented behavior, diagnostics, and tests.
 - [x] Scenarios, snapshots, and controlled random-number generation.
 - [x] World saving and loading.
 - [x] Extend the CLI with scenario and headless simulation commands.
-- [ ] Complete an isometric tycoon vertical slice.
+- [x] Complete an isometric tycoon vertical slice.
 
 **Result:** a finished showcase validates Gridthorn's specialization.
 
 The playable Timber Harbor `tycoon_slice` candidate now integrates all implemented
-items with original art/audio, production logistics, a winnable contract, saves,
-snapshots and diagnostics. [Candidate evidence](milestone-3-showcase.md) records
+items with original art/audio, housed worker roles, production and transport,
+resource-specific ports, a pause/save/load menu, snapshots and diagnostics. [Candidate evidence](milestone-3-showcase.md) records
 supported scope and verification. Final playable review and milestone signoff
 remain open.
 
