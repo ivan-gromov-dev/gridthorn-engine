@@ -1,5 +1,5 @@
 use super::super::FrameGeometry;
-use crate::{Camera2d, Color, RenderFrame, TextLabel, UiPrimitive, UiRect};
+use crate::{Camera2d, Color, RenderFrame, Sprite, TextLabel, UiPrimitive, UiRect};
 
 #[test]
 fn projects_screen_rect_from_top_left_pixels() {
@@ -35,4 +35,55 @@ fn assert_slice_close(actual: &[f32], expected: &[f32]) {
             .zip(expected)
             .all(|(actual, expected)| (actual - expected).abs() < f32::EPSILON)
     );
+}
+
+#[test]
+fn separates_world_geometry_from_the_overlay_drawn_after_textures() {
+    let frame = RenderFrame::new(
+        Camera2d::default(),
+        vec![Sprite::new(
+            [0.0, 0.0],
+            [20.0, 20.0],
+            Color::rgb(1.0, 0.0, 0.0),
+        )],
+    )
+    .with_ui(vec![
+        UiRect::new([0.0, 0.0], [20.0, 20.0], Color::rgb(0.0, 1.0, 0.0))
+            .expect("UI bounds")
+            .into(),
+    ]);
+    let geometry = FrameGeometry::new(&frame, 100, 100);
+    assert_eq!(geometry.world_vertex_count, 6);
+    assert_eq!(geometry.vertices.len(), 12);
+    assert_slice_close(&geometry.vertices[5].color, &[1.0, 0.0, 0.0, 1.0]);
+    assert_slice_close(&geometry.vertices[6].color, &[0.0, 1.0, 0.0, 1.0]);
+    assert_eq!(
+        FrameGeometry::new(
+            &RenderFrame::default().with_ui(frame.ui().to_vec()),
+            100,
+            100
+        )
+        .world_vertex_count,
+        0
+    );
+}
+
+#[test]
+fn timing_diagnostics_remain_above_opaque_ui_panels() {
+    let frame = RenderFrame::default()
+        .with_ui(vec![
+            UiRect::new([0.0, 0.0], [100.0, 100.0], Color::rgb(0.0, 0.0, 0.0))
+                .expect("panel")
+                .into(),
+        ])
+        .with_timing_overlay(crate::TimingOverlay::new(
+            std::time::Duration::from_millis(20),
+            2,
+            std::time::Duration::from_millis(35),
+            true,
+        ));
+    let geometry = FrameGeometry::new(&frame, 100, 100);
+    assert_eq!(geometry.world_vertex_count, 0);
+    assert_slice_close(&geometry.vertices[0].color, &[0.0, 0.0, 0.0, 1.0]);
+    assert_slice_close(&geometry.vertices[18].color, &[1.0, 0.18, 0.16, 0.95]);
 }

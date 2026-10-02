@@ -39,7 +39,8 @@ pub use runtime::{
     SimulationControl, SimulationSpeed, SimulationSpeedError, Sprite, SpriteRegion,
     SpriteRegionError, TextLabel, TextureAsset, TextureAssetError, TexturedSprite, TimeError,
     TimingOverlay, UiButton, UiButtonError, UiButtonInteraction, UiError, UiPrimitive, UiRect,
-    Vec2, WavDecodeError, WindowConfig, WindowedApplication, WorldAccess, contact, overlaps,
+    Vec2, WavDecodeError, WindowConfig, WindowViewport, WindowedApplication, WorldAccess, contact,
+    overlaps,
 };
 pub use version::version;
 

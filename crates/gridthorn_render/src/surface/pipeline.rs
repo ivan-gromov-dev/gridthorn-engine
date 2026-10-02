@@ -211,16 +211,21 @@ impl SpritePipeline {
             ..RenderPassDescriptor::default()
         });
         if let Some(vertex_buffer) = vertex_buffer.as_ref() {
-            let vertex_count = u32::try_from(geometry.vertices.len()).unwrap_or(u32::MAX);
             render_pass.set_pipeline(&self.pipeline);
             render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
-            render_pass.draw(0..vertex_count, 0..1);
+            render_pass.draw(0..geometry.world_vertex_count, 0..1);
         }
         for (buffer, bind_group, vertex_count) in &textured {
             render_pass.set_pipeline(&self.textured_pipeline);
             render_pass.set_bind_group(0, bind_group, &[]);
             render_pass.set_vertex_buffer(0, buffer.slice(..));
             render_pass.draw(0..*vertex_count, 0..1);
+        }
+        if let Some(vertex_buffer) = vertex_buffer.as_ref() {
+            let vertex_count = u32::try_from(geometry.vertices.len()).unwrap_or(u32::MAX);
+            render_pass.set_pipeline(&self.pipeline);
+            render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+            render_pass.draw(geometry.world_vertex_count..vertex_count, 0..1);
         }
     }
 }

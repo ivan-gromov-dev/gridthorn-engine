@@ -183,6 +183,12 @@ documented behavior, diagnostics, and tests.
 
 **Result:** a finished showcase validates Gridthorn's specialization.
 
+The playable Timber Harbor `tycoon_slice` candidate now integrates all implemented
+items with original art/audio, production logistics, a winnable contract, saves,
+snapshots and diagnostics. [Candidate evidence](milestone-3-showcase.md) records
+supported scope and verification. Final playable review and milestone signoff
+remain open.
+
 ## Milestone 4 — Professional debugging workflow
 
 - [ ] Entity hierarchy and universal inspector.
@@ -275,7 +281,8 @@ CLI scenario and headless simulation commands are complete on 2026-10-02 for the
 provisional game-process subset documented in [CLI_SIMULATION.md](CLI_SIMULATION.md).
 Project declarations, dedicated binary routing, explicit ticks/seeds, and failure
 diagnostics are covered by command tests and the public scenarios-snapshots example.
-The immediate target is Milestone 3: an isometric tycoon vertical slice.
+The immediate target is playable acceptance of the implemented Milestone 3
+Timber Harbor `tycoon_slice` candidate; see [the showcase review](milestone-3-showcase.md).
 Milestone 2 is complete for the supported subsets documented in the
 [completion review](milestone-2-review.md); its APIs remain provisional.
 

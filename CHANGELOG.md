@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Provisional `WindowViewport` resource with actual physical creation/resize
+  extents for windowed camera picking and screen-space UI.
+
 - Provisional CLI scenario listing and dedicated headless simulation launch with
   explicit ticks/seeds, project configuration, release-profile selection,
   contextual diagnostics, Cargo command tests, and a public SDK example.
@@ -29,6 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cursor conversion, and a headless public SDK example behind `grid`.
 - Provisional opt-in `gridthorn::grid` square/isometric coordinate projection,
   signed cell identities, checked inverse conversion, and a headless SDK example.
+
+### Fixed
+
+- Draw screen-space UI and timing diagnostics above textured world sprites.
 
 ## [0.3.0] - 2026-10-02
 

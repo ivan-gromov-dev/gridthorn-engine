@@ -52,6 +52,12 @@ impl RuntimeWindowLifecycle {
 }
 
 impl WindowLifecycle for RuntimeWindowLifecycle {
+    fn resized(&mut self, width: u32, height: u32) {
+        self.runtime
+            .world()
+            .insert_resource(super::WindowViewport { width, height });
+    }
+
     fn started(&mut self, _control: &mut WindowControl) -> Result<(), ApplicationError> {
         self.runtime.startup()?;
         self.frame_timer.start(Instant::now());

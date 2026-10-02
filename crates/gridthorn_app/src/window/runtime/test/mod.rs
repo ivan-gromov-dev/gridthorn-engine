@@ -10,6 +10,7 @@ use super::{FrameTimer, RuntimeWindowLifecycle};
 mod exit;
 mod input;
 mod presentation;
+mod viewport;
 
 #[derive(Default)]
 struct StageCounts {
