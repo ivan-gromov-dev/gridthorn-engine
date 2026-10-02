@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Provisional bounded deterministic weighted grid pathfinding, typed errors,
+  expansion budgets, visited/frontier diagnostics, and a public SVG example.
+
 - Provisional integer object footprints, deterministic exclusive grid occupancy,
   read-only placement preview, atomic placement/relocation, removal, typed
   diagnostics, and a headless public SDK example behind `grid`.

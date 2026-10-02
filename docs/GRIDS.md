@@ -169,3 +169,56 @@ persistence remain deferred. Memory, large-footprint/map performance, binary-siz
 and cross-platform measurements are explicitly deferred. No scalability or
 stronger determinism guarantee is claimed; this increment introduces no stable
 format or irreversible architecture decision.
+
+## Pathfinding and diagnostic visualization
+
+The opt-in `grid` feature exports provisional `NavigationBounds`, `search_path`,
+`PathSearch`, `PathStatus`, and `NavigationError`. The platform-independent
+service uses Dijkstra search across four orthogonal neighbors in an inclusive
+signed-cell rectangle. Square and isometric layouts share identical navigation.
+No dependency, lifecycle system, stable format, or authoritative floating-point
+arithmetic is introduced. Values are `Send + Sync`.
+
+The caller supplies a pure cost query over an immutable terrain/occupancy
+snapshot: `None` blocks a cell, positive `u32` values specify entry costs.
+The start costs zero; the goal's entry cost is included. Both endpoints must
+be in bounds and traversable, even when identical. Invalid bounds, endpoints,
+encountered zero costs, and accumulated `u64` overflow return contextual errors.
+Checked neighbor coordinates never wrap at integer limits. Terrain outside
+bounds is never queried. Tile layers, placement occupancy, agent clearance,
+and dynamic obstacle policy remain caller-owned.
+
+A successful route includes both endpoints and minimizes total entry cost.
+Neighbors and equal-cost frontier ties use `(column, row)` order; equal-cost
+routes retain their first predecessor. Reproducibility requires the same inputs
+and a consistent cost query. `Unreachable` means the reachable frontier was
+exhausted; `BudgetExceeded` does not prove the goal unreachable. The explicit
+budget limits settled cells; zero permits no expansion, including start=goal.
+Each expansion probes at most four neighbors, plus two endpoint probes per
+query. Work and diagnostic storage grow with the budget rather than allocating
+the entire rectangle. Searches are synchronous and are not resumable.
+
+`PathSearch` owns the route, optional total cost, visited cells with settled
+costs in expansion order, and the remaining frontier with tentative costs in
+cost/cell order. Failed and budget-limited searches have no route or total cost.
+These read-only diagnostics can be projected into existing sprites/UI or custom
+tools without linking navigation to rendering. Queries mutate no world data;
+authoritative route consumption belongs at fixed ticks or explicit load/reset.
+
+Run the public facade example:
+
+```console
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_pathfinding
+```
+
+It combines weighted tiles with object occupancy and writes four SVGs under
+`../gridthorn-examples/target/pathfinding`: square/isometric found routes and
+budget-limited diagnostics. Red means blocked, blue visited, yellow frontier,
+and green route. Focused tests cover weighted detours, tie ordering, repeatable
+results, unreachable goals, budgets, invalid input, and extreme coordinates.
+
+Diagonal movement, multi-cell agents, heuristic A*, asynchronous/resumable work,
+route caching/invalidation, automatic movement and interactive overlays are
+explicitly deferred. Large-map performance/memory, binary size, and stronger
+cross-platform determinism measurements remain deferred; no scalability claim
+is made. This roadmap item is complete for the documented provisional subset.
