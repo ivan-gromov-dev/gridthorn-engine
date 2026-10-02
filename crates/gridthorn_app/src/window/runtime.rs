@@ -8,6 +8,7 @@ use super::{ApplicationError, WindowApplication, WindowConfig, WindowControl, Wi
 
 /// Windowed runner for an application runtime and its timed frame schedules.
 pub struct WindowedApplication {
+    rendering_enabled: bool,
     config: WindowConfig,
     runtime: ApplicationRuntime,
 }
@@ -16,7 +17,18 @@ impl WindowedApplication {
     /// Create a windowed application from platform and runtime configuration.
     #[must_use]
     pub fn new(config: WindowConfig, runtime: ApplicationRuntime) -> Self {
-        Self { config, runtime }
+        Self {
+            config,
+            runtime,
+            rendering_enabled: true,
+        }
+    }
+
+    /// Run a native input window without initializing or presenting GPU resources.
+    #[must_use]
+    pub fn without_renderer(mut self) -> Self {
+        self.rendering_enabled = false;
+        self
     }
 
     /// Run timed frames until the platform event loop exits.
@@ -25,7 +37,13 @@ impl WindowedApplication {
     ///
     /// Returns contextual platform, renderer, or runtime failures.
     pub fn run(self) -> Result<(), ApplicationError> {
-        WindowApplication::new(self.config, RuntimeWindowLifecycle::new(self.runtime)).run()
+        let application =
+            WindowApplication::new(self.config, RuntimeWindowLifecycle::new(self.runtime));
+        if self.rendering_enabled {
+            application.run()
+        } else {
+            application.without_renderer().run()
+        }
     }
 }
 
@@ -59,6 +77,9 @@ impl WindowLifecycle for RuntimeWindowLifecycle {
     }
 
     fn started(&mut self, _control: &mut WindowControl) -> Result<(), ApplicationError> {
+        self.runtime
+            .world()
+            .insert_resource(gridthorn_input::PointerCapture::default());
         self.runtime.startup()?;
         self.frame_timer.start(Instant::now());
         Ok(())
@@ -67,6 +88,13 @@ impl WindowLifecycle for RuntimeWindowLifecycle {
     fn idle(&mut self, control: &mut WindowControl) -> Result<(), ApplicationError> {
         let elapsed = self.frame_timer.advance(Instant::now());
         self.run_elapsed_frame(elapsed)?;
+        if let Some(Some(mode)) = self
+            .runtime
+            .world()
+            .update_resource_with(gridthorn_input::PointerCapture::take_request)
+        {
+            control.set_pointer_capture(mode);
+        }
         if self
             .runtime
             .world()
@@ -91,6 +119,7 @@ impl WindowLifecycle for RuntimeWindowLifecycle {
     }
 
     fn suspended(&mut self) {
+        self.input.push(InputEvent::FocusLost);
         self.frame_timer.suspend();
     }
 

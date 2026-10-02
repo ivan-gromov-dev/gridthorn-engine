@@ -29,7 +29,7 @@ impl SurfaceRenderer {
     /// # Errors
     ///
     /// Returns an error when surface creation, adapter selection, device
-    /// creation, or initial surface configuration fails.
+    /// creation, or initial surface compatibility validation fails.
     pub fn new(
         target: WindowSurfaceTarget,
         width: u32,
@@ -69,7 +69,8 @@ impl SurfaceRenderer {
         Ok(renderer)
     }
 
-    /// Reconfigure for a new non-zero extent or suspend acquisition at zero.
+    /// Queue a new non-zero extent or suspend acquisition at zero.
+    /// Native configuration is deferred until the next renderable frame.
     ///
     /// # Errors
     ///
@@ -77,7 +78,11 @@ impl SurfaceRenderer {
     /// non-zero surface extent.
     pub fn resize(&mut self, width: u32, height: u32) -> Result<(), RenderSurfaceError> {
         match self.lifecycle.resize(width, height) {
-            SurfaceChange::Configure(extent) => self.configure(extent)?,
+            SurfaceChange::QueueConfiguration(extent) => {
+                self.surface
+                    .get_default_config(&self.adapter, extent.width, extent.height)
+                    .ok_or(RenderSurfaceError::UnsupportedConfiguration)?;
+            }
             SurfaceChange::Suspend => {
                 self.configuration = None;
                 debug!(component = "renderer", "suspended zero-sized surface");
@@ -112,6 +117,11 @@ impl SurfaceRenderer {
             return Ok(());
         }
 
+        if let Some(extent) = self.lifecycle.configuration_required() {
+            self.configure(extent)?;
+            self.lifecycle.mark_configured();
+        }
+
         let (frame, suboptimal) = match self.surface.get_current_texture() {
             wgpu::CurrentSurfaceTexture::Success(frame) => (frame, false),
             wgpu::CurrentSurfaceTexture::Suboptimal(frame) => (frame, true),
@@ -119,7 +129,7 @@ impl SurfaceRenderer {
                 return Ok(());
             }
             wgpu::CurrentSurfaceTexture::Outdated => {
-                self.reconfigure_current()?;
+                self.lifecycle.invalidate_configuration();
                 return Ok(());
             }
             wgpu::CurrentSurfaceTexture::Lost => return Err(RenderSurfaceError::SurfaceLost),
@@ -157,7 +167,7 @@ impl SurfaceRenderer {
                 component = "renderer",
                 "surface frame was suboptimal; reconfiguring"
             );
-            self.reconfigure_current()?;
+            self.lifecycle.invalidate_configuration();
         }
         Ok(())
     }
@@ -176,13 +186,6 @@ impl SurfaceRenderer {
             height = extent.height,
             "configured surface"
         );
-        Ok(())
-    }
-
-    fn reconfigure_current(&mut self) -> Result<(), RenderSurfaceError> {
-        if let Some(extent) = self.lifecycle.extent() {
-            self.configure(extent)?;
-        }
         Ok(())
     }
 }

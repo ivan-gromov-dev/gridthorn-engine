@@ -81,6 +81,14 @@ impl UiButton {
 
     /// Consume one frame of engine-owned input and return its interaction state.
     pub fn update(&mut self, input: &InputState) -> UiButtonInteraction {
+        if input
+            .events()
+            .iter()
+            .any(|event| matches!(event, gridthorn_input::InputEvent::FocusLost))
+        {
+            self.armed = false;
+            return UiButtonInteraction::default();
+        }
         let hovered = input
             .cursor_position()
             .is_some_and(|cursor| self.contains(cursor.x, cursor.y));

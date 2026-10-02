@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Defer GPU surface configuration until a renderable frame, coalescing resize
+  events and recovery requests. This avoids the reproduced NVIDIA/Vulkan native
+  exception during shutdown before the first presentation.
+
 ## [0.4.0] - 2026-10-02
 
 ### Added
