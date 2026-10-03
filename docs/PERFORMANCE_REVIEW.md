@@ -10,6 +10,21 @@ records debug/release samples and confirmed duplicate paint in
 [the active checkpoint](work-in-progress/milestone-4-5.md). Reference hardware,
 repeat runs and native CPU/GPU/present measurements remain outstanding.
 
+The renderer's opt-in `GRIDTHORN_RENDER_PERFORMANCE` environment variable records
+the first 240 successful presented frames in memory and writes `render_cpu` CSV
+rows to stderr when the renderer is dropped. Unset it for normal runs. It also
+reports adapter/backend/driver, physical surface extent and configured present mode.
+Rows contain acquire, colored/UI geometry, resource preparation, encode, submit
+and present CPU microseconds plus generated vertex count and vertex-buffer bytes.
+Encode includes geometry/resources; do not add these nested timings to it.
+Resources include textured geometry/batching and creation/upload calls. Submit
+includes encoder finishing. CPU upload-call time is not GPU transfer time, and
+CPU present-call time is not presented frame interval or GPU execution time.
+Counts exclude texture bytes, staging/internal driver allocations and GPU memory.
+No per-frame logging occurs during collection; opt-in pipeline timers continue
+after the sample limit. The first row includes startup/cold work; warm analysis
+must identify its exclusions and interaction sequence explicitly.
+
 ## Evidence and limits
 
 A preliminary Windows debug probe measured one workbench router layout at about
@@ -57,16 +72,16 @@ Do not infer GPU costs from CPU submission timing or claim gains from FPS alone.
 
 ## Workload and ownership matrix
 
-| Domain | Representative workload | Review focus |
-| --- | --- | --- |
-| Runtime/world | Empty runtime, schedule systems, increasing entity counts | Idle overhead, resource access, iteration, cloning, schedule work |
-| Input/UI/localization | Workbench idle, hover, slider drag, scrolling, typing/selection, clipboard, IME, language changes, nested windows and animation | Invalidation, repeated formatting/layout/paint, hidden nodes, text anchors, routing allocations |
-| Fonts/text | English, Russian, Arabic and Japanese at DPI 1/2; short and bounded long fields | Shaping/fallback, cache lifetime, raster samples, memory, editing latency |
-| Rendering/presentation | Workbench, Crystal Trail and Timber Harbor; increasing sprite/text counts | Geometry, clipping, batching, uploads, resource churn, GPU work, present waits |
-| Assets/scenes/saves | Asset-reload plus scene/world-save examples; increasing documented data sizes | Decode/I/O, worker publication, serialization, memory peaks, frame stalls |
-| Simulation/grids/collision | Headless simulation and Timber Harbor; increasing grid/entity/query sizes | Fixed-tick cost, pathfinding/placement, collision queries, snapshots/RNG, scaling and determinism |
-| Audio/platform | Existing native audio and window lifecycle workflows | Command/worker cost, suspension/shutdown, pacing, unavailable-device behavior |
-| CLI/build footprint | Generated-project check/run/build, engine/examples builds | Cold/warm build time, dependency growth, binary size, reproducibility |
+| Domain                     | Representative workload                                                                                                         | Review focus                                                                                      |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Runtime/world              | Empty runtime, schedule systems, increasing entity counts                                                                       | Idle overhead, resource access, iteration, cloning, schedule work                                 |
+| Input/UI/localization      | Workbench idle, hover, slider drag, scrolling, typing/selection, clipboard, IME, language changes, nested windows and animation | Invalidation, repeated formatting/layout/paint, hidden nodes, text anchors, routing allocations   |
+| Fonts/text                 | English, Russian, Arabic and Japanese at DPI 1/2; short and bounded long fields                                                 | Shaping/fallback, cache lifetime, raster samples, memory, editing latency                         |
+| Rendering/presentation     | Workbench, Crystal Trail and Timber Harbor; increasing sprite/text counts                                                       | Geometry, clipping, batching, uploads, resource churn, GPU work, present waits                    |
+| Assets/scenes/saves        | Asset-reload plus scene/world-save examples; increasing documented data sizes                                                   | Decode/I/O, worker publication, serialization, memory peaks, frame stalls                         |
+| Simulation/grids/collision | Headless simulation and Timber Harbor; increasing grid/entity/query sizes                                                       | Fixed-tick cost, pathfinding/placement, collision queries, snapshots/RNG, scaling and determinism |
+| Audio/platform             | Existing native audio and window lifecycle workflows                                                                            | Command/worker cost, suspension/shutdown, pacing, unavailable-device behavior                     |
+| CLI/build footprint        | Generated-project check/run/build, engine/examples builds                                                                       | Cold/warm build time, dependency growth, binary size, reproducibility                             |
 
 Use existing sibling examples where possible. Benchmark scaffolding belongs to
 its domain or a focused sibling example. This milestone does not introduce the

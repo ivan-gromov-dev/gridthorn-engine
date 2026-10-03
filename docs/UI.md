@@ -341,6 +341,14 @@ cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_
 
 ## Integrated workbench
 
+Router layout now measures/arranges the tree, filters and orders managed layers,
+then prepares field geometry and paints once. Closed layers retain their layout
+participation but produce neither paint nor editing geometry. Direct tree layout
+continues to prepare every authored layer. The first Milestone 4.5 optimization
+and CPU before/after samples are recorded in the
+[performance checkpoint](work-in-progress/milestone-4-5.md); native frame-budget
+acceptance remains outstanding.
+
 The sibling [multilingual-workbench](../../gridthorn-examples/multilingual-workbench/README.md)
 combines four Fluent catalogs, multilingual editing, all six controls, reusable modal/
 context actions and unscaled presentation transitions in one interactive application.

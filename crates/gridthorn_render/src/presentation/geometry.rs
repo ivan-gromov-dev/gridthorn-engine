@@ -102,7 +102,7 @@ impl FrameGeometry {
             }
         }
         let world_vertex_count = u32::try_from(vertices.len()).unwrap_or(u32::MAX);
-        vertices.extend(ui_vertices(frame.ui(), width, height));
+        append_ui_vertices(frame.ui(), width, height, &mut vertices);
         if let Some(overlay) = frame.timing_overlay() {
             vertices.extend(timing_overlay_vertices(overlay));
         }
@@ -117,23 +117,27 @@ impl FrameGeometry {
     clippy::cast_precision_loss,
     reason = "surface dimensions and bitmap coordinates become f32 GPU clip-space coordinates"
 )]
-fn ui_vertices(ui: &[super::UiPrimitive], width: u32, height: u32) -> Vec<SpriteVertex> {
-    let mut vertices = Vec::new();
+fn append_ui_vertices(
+    ui: &[super::UiPrimitive],
+    width: u32,
+    height: u32,
+    vertices: &mut Vec<SpriteVertex>,
+) {
     for primitive in ui {
         match primitive {
             super::UiPrimitive::Clipped { bounds, children } => {
-                let mut clipped = ui_vertices(children, width, height);
+                let start = vertices.len();
+                append_ui_vertices(children, width, height, vertices);
                 let left = bounds.position()[0] / width as f32 * 2.0 - 1.0;
                 let right = (bounds.position()[0] + bounds.size()[0]) / width as f32 * 2.0 - 1.0;
                 let top = 1.0 - bounds.position()[1] / height as f32 * 2.0;
                 let bottom = 1.0 - (bounds.position()[1] + bounds.size()[1]) / height as f32 * 2.0;
-                for quad in clipped.as_chunks_mut::<6>().0 {
+                for quad in vertices[start..].as_chunks_mut::<6>().0 {
                     for vertex in quad {
                         vertex.position[0] = vertex.position[0].clamp(left, right);
                         vertex.position[1] = vertex.position[1].clamp(bottom, top);
                     }
                 }
-                vertices.extend(clipped);
             }
             super::UiPrimitive::Rect(rect) => vertices.extend(screen_rect_vertices(
                 rect.position(),
@@ -166,7 +170,6 @@ fn ui_vertices(ui: &[super::UiPrimitive], width: u32, height: u32) -> Vec<Sprite
             }
         }
     }
-    vertices
 }
 
 fn text_vertices(label: &super::TextLabel, width: f32, height: f32) -> Vec<SpriteVertex> {

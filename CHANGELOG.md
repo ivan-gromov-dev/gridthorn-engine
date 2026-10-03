@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Renderer UI geometry now appends nested clipped primitives into one vertex
+  vector, preserving painter order without intermediate clip-subtree copies.
+  Opt-in bounded native CPU diagnostics separate acquisition, geometry, resource
+  preparation, encoding, submission and presentation calls.
+
+- UI router layout prepares paint once after filtering and ordering managed
+  layers, and prepares editing geometry only for visible layer placements.
+  Closed layers still participate in sizing and arrangement.
+
 ### Added
 
 - Provisional presentation `UiTween`, easing and interruptible `UiTransition`

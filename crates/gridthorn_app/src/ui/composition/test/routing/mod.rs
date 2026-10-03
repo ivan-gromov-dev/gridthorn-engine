@@ -5,6 +5,7 @@ mod editing;
 mod layers;
 mod navigation;
 mod pointer;
+mod presentation;
 
 fn tree(controls: Vec<UiControl>) -> UiTree {
     let mut root = UiNode::new(UiNodeId(0), UiControl::Panel);

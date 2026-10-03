@@ -103,6 +103,18 @@ impl UiTree {
         scale: f32,
         mut text: Option<&mut TextSystem>,
     ) -> Result<UiLayout, UiCompositionError> {
+        let mut layout = self.arrange_layout(viewport, scale, &mut text)?;
+        layout.primitives = super::paint::paint(self, &layout.placements, scale, &mut text, None)?;
+        layout.text_geometry = super::text_geometry::prepare(self, &layout.placements, &mut text)?;
+        Ok(layout)
+    }
+
+    pub(super) fn arrange_layout(
+        &self,
+        viewport: [f32; 2],
+        scale: f32,
+        text: &mut Option<&mut TextSystem>,
+    ) -> Result<UiLayout, UiCompositionError> {
         if !viewport.into_iter().all(super::tree::metric)
             || !scale.is_finite()
             || scale <= 0.0
@@ -122,17 +134,15 @@ impl UiTree {
                 size: viewport,
             },
             &self.theme,
-            &mut text,
+            text,
             &mut placements,
             None,
         )?;
-        let primitives = super::paint::paint(self, &placements, scale, &mut text, None)?;
-        let text_geometry = super::text_geometry::prepare(self, &placements, &mut text)?;
         Ok(UiLayout {
             scale,
-            text_geometry,
+            text_geometry: std::collections::BTreeMap::new(),
             placements,
-            primitives,
+            primitives: Vec::new(),
         })
     }
 }

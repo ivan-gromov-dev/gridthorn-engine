@@ -253,6 +253,11 @@ workflows remain game-owned. No translation-management desktop service is requir
 
 Started on 2026-10-03 with a reproducible workbench CPU workload and initial
 UI/text preparation review; see [the checkpoint](work-in-progress/milestone-4-5.md).
+The first focused optimizations remove discarded router paint/hidden-field
+geometry and intermediate clipped-renderer geometry copies. Release CPU
+before/after samples and opt-in native renderer diagnostics are recorded in the
+checkpoint; whole-frame CPU/GPU/present acceptance and the remaining domain
+review are still outstanding.
 Following poor native multilingual-workbench performance,
 including after example-side layout reuse. This is the immediate target and a
 required gate before Milestone 4 closes or Milestone 5 starts. Review all implemented
