@@ -225,3 +225,60 @@ workflows, dependency boundaries and diff whitespace. Log:
 `target/milestone-4-5-render-verify.log`. No new example source or manifest changes
 were needed for these native runs. GPU execution, frame intervals, allocation
 counts and the full milestone workload/acceptance matrix remain outstanding.
+
+## Retained renderer increment
+
+Starting engine revision: `8f3cd5dc606129a1b6a676c88eba884409177c4d`, clean working
+tree. Previous increments are committed; this increment changes renderer code,
+its domain tests and documentation. Examples HEAD remains
+`c89adb9a5317007b3469782c1c8da9d8b4b1b04a`; existing working-tree workbench is used.
+
+Retain one colored/UI input snapshot, CPU geometry and immutable GPU vertex buffer
+per pipeline. Check camera, colored sprites, UI order/clips, overlay and extent.
+Raster reuse requires shared pixel storage and exact position/DPI; independently
+rasterized equal text conservatively rebuilds. Public equality is unchanged.
+Textured resources are still rebuilt per frame and excluded from the retained key.
+Empty frames remove the colored buffer. Reconfiguration recreates the cache;
+occlusion retains it. Dirty geometry clears/refills the CPU vector, retaining
+high-water capacity until reconfiguration/shutdown.
+
+The initial cache attempt allocated a new vector on dirty frames and had costly
+misses. Removed deep raster comparisons from the private predicate and reused
+CPU vertex capacity. Discarded logs: `target/workbench-render-cache.log` and
+`target/workbench-render-cache-shared.log`; those are not final gains.
+New tests compare cached/fresh geometry across camera/sprites, order/clips,
+overlay, empty frames, resize, raster storage, placement, DPI and tint.
+All 40 renderer tests and package Clippy passed during iteration.
+
+Final release logs: `target/workbench-render-retained.log` and
+`target/workbench-render-retained-repeat.log`, 119 frames each; analyze 10–118
+(109 samples). Same RTX 3070/Vulkan/616.56/Fifo/1000×800 configuration.
+Wall-clock animations mean faster runs spend more of the 120-frame script inside
+transitions; cache-hit fractions are not a fixed idle/interaction matrix.
+
+| CPU operation | First median/p95 ms | Repeat median/p95 ms |
+| --- | --- | --- |
+| Geometry including cache check | 0.786 / 1.966 | 0.631 / 0.985 |
+| Resource preparation | 0.643 / 1.014 | 0.609 / 0.766 |
+| Encode (includes geometry/resources) | 1.465 / 2.946 | 1.286 / 1.806 |
+
+Hits: 14/109 and 12/109; hit geometry p95 2/1 microseconds, encode 24/15
+microseconds. Colored upload on hits is zero. Generated vertex-data bytes total
+594088704 per warm run; actual uploads total 540508800/548163072 (9.0%/7.7% lower
+in these mixed scripts). Dirty-frame upload volume is unchanged. These counters
+exclude textures, staging/padding and GPU bandwidth. Peak retained CPU vertex
+capacity in the repeat is 12582912 bytes (12 MiB), excluding snapshot/raster data,
+GPU buffers, driver/staging and other memory. One high-water vector is retained;
+this is not a universal total engine memory limit.
+
+Host present-call interval p95/p99: 21.252/26.714 and 18.277/24.652 ms; worst warm
+interval 36.795/31.990 ms. First interval is zero and excluded. This is CPU cadence
+including engine/event-loop work, not compositor/display timing. PresentMon is
+not on PATH; actual presented intervals/GPU execution remain unmeasured. These
+values do not close native acceptance. Next establish GPU/display measurements,
+isolated idle/editing/IME/animation workloads and native DPI/refresh metadata.
+
+Full `./scripts/verify.ps1` passed: formatting, workspace check/Clippy/tests,
+generated-project workflows, dependency boundaries and whitespace. Log:
+`target/milestone-4-5-retained-verify.log`. Both final release native smoke runs
+passed. No public API, dependency edge or sibling example source changed.

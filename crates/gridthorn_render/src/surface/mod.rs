@@ -1,3 +1,4 @@
+mod colored_frame;
 mod context;
 mod errors;
 mod lifecycle;

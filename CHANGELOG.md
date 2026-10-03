@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Renderer retains colored/UI geometry and its immutable GPU vertex buffer for
+  unchanged snapshots, and reuses CPU vertex capacity when snapshots change.
+  Surface reconfiguration recreates the cache; textured resources remain per-frame.
+
 - Renderer UI geometry now appends nested clipped primitives into one vertex
   vector, preserving painter order without intermediate clip-subtree copies.
   Opt-in bounded native CPU diagnostics separate acquisition, geometry, resource

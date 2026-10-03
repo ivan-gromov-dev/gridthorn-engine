@@ -25,6 +25,16 @@ No per-frame logging occurs during collection; opt-in pipeline timers continue
 after the sample limit. The first row includes startup/cold work; warm analysis
 must identify its exclusions and interaction sequence explicitly.
 
+Renderer rows now also include uploaded vertex-data bytes, colored/UI cache-hit
+status, host present-call intervals and retained CPU vertex capacity bytes.
+`vertex_bytes` describes geometry used for drawing; it is no longer an upload
+counter. Uploaded bytes exclude textures and backend staging/padding. Host
+intervals are measured between successful CPU present calls; the first is zero,
+and gaps include engine work, event-loop pacing and skipped/suspended rendering.
+These are a cadence proxy, not compositor/display presentation timestamps.
+PresentMon was not found on PATH on the reference host; displayed-frame timing
+and GPU execution remain unmeasured.
+
 ## Evidence and limits
 
 A preliminary Windows debug probe measured one workbench router layout at about

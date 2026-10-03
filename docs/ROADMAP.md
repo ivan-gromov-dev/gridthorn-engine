@@ -254,37 +254,93 @@ workflows remain game-owned. No translation-management desktop service is requir
 Started on 2026-10-03 with a reproducible workbench CPU workload and initial
 UI/text preparation review; see [the checkpoint](work-in-progress/milestone-4-5.md).
 The first focused optimizations remove discarded router paint/hidden-field
-geometry and intermediate clipped-renderer geometry copies. Release CPU
+geometry and intermediate clipped-renderer geometry copies.
+Further work retains unchanged colored/UI GPU buffers and reuses CPU vertex
+capacity, with uploaded-byte and host present-call cadence diagnostics. Release CPU
 before/after samples and opt-in native renderer diagnostics are recorded in the
 checkpoint; whole-frame CPU/GPU/present acceptance and the remaining domain
 review are still outstanding.
-Following poor native multilingual-workbench performance,
-including after example-side layout reuse. This is the immediate target and a
+The review follows poor native multilingual-workbench performance,
+including after example-side layout reuse. It is the immediate target and a
 required gate before Milestone 4 closes or Milestone 5 starts. Review all implemented
 engine domains; fix measured bottlenecks in the order below. Measurement protocol,
 workloads, ownership and acceptance criteria are in
 [the performance review plan](PERFORMANCE_REVIEW.md).
 
+Parent items remain open until all their substeps are complete. Checked substeps
+record implemented and verified increments; measurements and limitations are in
+[the checkpoint](work-in-progress/milestone-4-5.md).
+
 - [ ] Establish reproducible release/debug baselines, reference hardware, workload
       sizes and budgets; distinguish cold/warm work and CPU/GPU/present costs.
+  - [x] Add the workbench CPU workload for four locales, DPI 1/2 and 1000×800
+        logical pixels; record debug and repeated release samples with warmups,
+        percentiles and separate construction/first-prepare observations.
+  - [x] Record compiler/target, CPU, GPU/backend/driver, native surface extent
+        and configured present mode on the available Windows host.
+  - [ ] Complete reference metadata with native DPI, display refresh and power
+        conditions; establish remaining domain workloads and budgets.
+  - [ ] Establish controlled cold/warm baselines for whole-engine CPU, GPU
+        execution and actual displayed-frame timing.
 - [ ] Profile the native workbench at idle and during editing, IME, pointer input,
       scrolling, locale changes, nested windows and animation at DPI 1/2.
+  - [x] Add bounded opt-in native renderer CPU timings, vertex/upload counters,
+        retained vertex-capacity counters and host present-call cadence.
+  - [x] Measure repeated native release smoke runs combining locale changes,
+        nested windows and animation; distinguish cache hits and misses.
+  - [ ] Measure isolated idle, editing/selection, clipboard/IME, pointer/slider,
+        scrolling, locale-switch, nested-window and animation workloads at DPI 1/2.
+  - [ ] Measure whole-engine frame CPU work, GPU execution and actual presented
+        intervals; host present-call cadence alone does not satisfy this step.
 - [ ] Resolve measured text/UI bottlenecks: shaping/rasterization, invalidation,
       layout/paint duplication, hidden-layer work, routing and allocations.
+  - [x] Remove discarded router paint and closed-layer editing geometry;
+        preserve sizing/arrangement and verify clipping, DPI and text-session recovery.
+  - [x] Repeat release CPU measurements after the single-paint optimization.
+  - [ ] Profile remaining shaping/rasterization, invalidation, hidden-node sizing,
+        focused editing/preedit, routing and allocation costs; resolve measured issues.
 - [ ] Review and optimize measured rendering/presentation bottlenecks: text/sprite
       geometry, clipping, batching, GPU uploads, resource lifetime and frame pacing.
+  - [x] Remove intermediate nested-clip geometry copies; verify sibling isolation
+        and painter order, and record repeated native CPU before/after samples.
+  - [x] Retain unchanged colored/UI geometry and GPU buffers, reuse CPU vertex
+        capacity on invalidation, and verify camera/sprite/UI/overlay/resize changes.
+  - [x] Measure cache hits/misses, uploaded bytes and retained-capacity tradeoffs
+        in repeated native release smoke runs.
+  - [ ] Review sprite/text batching, dirty-frame uploads, textured-resource lifetime
+        and GPU execution across workbench, Crystal Trail and Timber Harbor.
+  - [ ] Measure and resolve remaining frame-pacing/presentation bottlenecks.
 - [ ] Review runtime/world/input/localization overhead and scaling with increasing
       entity/control/event counts; record measurements and each domain's disposition.
+  - [ ] Measure empty-runtime/schedule overhead and entity/control/event scaling.
+  - [ ] Record runtime, world, input and localization dispositions and remeasure fixes.
 - [ ] Review assets/reload, scenes/saves, audio and platform lifecycle for I/O,
       memory peaks, worker/publication costs and frame stalls.
+  - [ ] Measure asset reload, scene/world-save I/O, publication and memory peaks.
+  - [ ] Measure audio command/worker costs and platform suspend/resume/shutdown.
+  - [ ] Record each domain's disposition and remeasure any fixes.
 - [ ] Review fixed simulation, grids, pathfinding/placement, collision and
       snapshots for scaling, allocation costs and preserved determinism.
+  - [ ] Measure fixed ticks, grid/pathfinding/placement and collision scaling.
+  - [ ] Measure snapshots/RNG and allocation costs; verify determinism after fixes.
+  - [ ] Record each domain's disposition and supported workload limits.
 - [ ] Measure cold/warm build time, dependency footprint and binary size; address
       measured regressions without introducing unrelated subsystems.
+  - [ ] Run controlled cold/warm engine, examples and generated-project builds.
+  - [ ] Record dependency footprint/binary sizes and resolve measured regressions.
 - [ ] Add repeatable performance workloads/regression checks, rerun the complete
       matrix and repository verification, and document before/after results and limits.
+  - [x] Add workbench CPU/native measurement entrypoints and behavior regression
+        tests for completed UI/renderer fixes; record before/after samples and limits.
+  - [x] Run full repository verification and affected native smoke after each
+        completed optimization increment.
+  - [ ] Complete workloads/regression checks for the remaining domains and rerun
+        the entire performance matrix and final repository verification.
 - [ ] Meet the documented native workbench frame budget and obtain maintainer
       acceptance; record a completion review before resuming Milestone 4 closure.
+  - [ ] Meet whole-engine CPU/GPU budgets and displayed-frame interval targets
+        across the required interaction, locale and DPI matrix.
+  - [ ] Obtain maintainer native acceptance and publish the Milestone 4.5 completion review.
 
 **Result:** implemented engine capabilities have measured performance envelopes,
 the multilingual UI is usable within its recorded frame budget, and remaining

@@ -19,6 +19,17 @@ pub(crate) struct TextPixel {
 }
 
 impl RasterText {
+    #[expect(
+        clippy::float_cmp,
+        reason = "cached draw data requires exactly matching placement and DPI"
+    )]
+    pub(crate) fn same_draw_data(&self, other: &Self) -> bool {
+        self.position == other.position
+            && self.scale == other.scale
+            && self.measurement == other.measurement
+            && Arc::ptr_eq(&self.pixels, &other.pixels)
+    }
+
     /// Place the snapshot at a logical-pixel top-left origin. Ink overhang is retained.
     ///
     /// # Errors

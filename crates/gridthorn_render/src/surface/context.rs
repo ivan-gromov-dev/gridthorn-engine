@@ -154,7 +154,7 @@ impl SurfaceRenderer {
             .ok_or(RenderSurfaceError::UnsupportedConfiguration)?;
         let pipeline = self
             .sprite_pipeline
-            .as_ref()
+            .as_mut()
             .ok_or(RenderSurfaceError::UnsupportedConfiguration)?;
         let pipeline_sample = pipeline.encode(
             &self.device,

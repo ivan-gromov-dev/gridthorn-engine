@@ -1,4 +1,3 @@
-use wgpu::util::DeviceExt;
 use wgpu::{
     BindGroupLayout, BlendState, Color, ColorTargetState, ColorWrites, CommandEncoder, Device,
     FragmentState, LoadOp, MultisampleState, Operations, PipelineCompilationOptions,
@@ -9,7 +8,7 @@ use wgpu::{
 };
 
 use crate::RenderFrame;
-use crate::presentation::{FrameGeometry, SpriteVertex};
+use crate::presentation::SpriteVertex;
 
 use super::lifecycle::SurfaceExtent;
 
@@ -18,6 +17,7 @@ pub(super) struct SpritePipeline {
     textured_pipeline: RenderPipeline,
     texture_layout: BindGroupLayout,
     performance: bool,
+    colored: super::colored_frame::ColoredFrame,
 }
 
 impl SpritePipeline {
@@ -26,27 +26,7 @@ impl SpritePipeline {
             label: Some("gridthorn sprite shader"),
             source: ShaderSource::Wgsl(include_str!("sprite.wgsl").into()),
         });
-        let texture_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            label: Some("gridthorn texture layout"),
-            entries: &[
-                wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Texture {
-                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                        view_dimension: wgpu::TextureViewDimension::D2,
-                        multisampled: false,
-                    },
-                    count: None,
-                },
-                wgpu::BindGroupLayoutEntry {
-                    binding: 1,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-                    count: None,
-                },
-            ],
-        });
+        let texture_layout = sampled_texture_layout(device);
         let layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
             label: Some("gridthorn sprite pipeline layout"),
             bind_group_layouts: &[],
@@ -121,11 +101,12 @@ impl SpritePipeline {
             textured_pipeline,
             texture_layout,
             performance,
+            colored: super::colored_frame::ColoredFrame::new(),
         }
     }
 
     pub(super) fn encode(
-        &self,
+        &mut self,
         device: &Device,
         queue: &Queue,
         encoder: &mut CommandEncoder,
@@ -134,19 +115,15 @@ impl SpritePipeline {
         extent: SurfaceExtent,
     ) -> Option<super::performance::PipelineSample> {
         let geometry_start = self.performance.then(std::time::Instant::now);
-        let geometry = FrameGeometry::new(frame, extent.width, extent.height);
+        let changed = self.colored.prepare(frame, extent);
         let geometry_time = geometry_start.map(|start| start.elapsed());
         let resources_start = self.performance.then(std::time::Instant::now);
-        let vertex_buffer = (!geometry.vertices.is_empty()).then(|| {
-            device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("gridthorn sprite vertices"),
-                contents: bytemuck::cast_slice(&geometry.vertices),
-                usage: wgpu::BufferUsages::VERTEX,
-            })
-        });
+        self.colored.upload(device, changed);
         let textured =
             super::uploads::textured_resources(device, queue, &self.texture_layout, frame, extent);
         let resources_time = resources_start.map(|start| start.elapsed());
+        let geometry = self.colored.geometry();
+        let vertex_buffer = self.colored.buffer();
         let color_attachment = RenderPassColorAttachment {
             view,
             depth_slice: None,
@@ -194,7 +171,37 @@ impl SpritePipeline {
                 resources: resources_time.unwrap_or_default(),
                 vertices,
                 vertex_bytes: vertices * std::mem::size_of::<SpriteVertex>(),
+                uploaded_vertex_bytes: (vertices
+                    - if changed { 0 } else { geometry.vertices.len() })
+                    * std::mem::size_of::<SpriteVertex>(),
+                colored_cache_hit: !changed,
+                retained_vertex_capacity_bytes: geometry.vertices.capacity()
+                    * std::mem::size_of::<SpriteVertex>(),
             }
         })
     }
+}
+
+fn sampled_texture_layout(device: &Device) -> BindGroupLayout {
+    device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+        label: Some("gridthorn texture layout"),
+        entries: &[
+            wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::FRAGMENT,
+                ty: wgpu::BindingType::Texture {
+                    sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                    view_dimension: wgpu::TextureViewDimension::D2,
+                    multisampled: false,
+                },
+                count: None,
+            },
+            wgpu::BindGroupLayoutEntry {
+                binding: 1,
+                visibility: wgpu::ShaderStages::FRAGMENT,
+                ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                count: None,
+            },
+        ],
+    })
 }

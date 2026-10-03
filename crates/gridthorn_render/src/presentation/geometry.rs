@@ -57,20 +57,28 @@ pub(crate) fn textured_sprite_batches(
 }
 
 impl FrameGeometry {
+    pub(crate) fn new(frame: &RenderFrame, width: u32, height: u32) -> Self {
+        let mut geometry = Self {
+            vertices: Vec::with_capacity(frame.sprites().len() * 6),
+            world_vertex_count: 0,
+        };
+        geometry.update(frame, width, height);
+        geometry
+    }
+
     #[expect(
         clippy::cast_precision_loss,
         reason = "surface dimensions become f32 GPU clip-space coordinates"
     )]
-    pub(crate) fn new(frame: &RenderFrame, width: u32, height: u32) -> Self {
+    pub(crate) fn update(&mut self, frame: &RenderFrame, width: u32, height: u32) {
+        self.vertices.clear();
+        self.world_vertex_count = 0;
         if width == 0 || height == 0 {
-            return Self {
-                vertices: Vec::new(),
-                world_vertex_count: 0,
-            };
+            return;
         }
         let camera = frame.camera();
         let viewport_height = camera.viewport_height();
-        let mut vertices = Vec::with_capacity(frame.sprites().len() * 6);
+        let vertices = &mut self.vertices;
         if viewport_height.is_finite() && viewport_height > 0.0 {
             let aspect = width as f32 / height as f32;
             let half_height = viewport_height * 0.5;
@@ -102,14 +110,11 @@ impl FrameGeometry {
             }
         }
         let world_vertex_count = u32::try_from(vertices.len()).unwrap_or(u32::MAX);
-        append_ui_vertices(frame.ui(), width, height, &mut vertices);
+        append_ui_vertices(frame.ui(), width, height, vertices);
         if let Some(overlay) = frame.timing_overlay() {
             vertices.extend(timing_overlay_vertices(overlay));
         }
-        Self {
-            vertices,
-            world_vertex_count,
-        }
+        self.world_vertex_count = world_vertex_count;
     }
 }
 
