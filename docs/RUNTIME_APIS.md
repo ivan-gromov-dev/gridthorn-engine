@@ -77,8 +77,9 @@ Unicode/IME text sessions and plain-text clipboard are now implemented provision
 Font assets, script fallback, shaping/bidi, measurement, wrapping and DPI rendering
 are implemented provisionally; [TEXT.md](TEXT.md) records coverage and limitations.
 Current UI provides [composition, sizing, layout, anchoring, clipping, scrolling,
-themes and reusable controls](UI.md), with explicit control value commands.
-Rich styled text, text-field editing,
+themes and reusable controls](UI.md), with explicit value commands, ordered routing,
+hit testing, focus/navigation hooks, text editing/selection and local pointer capture
+with explicit world-input consumption. Rich styled text,
 modal UI and device selection remain planned. Existing sprite animation supports
 uniform-duration atlas frames, looping, one-shot playback and pause/restart.
 

@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Provisional retained UI event router with clipped painter-order hit testing,
+  keyboard/controller navigation hooks, focus and pointer capture, explicit
+  event/continuous world-input consumption, Unicode grapheme selection/editing,
+  caret/preedit paint and text-session/clipboard requests. Atomic routing and
+  cancellation tests, public facade lifecycle tests and composed-controls workflow.
+
 - Provisional retained UI composition with logical sizing, row/column/overlay
   layout, anchors, padding, constraints, nested rectangular clipping, clamped
   scrolling, themes and reusable labels/buttons/toggles/sliders/lists/text fields.

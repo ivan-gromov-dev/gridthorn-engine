@@ -4,7 +4,7 @@
 //! under construction.
 
 mod runtime;
-/// Provisional retained UI composition and explicitly commanded controls.
+/// Provisional retained UI composition, controls and explicit ordered input routing.
 pub mod ui {
     pub use gridthorn_app::composition::*;
     #[cfg(test)]
