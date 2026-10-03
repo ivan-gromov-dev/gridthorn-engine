@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- UI arrangement reuses identical asset-font text measurements within one layout
+  pass, with bounded storage and no cache retained across tree/theme/font changes.
+  Optional router layout diagnostics separate arrangement, text geometry and paint.
+
 - Opt-in window diagnostics record bounded preparation and redraw callback CPU
   timings separately from event-loop waiting.
 

@@ -401,3 +401,134 @@ attributing it entirely to renderer CPU geometry work.
 Do not add phase percentiles or claim whole-frame budget acceptance: input
 callbacks and actual displayed intervals remain unmeasured, and redraw includes
 surface/presentation waits. Native DPI 2 and OS IME are still outstanding.
+
+## Workbench native input-phase increment
+
+Starting engine HEAD: `1252ee44735e44a3e4ed29e095d1491988a13dd6` with a clean
+engine tree; examples HEAD remains `c89adb9a5317007b3469782c1c8da9d8b4b1b04a`
+with existing manifest/README/workbench changes. This increment adds an opt-in
+example-owned `GRIDTHORN_WORKBENCH_PERFORMANCE` collector: up to 240 successful
+input-system samples, printed at drop. Disabled/full collection takes no phase
+timestamps. Input preparation is extracted into a focused method; route/effect
+ordering and existing smoke workloads are preserved.
+
+Rows contain prepare-before, real-input route, workload route, effects,
+prepare-after and anchor refresh; nested snapshot/layout timings accumulate
+within the same host input frame. Animation/headless preparation is not collected.
+Effects in isolated editing include localized-preview refresh. Do not add nested
+snapshot/layout durations to their parent prepare durations. The probe excludes
+stdout/platform publication/render extraction and is not whole-frame CPU time.
+
+Package Clippy and all 7 workbench tests passed; logs:
+`target/workbench-phases-clippy.log`, `target/workbench-phases-tests.log`.
+The new collector test checks disabled collection, storage limits and resets.
+Release build passed: `target/workbench-phases-build.log`.
+
+Full engine `./scripts/verify.ps1` passed (workspace formatting/check/Clippy/tests,
+generated-project workflows, dependency boundaries and whitespace):
+`target/milestone-4-5-phases-verify.log`. Native measurements started only after
+verification and package builds finished. Two release runs per mode/locale passed,
+with all three performance environment variables enabled and no concurrent
+agent-launched compilation. Commands used the built workbench executable with
+`--<idle|editing>-smoke --locale=<en-US|ru|ar-EG|ja>`.
+Logs: `target/workbench-phases-<mode>-<locale>-<1|2>.log`; summary:
+`target/workbench-phases-summary.csv`. Native metadata remains RTX 3070, Vulkan,
+NVIDIA 616.56, Fifo, DPI 1, physical 1000×800; refresh/power conditions remain
+unrecorded. Warm input samples use host frames 11–120, 110 per run, including the
+exit-request frame; these do not require a matching successful presentation.
+Nearest-rank p95 values below are milliseconds.
+
+| Editing locale | Router layout p95, first/repeat | Effects/preview p95, first/repeat | Injected workload route p95, first/repeat |
+| --- | --- | --- | --- |
+| en-US | 5.439 / 5.910 | 0.049 / 0.093 | 0.028 / 0.034 |
+| ru | 6.524 / 6.398 | 0.069 / 0.079 | 0.034 / 0.032 |
+| ar-EG | 7.414 / 8.695 | 0.064 / 0.105 | 0.030 / 0.047 |
+| ja | 12.319 / 11.336 | 0.098 / 0.055 | 0.043 / 0.030 |
+
+Japanese layout p99: 14.093 / 12.524 ms. Aggregated layout microseconds account for
+97.49–98.82% of the sum of the six outer input phases across each warm editing
+cohort, excluding nested snapshot/layout from that sum. This is a measured
+component share, not a whole-runtime CPU percentage. All warm idle frames skip
+router layout; cached prepare-before p95 is 0.013–0.027 ms and prepare-after
+0.004–0.009 ms. Empty anchor route and snapshot capture remain small in this
+workload. Headless end-to-end passed with diagnostics unset and no diagnostic rows:
+`target/workbench-phases-headless.log`.
+
+No optimization chosen from aggregate layout timing alone. Router layout includes
+sizing/arrangement, painting and focused field geometry; the next focused review
+must distinguish these costs, including closed-layer sizing and unchanged text
+preparation, before selecting a cache/invalidation change. OS IME, native DPI 2,
+whole-engine CPU/GPU budgets and displayed-frame acceptance remain open.
+
+## Router arrangement measurement reuse increment
+
+Starting engine HEAD remains `1252ee44735e44a3e4ed29e095d1491988a13dd6`;
+the preceding input-phase documentation was still uncommitted and is preserved.
+Examples retain their existing workbench/manifest changes. Added private opt-in
+router layout diagnostics via `GRIDTHORN_UI_PERFORMANCE`, with at most 240 rows,
+nonblocking collector access and explicit skipped reporting. Cloned routers
+share their collector; the final owner prints samples. Arrangement/layer ordering,
+text geometry and paint are separate timings; focused decoration is nested paint.
+Sample indices count successful layout calls, not native host/present frames.
+
+The initial two native release editing probes per en-US/ja locale found arrangement
+dominant. Logs: `target/ui-layout-before-<en-US|ja>-<1|2>.log`. Excluding the first
+ten layout calls leaves 103 calls per run. Arrangement p95 was 5.558 / 6.160 ms
+in en-US and 11.719 / 10.454 ms in ja. Japanese paint p95 was 2.080 / 1.924 ms;
+text geometry 0.143 / 0.123 ms, with focused-decoration p95 0.136 / 0.133 ms
+nested in paint. Measurements ran without agent-launched compilation.
+
+Review found repeated measurement of identical captions/wrapping widths during
+recursive sizing and arrangement, including content extents and auto heights.
+The focused fix shares measurement results within a single arrangement pass.
+Text and exact effective wrapping width form the key; the theme and font service
+are fixed for the pass. Bitmap measurements bypass the cache. Cache keys/results
+are discarded before returning the layout; at most 1024 entries and 1 MiB copied
+UTF-8 keys are stored, excluding map/allocator overhead. Misses after either limit
+still measure normally, and errors are never cached. No subtree is skipped and
+closed layers retain their existing sizing semantics. No dependency or SDK API
+was added. Focused tests cover reuse, different text/widths, errors, entry/key-byte
+limits, fresh-cache results, disabled phase timers and busy-collector skipping.
+
+Full `./scripts/verify.ps1` passed: formatting, workspace check/Clippy/tests
+(application: 110 passed, 1 existing ignored), generated-project workflows,
+dependency boundaries and whitespace. Log:
+`target/milestone-4-5-arrangement-verify.log`. Workbench package Clippy and all
+7 tests passed; logs `target/ui-layout-cache-workbench-clippy.log` and
+`target/ui-layout-cache-workbench-tests.log`. Final release build:
+`target/ui-layout-cache-final-build.log`. These checks finished before final
+native measurements. No sibling example source change was needed in this increment.
+
+Final release editing matrix: two runs per four locales, with only
+`GRIDTHORN_UI_PERFORMANCE=1`, the same diagnostic setting as the before probes.
+Arguments: `--editing-smoke --locale=<en-US|ru|ar-EG|ja>`. Logs:
+`target/ui-layout-final-<locale>-<1|2>.log`; summary of before/final cohorts:
+`target/ui-layout-summary.csv`. All editing runs collected 113 layout calls with
+zero collector skips. Excluding the first ten leaves 103 samples per run.
+Native metadata logs physical 1000×800 and scale factor 1. Reference GPU/backend
+is from the earlier renderer-enabled cohort; this probe does not log adapter,
+refresh or power/frequency. Runs had no concurrent agent-launched build/test work.
+Nearest-rank p95 values below are milliseconds.
+
+| Locale | Arrangement before, first/repeat | Arrangement final, first/repeat | Layout phases total before, first/repeat | Layout phases total final, first/repeat |
+| --- | --- | --- | --- | --- |
+| en-US | 5.558 / 6.160 | 1.629 / 1.388 | 6.993 / 7.642 | 3.070 / 2.675 |
+| ru | Not measured in this before cohort | 1.397 / 1.380 | Not measured in this before cohort | 2.881 / 2.679 |
+| ar-EG | Not measured in this before cohort | 1.798 / 1.756 | Not measured in this before cohort | 3.257 / 2.958 |
+| ja | 11.719 / 10.454 | 2.758 / 2.560 | 13.941 / 12.204 | 4.221 / 4.419 |
+
+Layout total is computed per sample by summing arrangement, text geometry and
+paint before calculating percentiles; nested focused decoration is excluded from
+that sum. The total excludes diagnostic collector publication and minor wrapper
+work, and is not whole-engine frame CPU. Japanese total p99: 5.480 / 4.553 ms,
+versus 14.694 / 13.591 ms before. Early after probes are exploratory repetitions
+in `target/ui-layout-after-<en-US|ja>-<1|2>.log`, not the final cohort.
+Native mixed smoke and headless behavior also passed:
+`target/ui-layout-cache-mixed.log`, `target/ui-layout-cache-headless.log`.
+The latter ran with UI diagnostics unset.
+
+The measured arrangement issue is resolved for this workload without a persistent
+text cache or a visibility/sizing semantic change. Remaining review includes
+paint/raster preparation, closed-layer sizing, allocations, OS IME/native DPI 2
+and whole-engine CPU/GPU/display acceptance. This component improvement does not
+close the milestone's native frame-budget gate.

@@ -21,6 +21,13 @@ effective ancestor clips, content extents and clamped scroll offsets. Submit
 viewport, theme, content, control or DPI change. A zero viewport produces no
 paint; no window, GPU, world or simulation is required for layout.
 
+Arrangement reuses asset-font measurements for identical text and effective
+wrapping width within that pass. One immutable theme/font service owns the pass;
+the cache is discarded before layout returns and stores at most 1024 entries
+with at most 1 MiB of copied UTF-8 keys (excluding map metadata).
+Further measurements still execute normally after the limit. Bitmap measurement,
+paint and editing geometry retain their existing behavior.
+
 `UiLength` supports intrinsic `Auto`, fixed `Pixels`, parent-relative `Fraction`
 (0–1) and `Fill`. Minimum/maximum sizes include padding. Fractions resolve
 against available parent content, even in auto parents; this is not a cyclic

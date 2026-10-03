@@ -17,12 +17,29 @@ impl UiRouter {
         scale: f32,
         mut text: Option<&mut TextSystem>,
     ) -> Result<UiLayout, UiCompositionError> {
+        let mut sample =
+            super::super::layout_performance::LayoutSample::new(self.performance.is_some());
+        let start = sample.start();
         let mut layout = tree.arrange_layout(viewport, scale, &mut text)?;
         self.order_layers(tree, &mut layout);
+        sample.record(0, start);
+        let start = sample.start();
         layout.text_geometry =
             super::super::text_geometry::prepare(tree, &layout.placements, &mut text)?;
-        layout.primitives =
-            super::super::paint::paint(tree, &layout.placements, scale, &mut text, Some(self))?;
+        sample.record(1, start);
+        let start = sample.start();
+        layout.primitives = super::super::paint::paint(
+            tree,
+            &layout.placements,
+            scale,
+            &mut text,
+            Some(self),
+            Some(&mut sample),
+        )?;
+        sample.record(2, start);
+        if let Some(performance) = &self.performance {
+            performance.record(&sample);
+        }
         Ok(layout)
     }
 

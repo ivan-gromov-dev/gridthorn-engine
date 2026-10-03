@@ -303,6 +303,10 @@ record implemented and verified increments; measurements and limitations are in
   - [x] Remove discarded router paint and closed-layer editing geometry;
         preserve sizing/arrangement and verify clipping, DPI and text-session recovery.
   - [x] Repeat release CPU measurements after the single-paint optimization.
+    - [x] Add bounded native workbench input-phase timings to distinguish routing,
+          localized-preview effects and cached/dirty layout preparation.
+    - [x] Separate router arrangement/text-geometry/paint costs and reuse repeated
+          asset-font measurements within a bounded single arrangement pass.
   - [ ] Profile remaining shaping/rasterization, invalidation, hidden-node sizing,
         focused editing/preedit, routing and allocation costs; resolve measured issues.
 - [ ] Review and optimize measured rendering/presentation bottlenecks: text/sprite

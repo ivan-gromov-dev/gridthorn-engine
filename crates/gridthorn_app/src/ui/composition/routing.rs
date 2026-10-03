@@ -84,6 +84,7 @@ struct PendingClipboard {
 /// confinement/locking. Reserve unique clipboard IDs for this router.
 #[derive(Clone, Debug)]
 pub struct UiRouter {
+    performance: Option<std::sync::Arc<super::layout_performance::LayoutPerformance>>,
     layers: Vec<layers::OpenLayer>,
     layer_roots: BTreeSet<UiNodeId>,
     layer_hovered: bool,
@@ -108,6 +109,7 @@ impl UiRouter {
     #[must_use]
     pub fn new(first_clipboard_id: u64) -> Self {
         Self {
+            performance: super::layout_performance::LayoutPerformance::new(),
             layers: Vec::new(),
             layer_roots: BTreeSet::new(),
             layer_hovered: false,

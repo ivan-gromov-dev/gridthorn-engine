@@ -49,6 +49,26 @@ sampling gaps are unavailable data, not zero GPU work.
 
 ## Evidence and limits
 
+`GRIDTHORN_UI_PERFORMANCE` enables router-owned layout diagnostics. Up to 240
+successful layout calls are stored; `ui_layout` rows print when the final cloned
+router releases the shared collector. Arrangement includes layer ordering;
+text geometry and paint are separate phases. Focused-decoration time is nested
+within paint and includes focused field geometry, selection/caret and preedit.
+Indices count successful layout calls, not host or presented frames. Busy
+collector locks skip samples, reported by `ui_layout_summary`; collection never
+waits on a held lock. Default routers allocate no collector and take no phase
+timestamps. Optional timers continue after the storage limit. Whole-frame CPU,
+GPU execution and displayed-frame intervals are outside this probe.
+
+The sibling workbench also supports `GRIDTHORN_WORKBENCH_PERFORMANCE` for bounded
+input-system phase diagnostics. `workbench_cpu` rows distinguish prepare before
+input, real input routing, scripted workload routing, effect handling (including
+localized preview refresh), prepare after effects and empty-event anchor refresh.
+Snapshot capture and router layout are nested prepare timings, not additional
+costs to add. Host-frame indices differ from renderer and native callback indices.
+This example-only probe consumes public APIs, excludes startup/animation/render
+extraction/platform requests/stdout, and does not introduce an SDK profiling API.
+
 `GRIDTHORN_WINDOW_PERFORMANCE` records up to 240 preparation and 240 redraw
 callbacks, independently, and prints `window_cpu,phase,sample,elapsed_us` at
 shutdown. Preparation includes lifecycle idle (runtime schedules), render-frame

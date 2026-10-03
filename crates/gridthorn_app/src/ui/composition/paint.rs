@@ -7,6 +7,7 @@ pub(super) fn paint(
     scale: f32,
     text: &mut Option<&mut TextSystem>,
     router: Option<&super::UiRouter>,
+    mut performance: Option<&mut super::layout_performance::LayoutSample>,
 ) -> Result<Vec<UiPrimitive>, UiCompositionError> {
     let mut output = Vec::new();
     for placement in placements {
@@ -42,7 +43,11 @@ pub(super) fn paint(
         };
         append_clipped(&mut primitives, content, clip, scale)?;
         if let Some(router) = router {
+            let start = performance.as_ref().and_then(|sample| sample.start());
             router.paint_field(tree, placement, scale, text, &mut primitives)?;
+            if let Some(sample) = performance.as_deref_mut() {
+                sample.record(3, start);
+            }
         }
         append_clipped(&mut output, primitives, placement.clip, scale)?;
     }
