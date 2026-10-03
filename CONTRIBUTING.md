@@ -20,6 +20,11 @@ sh ./scripts/verify.sh
 
 The POSIX boundary check uses `python3` to parse Cargo metadata.
 
+The generated-project CLI lifecycle test seeds its dependencies from the
+workspace lockfile and runs the CLI and nested Cargo commands offline. Run the
+workspace build checks first to populate the local dependency cache; this test
+must not depend on crates.io availability after compilation.
+
 For changes containing only Markdown prose or agent instructions, use
 `./scripts/verify.ps1 -DocsOnly` or `sh ./scripts/verify.sh --docs-only`.
 This mode rejects non-Markdown staged, unstaged, and untracked changes and checks

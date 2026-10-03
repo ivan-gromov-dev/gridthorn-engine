@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Generated-project CLI lifecycle verification uses cached workspace dependencies
+  offline, avoiding registry timeout failures after the workspace checks pass.
 - Release guidance now uses the full release range, the correct patch increment,
   compatibility-aware version selection, and selective lockfile inspection.
 - Defer GPU surface configuration until a renderable frame, coalescing resize
