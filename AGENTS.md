@@ -5,8 +5,9 @@ more specific rules for its subtree.
 
 ## Working agreement
 
-- Follow `docs/ROADMAP.md` in risk-reduction order and keep every increment
-  buildable, tested, and documented.
+- Use `docs/ROADMAP.md` in risk-reduction order for initiative work. Explicit
+  user requests define the task scope; keep each increment buildable, tested,
+  and documented without expanding a local fix into a milestone.
 - Treat `docs/ARCHITECTURE.md` invariants as requirements. Record durable
   exceptions or difficult-to-reverse decisions through the ADR process.
 - Preserve a clean dependency direction. Run the boundary checker whenever a
@@ -56,5 +57,19 @@ more specific rules for its subtree.
 ## Required verification
 
 Run `./scripts/verify.ps1` on Windows or `sh ./scripts/verify.sh` on macOS/Linux
-before handing off a completed change. For CLI or template changes, also
-exercise the affected command end to end.
+before handing off code, configuration, or script changes and release candidates.
+For changes consisting only of Markdown prose or agent instructions, use
+`./scripts/verify.ps1 -DocsOnly` or `sh ./scripts/verify.sh --docs-only`; these
+reject non-Markdown changes. Changes to documented executable examples or code
+snippets also require the affected build or end-to-end check. For CLI or template
+changes, exercise the affected command end to end.
+
+## Agent context and execution
+
+- Load each applicable instruction chain once, before editing its scope; extend
+  it when the task reaches another subtree or repository. Do not reread guidance
+  already present in context unless it changed or was lost during compaction.
+- Use `docs/AI_WORKFLOW.md` for context routing and long-task checkpoints. Read
+  the current roadmap target and relevant milestone, architecture ownership rules,
+  and affected domain contracts rather than loading every design document. Follow
+  its execution guidance for bounded output, checks, and authorized delegation.

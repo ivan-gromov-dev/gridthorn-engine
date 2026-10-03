@@ -89,9 +89,10 @@ convention:
 - Standard plugins depend on public SDK contracts. They must not gain privileged
   access unavailable to third-party plugins.
 
-Allowed and forbidden crate dependencies will be checked in CI once the
-workspace exists. Any exception requires an ADR that records the replacement
-boundary and its consequences.
+Allowed and forbidden crate dependencies are checked by repository verification
+and CI; see [dependency boundaries](DEPENDENCY_BOUNDARIES.md) for current crate
+edges. Any exception requires an ADR that records the replacement boundary and
+its consequences.
 
 ## Application lifecycle
 

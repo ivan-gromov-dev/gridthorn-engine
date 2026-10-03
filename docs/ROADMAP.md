@@ -297,6 +297,11 @@ full breadth of Unity or Unreal.
 
 ## Cross-cutting requirements
 
+Repository AI workflows and context routing are documented in
+[AI_WORKFLOW.md](AI_WORKFLOW.md). Token usage and workflow latency improvements
+require equivalent-task measurements; no savings are assumed from instruction
+size alone.
+
 Every milestone monitors:
 
 - compile times, binary size, and dependency growth;

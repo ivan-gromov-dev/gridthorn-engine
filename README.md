@@ -264,9 +264,18 @@ Codex discovers project workflows under `.agents/skills`:
 
 - `$implement` implements a feature under scoped `AGENTS.md` guidance, adds
   domain-owned tests, and runs the complete existing verification suite.
-- `$release` prepares the next patch release, reconciles versioned project
-  documentation and optimized agent guidance, verifies the candidate, and
-  generates copy-ready tag and release text.
+- `$release` establishes the release range, selects a compatible version,
+  reconciles release documentation, verifies the candidate, and generates
+  copy-ready tag and release text without publishing.
+- `$review` reviews a defined diff for behavioral, architectural, and
+  compatibility defects without applying fixes.
+- `$diagnose` reproduces and localizes failures, applying a focused fix when
+  requested.
+
+[AI workflow](docs/AI_WORKFLOW.md) routes domain context, verification, optional
+long-task checkpoints, and measurements of token usage and execution time.
+Markdown-only prose and instruction changes support explicit docs-only
+verification; code, configuration, scripts, and releases retain full checks.
 
 ## License
 

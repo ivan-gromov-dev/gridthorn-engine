@@ -12,5 +12,4 @@ These rules apply to all crates below this directory.
 - Public APIs require rustdoc and a compiled domain test or example.
 - Keep third-party types behind engine-owned APIs unless interoperability is an
   explicit, documented decision.
-- Add tests under the owning `src/<domain>/test/` directory, grouped by
-  behavior. A module declares its test subtree behind `#[cfg(test)]`.
+- Declare domain test subtrees behind `#[cfg(test)]`.
