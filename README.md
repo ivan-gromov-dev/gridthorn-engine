@@ -103,7 +103,8 @@ by Milestone 5 desktop platform/device controls. The debugging workflow and
 editor move to Milestones 6 and 7. Desktop input, Unicode/IME/clipboard and
 multilingual font rendering and [runtime localization](docs/LOCALIZATION.md) are
 implemented provisionally. [UI composition and controls](docs/UI.md) are implemented
-with explicit value commands; event routing, focus, selection and modal UI remain planned.
+with explicit value commands, ordered event routing, focus/navigation, grapheme-aware
+editing/selection and pointer capture with explicit world-input consumption. Modal UI remains planned.
 Remaining runtime UI/device additions are planned;
 see [the runtime API scope](docs/RUNTIME_APIS.md) and [roadmap](docs/ROADMAP.md).
 

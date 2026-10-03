@@ -53,6 +53,9 @@ pub struct UiPlacement {
 /// Detached layout diagnostics and prepared render primitives.
 #[derive(Clone, Debug)]
 pub struct UiLayout {
+    pub(super) scale: f32,
+    pub(super) text_geometry:
+        std::collections::BTreeMap<UiNodeId, super::text_geometry::TextGeometry>,
     pub(super) placements: Vec<UiPlacement>,
     pub(super) primitives: Vec<gridthorn_render::UiPrimitive>,
 }
@@ -123,8 +126,11 @@ impl UiTree {
             &mut placements,
             None,
         )?;
-        let primitives = super::paint::paint(self, &placements, scale, &mut text)?;
+        let primitives = super::paint::paint(self, &placements, scale, &mut text, None)?;
+        let text_geometry = super::text_geometry::prepare(self, &placements, &mut text)?;
         Ok(UiLayout {
+            scale,
+            text_geometry,
             placements,
             primitives,
         })

@@ -209,8 +209,10 @@ fallback, plural/select, decimal formatting and the four-language headless examp
 UI composition, sizing, layout, anchoring, clipping, scrolling, styling and six
 reusable controls are implemented provisionally on 2026-10-03; see [UI.md](UI.md)
 for explicit value commands, domain/facade/renderer tests and the public
-composed-controls headless/native smoke example. Event routing, focus and complete
-text editing remain the following increment.
+composed-controls headless/native smoke example. Event routing, clipped hit testing,
+focus/navigation hooks, grapheme-aware text editing/selection, local pointer capture
+and explicit world-input consumption are implemented provisionally on 2026-10-03;
+see [UI.md](UI.md) for the supported editor/navigation subset and validation limits.
 This milestone extends the narrow Milestone 1/2 subsets;
 it does not change their completion status. Implement in the order below, with
 each increment independently buildable, tested and documented. Detailed engine
@@ -226,7 +228,7 @@ and game ownership is defined in [RUNTIME_APIS.md](RUNTIME_APIS.md).
       assets, fallback, parameters, plural/select rules and locale-aware formatting.
 - [x] UI composition, sizing, layout, anchoring, clipping, scrolling, styling and
       reusable controls: labels, buttons, toggles, sliders, lists and text fields.
-- [ ] UI event routing, hit testing, keyboard/controller navigation hooks, focus,
+- [x] UI event routing, hit testing, keyboard/controller navigation hooks, focus,
       text editing/selection and pointer capture with explicit world-input consumption.
 - [ ] Context menus, popups and dialogs: ordered layers, modal scopes, focus
       restoration, configurable Escape/outside-click dismissal and input blocking.
@@ -377,8 +379,9 @@ desktop keyboard/pointer and Unicode/IME/clipboard input are implemented;
 font assets, fallback and multilingual shaping/rendering are implemented provisionally.
 Localization runtime APIs are implemented provisionally with validated catalogs,
 explicit fallback and locale-aware decimal formatting. UI composition and controls
-are implemented provisionally with explicit value commands. UI event routing,
-focus, navigation and text editing/selection are next.
+are implemented provisionally with explicit value commands, ordered event routing,
+hit testing, focus/navigation hooks, text editing/selection, local capture and
+explicit world-input consumption. Context menus, popups and modal dialogs are next.
 Milestone 5 adds desktop platform/device controls. Professional debugging and
 the editor are deferred to Milestones 6 and 7 respectively.
 Milestone 2 is complete for the supported subsets documented in the

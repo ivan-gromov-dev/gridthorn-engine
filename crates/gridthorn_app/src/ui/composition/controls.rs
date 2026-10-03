@@ -53,7 +53,7 @@ pub enum UiVisualState {
     Disabled,
 }
 
-/// Explicit value commands; event routing and text selection are a later increment.
+/// Explicit value commands, also used by the event router.
 #[derive(Clone, Debug, PartialEq)]
 pub enum UiCommand {
     /// Activate a button or invert a toggle.

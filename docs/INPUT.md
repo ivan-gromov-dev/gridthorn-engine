@@ -57,8 +57,8 @@ and buttons, record release edges and clear the cursor position. Cancellation
 requests native release and reports its result. Capture does not automatically
 resume on focus return. Focus loss is an explicit ordered cancellation event;
 consumers must not interpret its release edges as a completed click. This is
-native cursor capture; UI ownership, hit testing and input consumption remain
-later Milestone 4 work. Gamepads remain Milestone 5 work.
+native cursor capture; [UI ownership, hit testing and explicit input consumption](UI.md)
+are now implemented separately. Gamepads remain Milestone 5 work.
 
 ## Unicode text sessions, IME and clipboard
 
@@ -100,9 +100,9 @@ Focus return does not reopen text input: the game restores its intended text
 owner and explicitly requests a new session. Native cancellation precedes
 `FocusLost`; headless `InputBuffer` injection also cancels outstanding preedit.
 All text events are presentation data; fixed simulation consumes game commands.
-No normalization, grapheme navigation, field validation, selection editing or
-automatic gameplay-event consumption is performed. Text-field/UI routing remains
-a subsequent Milestone 4 increment. [Unicode font rendering](TEXT.md) is now
+The raw input boundary performs no normalization, field validation or consumption.
+[UI routing](UI.md) now supplies grapheme navigation, selection editing and explicit
+world-input consumption. [Unicode font rendering](TEXT.md) is now
 implemented provisionally with an independent presentation service.
 
 `Clipboard::read(id)` and `write(id, text)` queue ordered one-shot operations.

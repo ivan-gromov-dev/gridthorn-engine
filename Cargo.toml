@@ -41,6 +41,7 @@ fontdb = { version = "0.23.0", default-features = false, features = ["std"] }
 fluent-bundle = "0.16.0"
 fluent-syntax = "0.12.0"
 unic-langid = "0.9.6"
+unicode-segmentation = "1.13.3"
 intl-memoizer = "0.5.3"
 icu_decimal = "2.3.0"
 icu_locale_core = "2.3.0"

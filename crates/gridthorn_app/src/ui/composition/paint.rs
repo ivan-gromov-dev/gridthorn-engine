@@ -6,6 +6,7 @@ pub(super) fn paint(
     placements: &[UiPlacement],
     scale: f32,
     text: &mut Option<&mut TextSystem>,
+    router: Option<&super::UiRouter>,
 ) -> Result<Vec<UiPrimitive>, UiCompositionError> {
     let mut output = Vec::new();
     for placement in placements {
@@ -40,12 +41,15 @@ pub(super) fn paint(
             placement.clip
         };
         append_clipped(&mut primitives, content, clip, scale)?;
+        if let Some(router) = router {
+            router.paint_field(tree, placement, scale, text, &mut primitives)?;
+        }
         append_clipped(&mut output, primitives, placement.clip, scale)?;
     }
     Ok(output)
 }
 
-fn append_clipped(
+pub(super) fn append_clipped(
     output: &mut Vec<UiPrimitive>,
     children: Vec<UiPrimitive>,
     bounds: UiBounds,
@@ -64,7 +68,7 @@ fn append_clipped(
     Ok(())
 }
 
-fn rect(
+pub(super) fn rect(
     output: &mut Vec<UiPrimitive>,
     bounds: UiBounds,
     color: Color,
@@ -83,7 +87,7 @@ fn rect(
     Ok(())
 }
 
-fn label(
+pub(super) fn label(
     tree: &UiTree,
     value: &str,
     bounds: UiBounds,
