@@ -801,3 +801,23 @@ equivalent uncached baseline. No memory-limit tuning is justified from this data
 Retention/release checks are complete for this bounded workload. Remaining review
 includes precise allocation/backend memory accounting, whole-engine CPU/GPU/display
 acceptance, native OS IME/DPI 2 and other implemented domain scaling workloads.
+
+## Runtime schedule diagnostics — 2026-10-03
+
+Starting engine revision: f48f6946eda7df55bd0cbd2ef1e6b49260f3f5ea.
+Added private opt-in bounded runtime stage timing, independent phase limits and
+no timestamps when disabled/full. Existing lifecycle/order tests cover unchanged
+execution; focused tests cover disabled collection and independent caps.
+Example sources were unchanged; existing sibling changes were preserved.
+
+Release build and four native Japanese idle/editing smoke runs passed, without
+concurrent build/test work. Logs: target/runtime-<idle|editing>-<1|2>.stderr.log;
+summary: target/runtime-summary.csv. Runtime/preparation collected 121 calls,
+redraw 119; warm summaries exclude each phase's first ten calls independently.
+Editing Input/transitions p95 1078/1126 us; other stages <=13 us. Window preparation
+1150/1202 us. Idle Input 85/58 us; preparation 155/128 us. Redraw includes blocking
+and cannot establish pure CPU or displayed cadence. No empty-schedule/scaling
+claim or extraction-specific measurement is made. Next: isolate extraction and
+empty-runtime overhead, then increasing entity/event/control workloads.
+
+Verification: ./scripts/verify.ps1 passed (workspace checks, Clippy, domain and CLI end-to-end tests, dependency boundaries and documentation checks). Initial Clippy range_plus_one finding was corrected before the successful run. Release example build and all four native smoke runs passed.

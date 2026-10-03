@@ -101,6 +101,26 @@ must not be treated as paired frame IDs or added as a whole-frame percentile.
 Disabled collection takes no timestamps and stores no samples. Native sample
 counts do not establish actual displayed-frame timing.
 
+`GRIDTHORN_RUNTIME_PERFORMANCE` records up to 240 calls independently for
+PollEvents, Input plus state/scene transitions, aggregate fixed updates, Update,
+PostUpdate and Render. It emits `runtime_cpu,phase,sample,elapsed_us` when the
+runtime is dropped. These wall-clock schedule durations include game systems and
+blocking work. Startup, clock/control sampling, FrameTiming publication, window
+input snapshots, extraction and shutdown are excluded. Fixed-update duration
+includes all ticks and their FixedTime publication; zero-tick frames are retained.
+PollEvents/Input samples can exist even if later clock advancement fails. Indices
+are per phase, not universal frame IDs. Disabled/full collectors take no timestamps.
+No public profiling API or whole-frame/GPU/display budget is implied.
+
+Windows release Japanese native idle/editing smoke, two runs each on 2026-10-03,
+with runtime and window diagnostics enabled, produced 121 runtime/preparation and
+119 redraw samples per run. After excluding each phase's first ten calls, editing
+Input/transitions p95 was 1078 / 1126 us; other schedule phases were at most 13 us
+p95. Window preparation p95 was 1150 / 1202 us. Idle Input/transitions p95 was
+85 / 58 us and preparation 155 / 128 us. Redraw p95 was 8.71–8.81 ms editing and
+9.48–9.53 ms idle, including renderer blocking. These separate phase percentiles
+cannot be subtracted or summed to infer extraction cost or presented cadence.
+Empty schedules, entity/event scaling and native DPI 2 remain unmeasured.
 A preliminary Windows debug probe measured one workbench router layout at about
 105 ms at DPI 1 and 119 ms at DPI 2; bitmap layout took about 0.2 ms. Empty routing
 took 0.03–0.06 ms. These are diagnostic samples, not release baselines or measured

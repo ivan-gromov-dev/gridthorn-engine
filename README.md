@@ -102,7 +102,7 @@ verification, deferrals and maintainer acceptance on 2026-10-02. The next phase
 is Milestone 4.5: an [engine performance review](docs/PERFORMANCE_REVIEW.md)
 and measured optimization of implemented capabilities, starting with multilingual
 UI/text and rendering. Opt-in bounded renderer/GPU-pass and window
-preparation/redraw and UI layout-phase diagnostics are documented in the performance review,
+preparation/redraw, runtime schedule and UI layout-phase diagnostics are documented in the performance review,
 with measured workload evidence and limits.
 Milestone 4 remains open until this performance gate and
 native language/IME acceptance finish, followed by Milestone 5 desktop

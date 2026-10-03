@@ -330,6 +330,8 @@ record implemented and verified increments; measurements and limitations are in
   - [ ] Measure and resolve remaining frame-pacing/presentation bottlenecks.
 - [ ] Review runtime/world/input/localization overhead and scaling with increasing
       entity/control/event counts; record measurements and each domain's disposition.
+  - [x] Add bounded runtime schedule diagnostics and record repeated native Japanese
+        idle/editing samples with explicit wall-clock and phase-index limits.
   - [ ] Measure empty-runtime/schedule overhead and entity/control/event scaling.
   - [ ] Record runtime, world, input and localization dispositions and remeasure fixes.
 - [ ] Review assets/reload, scenes/saves, audio and platform lifecycle for I/O,
