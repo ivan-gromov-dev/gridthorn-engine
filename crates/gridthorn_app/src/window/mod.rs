@@ -15,4 +15,6 @@ pub use lifecycle::WindowLifecycle;
 pub use runtime::WindowedApplication;
 pub use viewport::WindowViewport;
 mod capture;
+mod clipboard;
 mod key_mapping;
+mod text;

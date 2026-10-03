@@ -63,6 +63,10 @@ pub use runtime::{
 };
 
 pub use runtime::{
+    Clipboard, ClipboardError, ClipboardOperation, ClipboardRequest, ClipboardResponse,
+    ImeCursorArea, TextInput, TextInputError, TextInputEvent, TextInputRequest,
+};
+pub use runtime::{
     KeyLocation, KeyboardEvent, LogicalKey, Modifiers, NamedKey, NativeKey, PhysicalKey,
     PointerCapture, PointerCaptureError, PointerCaptureMode, PointerCaptureStatus, ScrollPhase,
     WheelDelta,

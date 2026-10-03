@@ -71,7 +71,9 @@ retains the repository verification, documentation and boundary-check requiremen
 Desktop keyboard/pointer input is now implemented provisionally; [INPUT.md](INPUT.md)
 documents physical/logical keys, repeat, modifiers, ordered events, wheel and capture.
 
-Current UI provides bitmap text, panels and buttons. Rich text, text/IME input,
+Unicode/IME text sessions and plain-text clipboard are now implemented provisionally;
+[INPUT.md](INPUT.md) documents their lifecycle and validation scope.
+Current UI provides bitmap text, panels and buttons. Rich text, text-field editing,
 modal UI and device selection remain planned. Existing sprite animation supports
 uniform-duration atlas frames, looping, one-shot playback and pause/restart.
 

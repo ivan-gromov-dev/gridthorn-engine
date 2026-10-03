@@ -17,3 +17,8 @@ pub use pointer::{
 pub use state::{InputBuffer, InputState};
 mod errors;
 pub use errors::PointerCaptureError;
+mod clipboard;
+mod text;
+pub use clipboard::{Clipboard, ClipboardOperation, ClipboardRequest, ClipboardResponse};
+pub use errors::{ClipboardError, TextInputError};
+pub use text::{ImeCursorArea, TextInput, TextInputEvent, TextInputRequest};

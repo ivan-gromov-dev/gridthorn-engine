@@ -61,6 +61,8 @@ where
 }
 
 struct WinitApplication<L> {
+    text: super::text::NativeTextInput,
+    clipboard: super::clipboard::NativeClipboard,
     rendering_enabled: bool,
     capture: super::capture::NativeCapture,
     config: WindowConfig,
@@ -78,6 +80,8 @@ where
         Self {
             config,
             error: None,
+            text: super::text::NativeTextInput::default(),
+            clipboard: super::clipboard::NativeClipboard::default(),
             rendering_enabled: true,
             capture: super::capture::NativeCapture::default(),
             lifecycle,
@@ -127,6 +131,44 @@ where
         let Some(window) = self.window.as_ref() else {
             return;
         };
+
+        if let Some(area) = control.text_input {
+            let area = match area {
+                gridthorn_input::TextInputRequest::Start(area) => Some(area),
+                gridthorn_input::TextInputRequest::Stop => None,
+            };
+            let events = self.text.request(area, window.has_focus());
+            if events.iter().all(|event| {
+                !matches!(
+                    event,
+                    gridthorn_input::InputEvent::TextInputChanged { error: Some(_), .. }
+                )
+            }) {
+                window.set_ime_allowed(self.text.active());
+                if let Some(area) = area {
+                    window.set_ime_cursor_area(
+                        winit::dpi::PhysicalPosition::new(area.x, area.y),
+                        PhysicalSize::new(area.width, area.height),
+                    );
+                }
+            }
+            for event in events {
+                if let Err(error) = self.lifecycle.input(event) {
+                    self.fail(event_loop, error);
+                    return;
+                }
+            }
+        }
+        for request in &control.clipboard {
+            let response = self.clipboard.execute(request, window.has_focus());
+            if let Err(error) = self
+                .lifecycle
+                .input(gridthorn_input::InputEvent::Clipboard(response))
+            {
+                self.fail(event_loop, error);
+                return;
+            }
+        }
 
         if let Some(mode) = control.capture {
             let status = self.capture.apply(mode, window.has_focus(), |mode| {
@@ -201,14 +243,26 @@ where
             if let Err(error) = self.initialize(event_loop) {
                 self.fail(event_loop, error);
             }
-        } else if let Some(renderer) = self.renderer.as_mut() {
-            renderer.set_occluded(false);
+        } else {
+            if let Some(renderer) = self.renderer.as_mut() {
+                renderer.set_occluded(false);
+            }
             self.lifecycle.resumed();
         }
     }
 
     fn suspended(&mut self, event_loop: &ActiveEventLoop) {
         self.cancel_capture(event_loop);
+        let events = self.text.translate(&WindowEvent::Focused(false));
+        if let Some(window) = &self.window {
+            window.set_ime_allowed(false);
+        }
+        for event in events {
+            if let Err(error) = self.lifecycle.input(event) {
+                self.fail(event_loop, error);
+                return;
+            }
+        }
         self.lifecycle.suspended();
         if let Some(renderer) = self.renderer.as_mut() {
             renderer.set_occluded(true);
@@ -227,12 +281,23 @@ where
 
         if matches!(event, WindowEvent::Focused(false)) {
             self.cancel_capture(event_loop);
+            if let Some(window) = &self.window {
+                window.set_ime_allowed(false);
+            }
         }
-        if let Some(input) = map_window_input(&event)
-            && let Err(error) = self.lifecycle.input(input)
-        {
-            self.fail(event_loop, error);
-            return;
+        let mut inputs = self.text.translate(&event);
+        if let Some(input) = map_window_input(&event) {
+            if matches!(event, WindowEvent::Focused(false)) {
+                inputs.push(input);
+            } else {
+                inputs.insert(0, input);
+            }
+        }
+        for input in inputs {
+            if let Err(error) = self.lifecycle.input(input) {
+                self.fail(event_loop, error);
+                return;
+            }
         }
 
         match event {

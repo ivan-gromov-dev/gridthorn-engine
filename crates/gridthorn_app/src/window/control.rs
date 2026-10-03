@@ -3,6 +3,8 @@ use std::time::Instant;
 /// Window operations available to lifecycle hooks.
 #[derive(Debug, Default)]
 pub struct WindowControl {
+    pub(super) text_input: Option<gridthorn_input::TextInputRequest>,
+    pub(super) clipboard: Vec<gridthorn_input::ClipboardRequest>,
     pub(super) capture: Option<gridthorn_input::PointerCaptureMode>,
     pub(super) exit_requested: bool,
     pub(super) minimized: Option<bool>,
@@ -11,6 +13,18 @@ pub struct WindowControl {
 }
 
 impl WindowControl {
+    /// Open/update a text session or close it with `None`; feedback arrives as input events.
+    pub fn set_text_input(&mut self, area: Option<gridthorn_input::ImeCursorArea>) {
+        self.text_input = Some(area.map_or(
+            gridthorn_input::TextInputRequest::Stop,
+            gridthorn_input::TextInputRequest::Start,
+        ));
+    }
+
+    /// Queue a correlated clipboard operation on the native event-loop thread.
+    pub fn clipboard(&mut self, request: gridthorn_input::ClipboardRequest) {
+        self.clipboard.push(request);
+    }
     /// Request native pointer capture; feedback arrives through input events.
     pub fn set_pointer_capture(&mut self, mode: gridthorn_input::PointerCaptureMode) {
         self.capture = Some(mode);

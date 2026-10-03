@@ -14,7 +14,7 @@ codes preserve their platform namespace and value; they are not portable binding
 Future unmapped standardized backend values become `Unidentified`.
 
 Logical characters describe shortcuts under the active layout. They are **not**
-committed text: Unicode text editing, IME and clipboard are the next increment.
+committed text: the separate text-session stream below carries insertable text.
 Modifiers arrive as ordered aggregate changes; left/right distinctions are physical
 keys. No caps-lock/num-lock toggle state or per-keyboard device selection is promised.
 
@@ -60,7 +60,106 @@ consumers must not interpret its release edges as a completed click. This is
 native cursor capture; UI ownership, hit testing and input consumption remain
 later Milestone 4 work. Gamepads remain Milestone 5 work.
 
-## Example and validation scope
+## Unicode text sessions, IME and clipboard
+
+Implemented provisionally on 2026-10-03. `TextInput` and `Clipboard` resources
+are installed before native runtime startup, alongside `PointerCapture`.
+Text delivery is disabled by default. `TextInput::start(ImeCursorArea)` opens or
+updates a session; `stop()` closes it. The last request in a frame wins. Requests
+are applied after that frame and `TextInputChanged { active, error }` arrives in
+the next snapshot. `active` describes engine text delivery, not a guarantee that
+an OS input method is available. `TextInputError` distinguishes unfocused windows
+and invalid cursor rectangles; rejected requests preserve the current session.
+The anchor uses finite physical window-pixel coordinates and nonnegative extents;
+games update it after caret movement, scrolling or DPI changes. Backend positioning
+support varies (X11 supports position only); unsupported IME environments cannot
+be inferred from a successful session request.
+
+`InputEvent::Text(TextInputEvent)` is separate from `Key` and `Keyboard`:
+
+- `Commit(String)` inserts Unicode text once. Keyboard text comes from the
+  backend text payload, never from a physical key or logical character. Only
+  real key presses, including repeats, deliver it. Releases, synthetic keys,
+  control characters and Control/Super shortcut chords are excluded. Control+Alt
+  is permitted for AltGr text; games still own shortcut policy.
+- `Composition { text, cursor }` replaces uncommitted preedit. Cursor endpoints
+  are UTF-8 byte offsets, potentially a reversed selection; `None` means the
+  native IME did not provide a visible cursor. Invalid native offsets become
+  `None`. `InputState::composition()` retains preedit across frame snapshots.
+- `CompositionCancelled` discards preedit without inserting it. Empty native
+  preedit clears pending composition, including the native clear immediately
+  before a commit: cancellation of preedit does not forbid a following commit.
+  Commit, IME disable, session stop, focus loss and suspend also clear preedit.
+- `ImeEnabled`/`ImeDisabled` report OS composition lifecycle. While IME is
+  enabled, keyboard text payloads are suppressed so composition input cannot
+  produce duplicate commits; physical events remain independent.
+
+Focus loss and suspend close the session, cancel preedit, clear modifiers and
+release held gameplay inputs. Late IME commits are ignored after closure.
+Focus return does not reopen text input: the game restores its intended text
+owner and explicitly requests a new session. Native cancellation precedes
+`FocusLost`; headless `InputBuffer` injection also cancels outstanding preedit.
+All text events are presentation data; fixed simulation consumes game commands.
+No normalization, grapheme navigation, field validation, selection editing or
+automatic gameplay-event consumption is performed. Text-field/UI routing and
+Unicode font rendering are subsequent Milestone 4 increments.
+
+`Clipboard::read(id)` and `write(id, text)` queue ordered one-shot operations.
+Caller-owned `u64` identities correlate `InputEvent::Clipboard(ClipboardResponse)`
+with requests; callers should distinguish outstanding operations. A successful
+read returns `Ok(Some(String))`; a successful write returns `Ok(None)`.
+`ClipboardError` reports `Unfocused`, `NoText` or a contextual native `Platform`
+failure. Errors do not terminate the application. Requests execute after the
+current frame on the event-loop thread and replies arrive in the next snapshot.
+Unfocused requests fail without accessing the OS. Clipboard access is independent
+of text-session activity; there is no implicit copy/paste shortcut or text commit.
+The backend initializes lazily and stays alive until shutdown for Linux clipboard
+ownership. Text is accepted as UTF-8 without normalization. Rich formats,
+clipboard preservation across process shutdown on ownership-based platforms,
+Linux primary selection and native Wayland data-control are outside this subset;
+Linux uses X11/XWayland. Native calls are synchronous; latency, allocation and
+binary-size measurements are deferred.
+
+Custom lifecycle adapters use `WindowControl::set_text_input` and `clipboard`.
+Headless adapters can drain `TextInput::take_request` / `Clipboard::take_requests`
+and inject the same engine-owned feedback; no OS clipboard is initialized by
+the input contract crate.
+
+The sibling `text-input` example uses only the public facade:
+
+```sh
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_text_input -- --headless
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_text_input
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_text_input -- --smoke
+```
+
+The native monitor prints committed text and preedit to the terminal; no Unicode
+font renderer is claimed. F4 opens/updates the session, F5 closes it, Control/Super+C
+copies its game-owned document, Control/Super+V appends clipboard text, and Escape
+exits outside preedit. The example explicitly reopens text on focus return.
+`--smoke` checks native session activation and, when original clipboard text can
+be read, a Unicode write/read round-trip followed by restoration. If original
+text is unavailable it skips writes. The headless mode exercises Cyrillic,
+Japanese preedit/commit, combining marks, emoji sequences and focus cancellation.
+Domain/runtime tests additionally cover IME disable, explicit stop, delayed
+commits, repeats, shortcut/synthetic suppression, cursor validation, request
+draining, clipboard correlation/errors and suspend/resume.
+
+Windows native clipboard Unicode round-trip and restoration passed on 2026-10-03
+through the opt-in `native_unicode_clipboard_round_trip_restores_original_text`
+test. The full native `--smoke` window did not receive focus in the available
+execution session (both sandboxed and unsandboxed runs reported `Unfocused`
+then timed out); session activation and candidate-window positioning therefore
+remain unverified natively here. The strict focus guard was retained.
+
+Interactive Cyrillic/dead-key layouts and installed CJK input methods require
+manual Windows device testing. Linux/macOS native IME and clipboard execution,
+large text/event bursts and platform-specific candidate-window geometry are
+explicitly deferred; automated injected IME tests are not native language testing.
+Backend semantics follow [winit IME](https://docs.rs/winit/0.30.13/winit/event/enum.Ime.html)
+and [arboard clipboard](https://docs.rs/arboard/3.6.1/arboard/struct.Clipboard.html).
+
+## Desktop pointer example and validation scope
 
 The sibling `desktop-input` example uses the public facade:
 

@@ -37,6 +37,17 @@ pub struct CursorPosition {
 /// Engine-owned input event produced by a platform adapter.
 #[derive(Clone, Debug, PartialEq)]
 pub enum InputEvent {
+    /// Committed Unicode text or IME lifecycle; never a physical shortcut.
+    Text(crate::TextInputEvent),
+    /// Applied text-session state; IME availability is reported separately.
+    TextInputChanged {
+        /// Whether text delivery is active.
+        active: bool,
+        /// Request failure, if any.
+        error: Option<crate::TextInputError>,
+    },
+    /// Ordered result of a clipboard operation.
+    Clipboard(crate::ClipboardResponse),
     /// Relative physical pointer motion while captured; never a window position.
     PointerMotion {
         /// Horizontal displacement.

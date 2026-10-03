@@ -5,6 +5,8 @@ use crate::{ButtonState, CursorPosition, InputEvent, KeyCode, MouseButton};
 /// Immutable keyboard and mouse state for one host frame.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct InputState {
+    composition: Option<(String, Option<(usize, usize)>)>,
+    text_input_active: bool,
     events: Vec<InputEvent>,
     physical_keys_down: BTreeSet<crate::PhysicalKey>,
     modifiers: crate::Modifiers,
@@ -20,6 +22,19 @@ pub struct InputState {
 }
 
 impl InputState {
+    /// Current preedit and optional UTF-8 byte cursor endpoints, retained across frames.
+    #[must_use]
+    pub fn composition(&self) -> Option<(&str, Option<(usize, usize)>)> {
+        self.composition
+            .as_ref()
+            .map(|(text, cursor)| (text.as_str(), *cursor))
+    }
+
+    /// Whether the adapter has applied an active text session.
+    #[must_use]
+    pub const fn text_input_active(&self) -> bool {
+        self.text_input_active
+    }
     /// Events in arrival order, including repeats and focus cancellation.
     #[must_use]
     pub fn events(&self) -> &[InputEvent] {
@@ -109,6 +124,31 @@ impl InputBuffer {
     pub fn push(&mut self, event: InputEvent) {
         self.state.events.push(event.clone());
         match event {
+            InputEvent::Text(crate::TextInputEvent::Composition { text, cursor }) => {
+                let cursor = cursor.filter(|(start, end)| {
+                    text.is_char_boundary(*start) && text.is_char_boundary(*end)
+                });
+                self.state.composition = if text.is_empty() {
+                    None
+                } else {
+                    Some((text, cursor))
+                };
+            }
+            InputEvent::Text(
+                crate::TextInputEvent::Commit(_)
+                | crate::TextInputEvent::CompositionCancelled
+                | crate::TextInputEvent::ImeDisabled,
+            ) => self.state.composition = None,
+            InputEvent::Text(crate::TextInputEvent::ImeEnabled)
+            | InputEvent::Clipboard(_)
+            | InputEvent::MouseWheel { .. }
+            | InputEvent::PointerMotion { .. } => {}
+            InputEvent::TextInputChanged { active, .. } => {
+                self.state.text_input_active = active;
+                if !active {
+                    self.state.composition = None;
+                }
+            }
             InputEvent::Key(key) => {
                 if let crate::PhysicalKey::Code(code) = key.physical_key {
                     if key.repeat && key.state == ButtonState::Pressed {
@@ -129,7 +169,6 @@ impl InputBuffer {
             InputEvent::ModifiersChanged(modifiers) => self.state.modifiers = modifiers,
             InputEvent::FocusGained => self.state.focused = true,
             InputEvent::PointerCaptureChanged(status) => self.state.capture = status.effective,
-            InputEvent::MouseWheel { .. } | InputEvent::PointerMotion { .. } => {}
             InputEvent::Keyboard { key, state } => self.apply_key(key, state),
             InputEvent::MouseButton { button, state } => self.apply_mouse_button(button, state),
             InputEvent::CursorMoved(position) => self.state.cursor_position = Some(position),
@@ -197,6 +236,12 @@ impl InputBuffer {
     }
 
     fn release_all(&mut self) {
+        if self.state.composition.take().is_some() {
+            self.state.events.push(InputEvent::Text(
+                crate::TextInputEvent::CompositionCancelled,
+            ));
+        }
+        self.state.text_input_active = false;
         self.state.physical_keys_down.clear();
         self.state.modifiers = crate::Modifiers::default();
         self.state.focused = false;
