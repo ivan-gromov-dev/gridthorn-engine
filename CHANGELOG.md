@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Opt-in window diagnostics record bounded preparation and redraw callback CPU
+  timings separately from event-loop waiting.
+
 - Opt-in renderer diagnostics now report asynchronous GPU render-pass timestamps
   where supported, with bounded nonblocking readback and explicit sampling gaps.
 

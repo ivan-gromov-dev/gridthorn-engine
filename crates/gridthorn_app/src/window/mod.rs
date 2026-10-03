@@ -4,6 +4,7 @@ mod control;
 mod errors;
 mod input;
 mod lifecycle;
+mod performance;
 mod runtime;
 mod viewport;
 

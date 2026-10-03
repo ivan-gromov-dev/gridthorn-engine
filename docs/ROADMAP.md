@@ -292,6 +292,8 @@ record implemented and verified increments; measurements and limitations are in
         skipped/error/pending reporting and bounded collection.
   - [x] Add isolated idle and bounded injected text-editing smoke modes; measure
         all four locales at native DPI 1 with separate CPU/GPU-pass samples.
+    - [x] Add bounded native preparation/redraw CPU callback diagnostics, including
+          runtime schedules and render extraction; keep input/waiting exclusions explicit.
   - [ ] Measure isolated idle, editing/selection, clipboard/IME, pointer/slider,
         scrolling, locale-switch, nested-window and animation workloads at DPI 1/2.
   - [ ] Measure whole-engine frame CPU work, GPU execution and actual presented

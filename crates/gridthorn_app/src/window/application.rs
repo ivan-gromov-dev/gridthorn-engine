@@ -61,6 +61,7 @@ where
 }
 
 struct WinitApplication<L> {
+    performance: super::performance::WindowPerformance,
     text: super::text::NativeTextInput,
     clipboard: super::clipboard::NativeClipboard,
     rendering_enabled: bool,
@@ -80,6 +81,7 @@ where
         Self {
             config,
             error: None,
+            performance: super::performance::WindowPerformance::new(),
             text: super::text::NativeTextInput::default(),
             clipboard: super::clipboard::NativeClipboard::default(),
             rendering_enabled: true,
@@ -320,11 +322,13 @@ where
                 }
             }
             WindowEvent::RedrawRequested => {
+                let start = self.performance.start();
                 if let Some(renderer) = self.renderer.as_mut()
                     && let Err(error) = renderer.render()
                 {
                     self.fail(event_loop, error.into());
                 }
+                self.performance.redraw(start);
             }
             _ => {}
         }
@@ -357,6 +361,7 @@ where
         if self.error.is_some() {
             return;
         }
+        let start = self.performance.start();
         let mut control = WindowControl::default();
         if let Err(error) = self.lifecycle.idle(&mut control) {
             self.fail(event_loop, error);
@@ -369,6 +374,7 @@ where
         if let Some(window) = self.window.as_ref() {
             window.request_redraw();
         }
+        self.performance.preparation(start);
     }
 }
 

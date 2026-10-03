@@ -49,6 +49,17 @@ sampling gaps are unavailable data, not zero GPU work.
 
 ## Evidence and limits
 
+`GRIDTHORN_WINDOW_PERFORMANCE` records up to 240 preparation and 240 redraw
+callbacks, independently, and prints `window_cpu,phase,sample,elapsed_us` at
+shutdown. Preparation includes lifecycle idle (runtime schedules), render-frame
+extraction, platform control application and redraw request. Redraw measures the
+renderer call. These are wall-clock CPU callback durations, including any blocking
+inside those calls, not thread CPU usage. They exclude event-loop waiting, native
+input callbacks, initialization and shutdown. Phase indices are independent and
+must not be treated as paired frame IDs or added as a whole-frame percentile.
+Disabled collection takes no timestamps and stores no samples. Native sample
+counts do not establish actual displayed-frame timing.
+
 A preliminary Windows debug probe measured one workbench router layout at about
 105 ms at DPI 1 and 119 ms at DPI 2; bitmap layout took about 0.2 ms. Empty routing
 took 0.03–0.06 ms. These are diagnostic samples, not release baselines or measured

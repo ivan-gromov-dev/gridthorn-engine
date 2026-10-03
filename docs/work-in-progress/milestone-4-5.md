@@ -341,3 +341,63 @@ and whitespace. Log: `target/milestone-4-5-gpu-verify.log`. All 16 isolated nati
 release runs and the mixed smoke passed; the workbench's 6 tests and package
 Clippy passed. Roadmap completion marks include the GPU-pass diagnostics and
 isolated idle/editing evidence; broader acceptance items remain open.
+
+## Native window callback CPU increment
+
+Starting engine HEAD: `5c9504cbc31f392225b0f610e135a6071c4e7440`, clean tree;
+examples HEAD remains `c89adb9a5317007b3469782c1c8da9d8b4b1b04a` with existing
+workbench changes. This increment changes only engine sources/documentation.
+`GRIDTHORN_WINDOW_PERFORMANCE` enables bounded independent preparation/redraw
+callback samples, printed at drop without per-frame logging. Preparation includes
+runtime schedules, frame extraction and platform control; redraw includes the
+renderer call and its acquisition/presentation blocking. Event-loop waiting,
+native input callbacks, startup and shutdown are excluded. Independent phase
+indices cannot be paired to construct whole-frame samples. This reduces a CPU
+measurement gap without closing whole-engine CPU acceptance.
+
+The first two release cohorts (`target/window-<mode>-<locale>[-repeat].log`)
+overlapped repository verification and generated-project compilation. They are
+exploratory observations only, not controlled baselines; Japanese editing repeat
+preparation p95 reached 46.303 ms under that contention. Do not compare these
+cohorts as an engine regression. Subsequent controlled cohorts run after
+verification completes, without concurrent agent-launched build/test work.
+
+Full `./scripts/verify.ps1` passed: workspace formatting/check/Clippy/tests,
+generated-project workflows, dependency boundaries and whitespace. Log:
+`target/milestone-4-5-window-verify.log`. The new domain test covers disabled
+collection and independent phase storage limits. No SDK API or dependency changed.
+
+After verification, two sequential release runs per mode/locale succeeded without
+concurrent agent-launched compilation. Environment enabled both window and render
+diagnostics; executable:
+`../gridthorn-examples/target/release/gridthorn_example_multilingual_workbench.exe`,
+arguments `--<idle|editing>-smoke --locale=<en-US|ru|ar-EG|ja>`.
+Logs: `target/window-controlled-<mode>-<locale>-<1|2>.log`; summary:
+`target/window-controlled-summary.csv`. Metadata remains RTX 3070/Vulkan/616.56,
+Fifo, native DPI 1, physical 1000×800. Display refresh and power/frequency during
+sampling remain unrecorded. Each run collected 121 preparation and 119 redraw
+callbacks. Excluding each phase's first ten leaves 111 and 109 samples respectively;
+independent callback scheduling need not match host-frame counts.
+Percentiles use nearest rank; all values below are milliseconds.
+
+| Mode/locale | Preparation p95, first/repeat | Redraw p95, first/repeat |
+| --- | --- | --- |
+| Idle en-US | 0.142 / 0.128 | 9.497 / 9.375 |
+| Idle ru | 0.116 / 0.116 | 9.147 / 9.247 |
+| Idle ar-EG | 0.121 / 0.105 | 9.241 / 9.215 |
+| Idle ja | 0.130 / 0.115 | 9.187 / 9.508 |
+| Editing en-US | 6.336 / 5.431 | 5.140 / 5.464 |
+| Editing ru | 6.553 / 6.382 | 4.836 / 4.738 |
+| Editing ar-EG | 6.472 / 6.616 | 1.537 / 1.647 |
+| Editing ja | 13.338 / 11.877 | 2.306 / 2.027 |
+
+Japanese editing preparation p99 was 15.982 / 12.976 ms. These include UI routing,
+localized preview refresh and layout rather than text shaping alone. The next
+focused step is to separate those preparation components before choosing a fix.
+In the first idle Japanese run, acquisition p95 was 8.769 ms versus encode
+0.069 ms; editing acquisition p95 was 0.067 ms versus encode 1.472 ms. This
+supports treating idle redraw wall time as partly pacing/waiting, rather than
+attributing it entirely to renderer CPU geometry work.
+Do not add phase percentiles or claim whole-frame budget acceptance: input
+callbacks and actual displayed intervals remain unmeasured, and redraw includes
+surface/presentation waits. Native DPI 2 and OS IME are still outstanding.
