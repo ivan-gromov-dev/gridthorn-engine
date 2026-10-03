@@ -241,15 +241,55 @@ and game ownership is defined in [RUNTIME_APIS.md](RUNTIME_APIS.md).
 - [ ] Validate public APIs through sibling examples of multilingual text editing,
       composed controls and nested modal/context windows; include headless behavior
       tests and native rendering/IME checks with a documented language/platform matrix.
+- [ ] Complete Milestone 4.5 performance review and native workbench acceptance
+      before closing this milestone.
 
 **Result:** game code can compose a multilingual management-game interface using
 public APIs without implementing text shaping, input routing or window stacking.
 Game-specific screens, research trees, settings policies and translation authoring
 workflows remain game-owned. No translation-management desktop service is required.
 
+## Milestone 4.5 — Engine performance review and optimization
+
+Started on 2026-10-03 with a reproducible workbench CPU workload and initial
+UI/text preparation review; see [the checkpoint](work-in-progress/milestone-4-5.md).
+Following poor native multilingual-workbench performance,
+including after example-side layout reuse. This is the immediate target and a
+required gate before Milestone 4 closes or Milestone 5 starts. Review all implemented
+engine domains; fix measured bottlenecks in the order below. Measurement protocol,
+workloads, ownership and acceptance criteria are in
+[the performance review plan](PERFORMANCE_REVIEW.md).
+
+- [ ] Establish reproducible release/debug baselines, reference hardware, workload
+      sizes and budgets; distinguish cold/warm work and CPU/GPU/present costs.
+- [ ] Profile the native workbench at idle and during editing, IME, pointer input,
+      scrolling, locale changes, nested windows and animation at DPI 1/2.
+- [ ] Resolve measured text/UI bottlenecks: shaping/rasterization, invalidation,
+      layout/paint duplication, hidden-layer work, routing and allocations.
+- [ ] Review and optimize measured rendering/presentation bottlenecks: text/sprite
+      geometry, clipping, batching, GPU uploads, resource lifetime and frame pacing.
+- [ ] Review runtime/world/input/localization overhead and scaling with increasing
+      entity/control/event counts; record measurements and each domain's disposition.
+- [ ] Review assets/reload, scenes/saves, audio and platform lifecycle for I/O,
+      memory peaks, worker/publication costs and frame stalls.
+- [ ] Review fixed simulation, grids, pathfinding/placement, collision and
+      snapshots for scaling, allocation costs and preserved determinism.
+- [ ] Measure cold/warm build time, dependency footprint and binary size; address
+      measured regressions without introducing unrelated subsystems.
+- [ ] Add repeatable performance workloads/regression checks, rerun the complete
+      matrix and repository verification, and document before/after results and limits.
+- [ ] Meet the documented native workbench frame budget and obtain maintainer
+      acceptance; record a completion review before resuming Milestone 4 closure.
+
+**Result:** implemented engine capabilities have measured performance envelopes,
+the multilingual UI is usable within its recorded frame budget, and remaining
+limits have concrete evidence. The professional profiling/editor tooling remains
+in Milestone 6; this milestone owns measurement and focused engine improvements.
+
 ## Milestone 5 — Desktop platform, devices and presentation controls
 
-Planned; depends on the input and UI contracts from Milestone 4. Platform
+Planned; follows Milestone 4 closure, including its Milestone 4.5 performance gate,
+and depends on the input and UI contracts from Milestone 4. Platform
 capabilities are explicit, optional and reported through engine-owned APIs.
 
 - [ ] Enumerate monitors, display modes, resolutions, refresh rates and DPI;
@@ -378,7 +418,7 @@ provisional game-process subset documented in [CLI_SIMULATION.md](CLI_SIMULATION
 Project declarations, dedicated binary routing, explicit ticks/seeds, and failure
 diagnostics are covered by command tests and the public scenarios-snapshots example.
 Milestone 3 is complete following maintainer acceptance on 2026-10-02; see
-[the completion review](milestone-3-showcase.md). The next target is Milestone 4:
+[the completion review](milestone-3-showcase.md). In Milestone 4,
 desktop keyboard/pointer and Unicode/IME/clipboard input are implemented;
 font assets, fallback and multilingual shaping/rendering are implemented provisionally.
 Localization runtime APIs are implemented provisionally with validated catalogs,
@@ -387,7 +427,13 @@ are implemented provisionally with explicit value commands, ordered event routin
 hit testing, focus/navigation hooks, text editing/selection, local capture and
 explicit world-input consumption. Context menus, popups and modal dialogs are
 implemented provisionally with ordered layers, modal scopes, focus restoration
-and configurable dismissal. Presentation transitions are next.
+and configurable dismissal. Presentation transitions are implemented provisionally.
+The integrated sibling multilingual-workbench example combines localization, editing,
+controls and nested windows; native interactive IME acceptance remains outstanding.
+The immediate target is now Milestone 4.5: establish performance baselines and
+profile the native workbench, then review all implemented domains in the order
+documented above. Milestone 4 remains open until the performance gate and its
+native language/IME acceptance are satisfied; see [PERFORMANCE_REVIEW.md](PERFORMANCE_REVIEW.md).
 Milestone 5 adds desktop platform/device controls. Professional debugging and
 the editor are deferred to Milestones 6 and 7 respectively.
 Milestone 2 is complete for the supported subsets documented in the

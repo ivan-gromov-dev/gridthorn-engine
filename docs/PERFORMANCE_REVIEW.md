@@ -1,0 +1,99 @@
+# Milestone 4.5 performance review
+
+Started on 2026-10-03 after the maintainer reported poor native performance in
+the multilingual workbench, including after example-side layout reuse. This is
+an engine-wide review of implemented capabilities, with measured, focused fixes.
+Milestone 4 remains open until this review and its own native acceptance finish.
+
+The first increment adds a public-API CPU workload to the sibling workbench and
+records debug/release samples and confirmed duplicate paint in
+[the active checkpoint](work-in-progress/milestone-4-5.md). Reference hardware,
+repeat runs and native CPU/GPU/present measurements remain outstanding.
+
+## Evidence and limits
+
+A preliminary Windows debug probe measured one workbench router layout at about
+105 ms at DPI 1 and 119 ms at DPI 2; bitmap layout took about 0.2 ms. Empty routing
+took 0.03–0.06 ms. These are diagnostic samples, not release baselines or measured
+native frame times. The example now reuses unchanged layout, but the maintainer
+still observes poor performance. The remaining CPU/GPU split is unmeasured.
+
+Code inspection identified repeated text preparation, painting before hidden-layer
+filtering, and raster text represented as many colored spans/rectangles. Their
+relative costs must be measured before choosing an implementation. An atlas,
+layout cache or retained GPU buffer is a candidate, not a committed design.
+
+## Execution order
+
+Work through the Milestone 4.5 checklist in ROADMAP. Each increment records its
+baseline, hypothesis, change, regression coverage and before/after measurements.
+Keep fixes in the owning domain and keep every increment buildable. Public
+semantics, dependency direction and authoritative determinism remain requirements.
+Record difficult-to-reverse backend/resource decisions through an ADR.
+
+1. Establish reproducible workloads and a domain inventory before optimizing.
+2. Resolve the observed UI/text/presentation bottleneck first, measuring CPU work
+   separately from GPU execution, present waits and frame pacing.
+3. Review the remaining implemented domains and fix measured bottlenecks in
+   risk-reduction order. A reviewed domain may need no change; record that evidence.
+4. Run the complete workload matrix again, document supported limits, and obtain
+   maintainer acceptance of the native workbench before returning to Milestone 4.
+
+## Reproducible measurements
+
+Record both repository revisions, Rust/compiler versions, profile/features,
+OS, CPU/GPU/driver, display refresh, window size, DPI, locale, input sequence,
+workload size and power conditions. Release is the acceptance profile; retain
+debug measurements separately as development-usability evidence. Distinguish
+cold startup/font/cache work from warmed steady state. Repeat comparable runs
+and report sample counts, duration, median, p95, p99 and worst frame/work time.
+
+Measure schedule stages, text shaping/rasterization, layout/paint, routing,
+geometry extraction, GPU uploads/submission/execution and present waits separately.
+Record allocations, retained/peak memory, primitive/vertex counts, uploaded bytes
+and draw calls where relevant. Report unavailable counters explicitly. Use bounded
+logs or opt-in instrumentation; diagnostic collection must not dominate the run.
+Do not infer GPU costs from CPU submission timing or claim gains from FPS alone.
+
+## Workload and ownership matrix
+
+| Domain | Representative workload | Review focus |
+| --- | --- | --- |
+| Runtime/world | Empty runtime, schedule systems, increasing entity counts | Idle overhead, resource access, iteration, cloning, schedule work |
+| Input/UI/localization | Workbench idle, hover, slider drag, scrolling, typing/selection, clipboard, IME, language changes, nested windows and animation | Invalidation, repeated formatting/layout/paint, hidden nodes, text anchors, routing allocations |
+| Fonts/text | English, Russian, Arabic and Japanese at DPI 1/2; short and bounded long fields | Shaping/fallback, cache lifetime, raster samples, memory, editing latency |
+| Rendering/presentation | Workbench, Crystal Trail and Timber Harbor; increasing sprite/text counts | Geometry, clipping, batching, uploads, resource churn, GPU work, present waits |
+| Assets/scenes/saves | Asset-reload plus scene/world-save examples; increasing documented data sizes | Decode/I/O, worker publication, serialization, memory peaks, frame stalls |
+| Simulation/grids/collision | Headless simulation and Timber Harbor; increasing grid/entity/query sizes | Fixed-tick cost, pathfinding/placement, collision queries, snapshots/RNG, scaling and determinism |
+| Audio/platform | Existing native audio and window lifecycle workflows | Command/worker cost, suspension/shutdown, pacing, unavailable-device behavior |
+| CLI/build footprint | Generated-project check/run/build, engine/examples builds | Cold/warm build time, dependency growth, binary size, reproducibility |
+
+Use existing sibling examples where possible. Benchmark scaffolding belongs to
+its domain or a focused sibling example. This milestone does not introduce the
+Milestone 6 inspector, profiler UI or development protocol. Native runs start on
+the available Windows host; record Linux/macOS coverage or explicit platform
+limits without presenting untested results as cross-platform guarantees.
+
+## Acceptance gate
+
+For the native workbench, the initial release target on the recorded reference
+hardware is 60 FPS at 1000×800 logical pixels, DPI 1 and 2, across the four locales.
+Measure idle and continuous interaction/animation separately: p95 engine CPU work
+and p95 GPU execution must each fit the 16.67 ms frame budget; warmed p99 presented
+frame intervals should stay within 33.33 ms. Record present-mode/display constraints,
+excluded external stalls and cold-operation latency explicitly. These are targets,
+not current capabilities. Any change to the target needs a documented reason and
+maintainer agreement; persistent workbench slowness cannot be waived as a generic
+performance deferral.
+
+For the other domains, establish workload sizes and budgets with the baseline,
+then assess scaling, measured regressions and bounded resource use. Avoid promising
+arbitrary world sizes or untested device guarantees. Every implemented domain needs
+a review disposition: measured and acceptable, fixed and remeasured, or a concrete
+limitation with evidence and an explicit follow-up. Record remaining limits in the
+owning contracts and completion review.
+
+Completion requires reproducible before/after results, regression checks for fixed
+behavior, full repository verification, successful native workloads and maintainer
+acceptance. After Milestone 4.5, complete Milestone 4's language/platform and native
+IME acceptance; neither milestone is closed by compilation or smoke alone.

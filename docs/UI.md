@@ -338,3 +338,17 @@ cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_composed_controls --locked -- --animations --smoke
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_composed_controls --locked -- --layers --animations --smoke
 ```
+
+## Integrated workbench
+
+The sibling [multilingual-workbench](../../gridthorn-examples/multilingual-workbench/README.md)
+combines four Fluent catalogs, multilingual editing, all six controls, reusable modal/
+context actions and unscaled presentation transitions in one interactive application.
+Its headless and native smoke workflows share the application's tree and actions.
+The README records a language/platform matrix and manual native IME acceptance steps;
+interactive native acceptance remains outstanding and Milestone 4 stays open.
+
+```console
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_multilingual_workbench --locked -- --headless
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_multilingual_workbench --locked -- --smoke
+```
