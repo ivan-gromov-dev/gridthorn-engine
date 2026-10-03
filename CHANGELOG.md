@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Performance review adds a public-example warm asset-font editing and overlapping
+  layer probe across four scripts and DPI 1/2, with explicit workload limits.
+
+- UI routing reuses batch-local input and pointer scopes, rebuilding after layer
+  dismissal or pointer-layer/capture changes instead of filtering every event.
+
+- UI layout clones and registered-layer input scopes share immutable prepared
+  text geometry instead of copying field strings and caret/selection geometry.
+
 - Registered-layer UI routing avoids copying render primitives and uses ordered
   ID sets for placement filtering; prepared text geometry and painter order remain intact.
 

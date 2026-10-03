@@ -109,6 +109,13 @@ immutable input layout scopes. UI node reads/commands use indexed child paths,
 with measured construction and retention tradeoffs in the review.
   Registered-layer input scopes omit paint copies and filter membership through
   ordered ID sets, with measured text-field routing limits in the review.
+  Layout clones and input scopes share immutable prepared text geometry, releasing
+  it with the last snapshot owner.
+  Routing reuses input/pointer scopes within a batch, rebuilding on layer dismissal
+  and pointer-layer/capture changes.
+  A public example probe measures warm asset-font editing and three overlapping
+  layers across four scripts at DPI 1/2; its bounded workload and limits are recorded
+  in the performance review.
 Milestone 4 remains open until this performance gate and
 native language/IME acceptance finish, followed by Milestone 5 desktop
 platform/device controls. The debugging workflow and

@@ -345,7 +345,13 @@ record implemented and verified increments; measurements and limitations are in
     - [x] Measure registered closed/open/modal text-field routing through 1024 fields;
           omit input-scope paint copies and replace linear layer membership scans,
           with repeated before/after samples and detached-layout regression coverage.
-    - [ ] Measure mixed ECS/churn, overlapping-layer/asset-font editing and cold localization
+    - [x] Share immutable prepared field geometry across layout clones/input scopes;
+          verify detached snapshot lifetime/release and repeat layered routing measurements.
+    - [x] Reuse batch-local input/pointer scopes with layer-dismissal and capture
+          invalidation; verify transitions/atomic rejection and remeasure layered routing.
+    - [x] Measure warm asset-font preedit/commit paint and alternating pointer scopes
+          across three overlapping layers, four scripts and DPI 1/2 through public APIs.
+    - [ ] Measure mixed ECS/churn, long/unique-text and expanded-layer workloads, and cold localization
         publication; attribute larger input burst and remaining layout/routing costs.
   - [ ] Record runtime, world, input and localization dispositions and remeasure fixes.
 - [ ] Review assets/reload, scenes/saves, audio and platform lifecycle for I/O,

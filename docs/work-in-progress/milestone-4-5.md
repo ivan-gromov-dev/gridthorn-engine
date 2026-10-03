@@ -1063,3 +1063,133 @@ Clippy, workspace/CLI tests, dependency boundaries and diff whitespace). App:
 120 passed, 6 manual probes ignored. Final release probe ran twice separately;
 native mixed and Japanese editing smokes passed. Both repositories' prior dirt
 remains preserved.
+
+## Shared immutable field geometry — 2026-10-03
+
+Engine starting revision 26661b17cc8531c86c3b8d6863f55e7685d3359a, clean working
+tree: preceding indexed-node and layered-routing increments were committed before
+this continuation. Sibling HEAD c89adb9a5317007b3469782c1c8da9d8b4b1b04a,
+existing manifest/lockfile/README dirt and untracked workbench preserved.
+Production: layout.rs stores prepared field geometry in Arc<BTreeMap>; both tree
+layout and routing/presentation.rs publish fresh immutable maps. Existing scoped
+clone now shares the geometry. No public API/dependency/cache expansion. Placement
+and ID-set setup remains per event; batch scope reuse has not been implemented.
+
+New domain regression test/layout_snapshot.rs retains an old clone over text edit
+and fresh DPI-2 router layout. It verifies detached values and Weak-observed
+release after last layout, including into_primitives; routing/router does not
+persistently retain geometry. Targeted composition suite: 52 passed, 2 ignored.
+
+Same layered probe twice before/after, no diagnostics/concurrent builds/tests,
+18 configs and 576 rows/run. At 1024 fields/32 events means (run 1/2), us:
+closed 9331.12/10333.95 → 2592.14/2919.88; open 15163.35/15465.58 →
+8281.70/8198.14; modal 17499.75/26019.77 → 11911.35/12096.98.
+Second modal baseline noisy (batch-mean p95 51624.40 vs 18696.35 us in run 1).
+Final modal batch-mean p95 13624.80/14642.62 us; these are not single-frame tails
+or whole-engine/display acceptance. Full protocol/table/limits in performance
+review. Geometry no longer deep-copied per scope; fresh layout adds Arc allocation
+and sharing has atomic ownership cost. One exploratory flat run: 1024-button
+layout mean 686.26→736.55 us; no layout improvement/causal regression claimed.
+
+Logs target/shared-geometry-before-<1|2>.log and after-<1|2>.log,
+shared-geometry-summary.csv; exploratory shared-geometry-flat-before/after.log
+and shared-geometry-flat-summary.csv. Release engine/sibling builds passed.
+Native --smoke and --editing-smoke --locale=ja passed; shared-geometry-native
+mixed/editing stdout/stderr logs under target. Full verify log:
+target/milestone-4-5-shared-geometry-verify.log. README/UI/roadmap/changelog and
+performance review updated together. Next: repeated scope/ID-set setup, then
+asset-font editing/overlapping layers and remaining domain scaling. No commits.
+
+Verification completed: ./scripts/verify.ps1 passed (format, workspace check,
+Clippy, workspace/CLI end-to-end tests, dependency boundaries, diff whitespace).
+App: 121 passed, 6 manual probes ignored; layered release probe ran twice before
+and twice after outside full verify. Native mixed and Japanese editing smokes
+passed. Final documentation whitespace check also passed.
+
+## Batch-local input/pointer scopes — 2026-10-03
+
+Engine revision 26661b17cc8531c86c3b8d6863f55e7685d3359a; preceding shared
+geometry increment still uncommitted and preserved. Sibling revision/dirt unchanged.
+New private routing/scopes.rs owns a base Cow layout and one lazy pointer layout
+per routed batch. Base rebuilt on stack-length change (events only pop layers),
+pointer rebuilt on hovered-layer/capture key change; commands preserve topology
+and registered roots. route_events and hit_test_layers use that path; duplicate
+event_layout implementation removed from layers.rs. No dependencies/public API.
+Cursor refresh and live control/focus checks still run per event. Cache is local
+and discarded on success/error. Closed/nonpointer paths reuse the base; plain
+trees stay borrowed. At most two scope placement vectors; shared field geometry,
+no registered-layer paint retention, temporary IDs discarded after filtering.
+
+Three regressions in test/routing/layers.rs: two modal dismissals and subsequent
+underlying/base activations in one DPI-2 batch; capture crossing layer boundaries,
+release and new capture; atomic text-error rejection after dismissal/scope rebuild
+with successful later dismissal. Targeted composition tests: 55 passed, 2 ignored.
+Release engine and sibling workbench builds passed. Native --smoke and
+--editing-smoke --locale=ja passed; batch-scope-native-mixed/editing stdout/stderr
+logs under target. Full verification log target/milestone-4-5-batch-scopes-verify.log.
+
+Same manual layered probe twice before/after, 18 configs and 576 rows/run, eight
+warm calls, 32 batches of eight; no concurrent agent-launched builds/tests during
+sampling. Each timed call starts with fresh scopes/atomic clones. At 1024 fields,
+32 events means (run 1/2), us: closed 2820.56/2545.59 → 306.61/344.43;
+open 8343.04/7917.84 → 602.64/577.47; modal 11440.99/11595.29 →
+572.54/574.48. Empty calls show no consistent gain. Modal final batch-mean p95
+849.74/668.91 us; no single-frame/native cadence or whole-engine-budget claim.
+Raw target/batch-scope-before-<1|2>.log and after-<1|2>.log, summary
+batch-scope-summary.csv. Full table/protocol/retention limits in performance review.
+README/UI/roadmap/changelog updated together. No commits/staging. Next: shaped
+editing and overlapping layers, then remaining domain scaling/memory attribution.
+
+Initial full verification rejected similar local names (scopes/scoped); renamed
+the owning local to prepared without changing runtime behavior, then restarted
+full verification. Native workloads and sampling preceded this name-only fix.
+
+Verification completed: ./scripts/verify.ps1 passed (format, workspace check,
+Clippy, workspace/CLI end-to-end tests, dependency boundaries and diff whitespace).
+App: 124 passed, 6 manual probes ignored. Final documentation whitespace check
+passed; no staging/commits or changes to the sibling's existing dirt.
+
+## Warm asset-font editing / overlapping layers — 2026-10-04
+
+Engine revision 26661b17cc8531c86c3b8d6863f55e7685d3359a, with previous shared
+geometry/batch-scope changes still dirty and preserved. Sibling revision
+c89adb9a5317007b3469782c1c8da9d8b4b1b04a with existing Cargo.lock/Cargo.toml/
+README dirt and untracked workbench. No production engine behavior changed in
+this increment. Added sibling workbench interface/test/layered_editing.rs, cfg(test)
+registration in interface/performance.rs, and workbench README probe instructions.
+Engine README/roadmap/changelog/performance review updated in the same increment.
+
+Public-API fixture: three overlapping 600x300 field panels, short English/Russian/
+Arabic/Japanese strings, nonmodal/modal top, 1000x800 logical viewport, DPI 1/2.
+Operations: 32 alternating pointer events across exposed fields; select-all,
+preedit route/paint, alternating bounded commit route/paint. Existing Noto assets
+loaded once per config outside timing. Font-service locale en-US remains fixed.
+Initial field-focus changes await native session-stop feedback; final fixture
+provides TextInputChanged(active=false) outside timing. Early failed setup runs
+suppressed commits; final-value assertion caught this and those runs are excluded.
+First excluded warm call verifies preedit and altered composing paint. Helpers
+separate authoring, pointer fixtures and validation to meet Clippy line limits.
+
+Final source probe ran twice in release, 32 configs, ten warm +100 individual
+samples/config (3200 rows/run); no diagnostics or concurrent agent-launched checks
+while sampling. Final p95 editing-cycle ranges across scripts/DPI/policies/runs
+64.60–514.80 us, largest sample 614.60 us. Pointer32 p95 15.50–37.90 us,
+largest sample 95.80 us. These are individual-call percentiles, unlike earlier
+batch-mean probes. Warm two-value, three-field workload has no new measured
+bottleneck requiring a fix; no before/after improvement/whole-engine-budget claim.
+Long/unique text, cold/cache churn, expanded layers, memory accounting and real
+IME/native DPI2 remain open. Logs target/font-editing-<1|2>.log;
+font-editing-summary.csv includes each policy/run/p99/max and font-editing-ranges.csv
+provides table ranges. Detailed protocol/table/disposition in performance review.
+
+Example package fmt check, Clippy --all-targets -D warnings, and regular tests
+passed (7 passed, 1 ignored); ignored release probe ran twice explicitly.
+Sibling release build passed. Native --editing-smoke --locale=<en-US|ru|ar-EG|ja>
+passed, configured physical1000x800/DPI1; logs font-editing-native-<locale>
+stdout/stderr under target. These are injected correctness smokes, not OS IME
+acceptance or native timings. Engine ./scripts/verify.ps1 passed: format/check/
+Clippy/workspace and CLI tests/boundaries/whitespace (app124 passed,6 ignored).
+Full log target/milestone-4-5-font-editing-verify.log; example logs
+font-editing-clippy.log / font-editing-example-tests.log. Final whitespace checks
+for both repositories passed. No staging/commits. Next: mixed ECS/churn and cold
+localization, retaining the explicit larger-text/cache/layer follow-ups.

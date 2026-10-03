@@ -114,8 +114,17 @@ commands; `route_events` provides the same contract for injected ordered events.
 Both leave the raw snapshot unchanged. With no registered layer roots, routing
 borrows the supplied immutable layout for its input scopes. Registered roots use
 filtered owned scopes, including when every registered layer is closed.
-These scopes copy placements and prepared text geometry without copying render
+These scopes copy placements and share immutable prepared text geometry without copying render
 primitives; ordered ID sets filter layer membership without changing painter order.
+Cloned layouts also share the geometry snapshot. A fresh layout prepares a new
+snapshot; it cannot modify an older layout. Geometry is released with its last
+layout/scope owner, including when primitives are transferred out of a layout.
+Within a routed batch, the base input scope and the most recent pointer scope are
+reused. Closing a layer rebuilds the base scope before the next event; changing
+the layer under the pointer or capture rebuilds the pointer scope. Tree topology
+and registered roots cannot change through routed commands. Scopes are released
+at the end of the batch, including rejected batches; the router does not retain
+them across calls. Hit testing uses the same scope preparation for a single query.
 A rejected batch preserves the tree/router
 and returns no platform side effects. Successful effects retain event order.
 

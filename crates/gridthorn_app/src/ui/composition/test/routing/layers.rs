@@ -103,6 +103,132 @@ fn composition() -> UiTree {
 }
 
 #[test]
+fn one_batch_rebuilds_scopes_after_each_modal_dismissal() {
+    let mut tree = composition();
+    let layout = tree.layout([400.0; 2], 2.0, None).unwrap();
+    let original = layout.clone();
+    let mut router = UiRouter::new(0);
+    let policy = UiLayer {
+        modal: true,
+        dismiss_escape: true,
+        ..UiLayer::default()
+    };
+    for root in [20, 10] {
+        router
+            .open_layer(&mut tree, &layout, UiNodeId(root), policy)
+            .unwrap();
+    }
+    let mut events = Vec::new();
+    for id in [11, 21, 1] {
+        let bounds = layout.placement(UiNodeId(id)).unwrap().bounds;
+        events.extend([
+            pointer(
+                f64::from(bounds.position[0] + 10.0) * 2.0,
+                f64::from(bounds.position[1] + 10.0) * 2.0,
+            ),
+            mouse(ButtonState::Pressed),
+            mouse(ButtonState::Released),
+        ]);
+        if id != 1 {
+            events.extend([
+                press(KeyCode::Escape),
+                key(KeyCode::Escape, ButtonState::Released),
+            ]);
+        }
+    }
+    let route = router.route_events(&mut tree, &layout, &events).unwrap();
+    assert_eq!(
+        route.effects,
+        [
+            (UiNodeId(11), UiEffect::Activated),
+            (UiNodeId(21), UiEffect::Activated),
+            (UiNodeId(1), UiEffect::Activated)
+        ]
+    );
+    assert_eq!(route.dismissed, [UiNodeId(10), UiNodeId(20)]);
+    assert_eq!(route.world_events, []);
+    assert_eq!(route.consumed, (0..events.len()).collect::<Vec<_>>());
+    assert_eq!(router.focused(), Some(UiNodeId(1)));
+    assert_eq!(router.open_layers(), []);
+    assert_eq!(layout.placements(), original.placements());
+    assert_eq!(layout.primitives(), original.primitives());
+}
+
+#[test]
+fn cached_pointer_scope_keeps_capture_across_layer_boundaries_then_releases_it() {
+    let mut tree = composition();
+    let layout = tree.layout([400.0; 2], 1.0, None).unwrap();
+    let mut router = UiRouter::new(0);
+    for root in [10, 20] {
+        router
+            .open_layer(&mut tree, &layout, UiNodeId(root), UiLayer::default())
+            .unwrap();
+    }
+    let first = layout.placement(UiNodeId(11)).unwrap().bounds;
+    let second = layout.placement(UiNodeId(21)).unwrap().bounds;
+    let events = [
+        pointer(
+            f64::from(first.position[0] + 10.0),
+            f64::from(first.position[1] + 10.0),
+        ),
+        mouse(ButtonState::Pressed),
+        pointer(
+            f64::from(second.position[0] + 10.0),
+            f64::from(second.position[1] + 10.0),
+        ),
+        mouse(ButtonState::Released),
+        mouse(ButtonState::Pressed),
+        mouse(ButtonState::Released),
+        pointer(-5.0, -5.0),
+    ];
+    let route = router.route_events(&mut tree, &layout, &events).unwrap();
+    assert_eq!(route.effects, [(UiNodeId(21), UiEffect::Activated)]);
+    assert_eq!(route.consumed, [0, 1, 2, 3, 4, 5]);
+    assert_eq!(route.world_events, [events[6].clone()]);
+    assert_eq!(router.focused(), Some(UiNodeId(21)));
+    assert!(!route.pointer_blocked);
+}
+
+#[test]
+fn rejected_batch_restores_layers_after_scope_rebuild_and_text_failure() {
+    let mut tree = composition();
+    let mut root = tree.root().clone();
+    root.children[0].control = UiControl::TextField {
+        value: "x".into(),
+        placeholder: String::new(),
+    };
+    tree.replace(root).unwrap();
+    let layout = tree.layout([400.0; 2], 1.0, None).unwrap();
+    let mut router = UiRouter::new(0);
+    router
+        .open_layer(
+            &mut tree,
+            &layout,
+            UiNodeId(10),
+            UiLayer {
+                modal: true,
+                dismiss_escape: true,
+                ..UiLayer::default()
+            },
+        )
+        .unwrap();
+    let events = [
+        press(KeyCode::Escape),
+        press(KeyCode::Tab),
+        InputEvent::Text(gridthorn_input::TextInputEvent::Commit("valid".into())),
+        InputEvent::Text(gridthorn_input::TextInputEvent::Commit("z".repeat(65536))),
+    ];
+    assert!(router.route_events(&mut tree, &layout, &events).is_err());
+    assert_eq!(router.open_layers(), [UiNodeId(10)]);
+    assert_eq!(router.focused(), Some(UiNodeId(11)));
+    assert_eq!(value(&tree), "x");
+    let route = router
+        .route_events(&mut tree, &layout, &[press(KeyCode::Escape)])
+        .unwrap();
+    assert_eq!(route.dismissed, [UiNodeId(10)]);
+}
+
+#[test]
 fn nested_modal_scopes_restore_focus_and_painter_order() {
     let mut tree = composition();
     let mut router = UiRouter::new(0);

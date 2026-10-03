@@ -25,7 +25,7 @@ impl UiRouter {
         sample.record(0, start);
         let start = sample.start();
         layout.text_geometry =
-            super::super::text_geometry::prepare(tree, &layout.placements, &mut text)?;
+            super::super::text_geometry::prepare(tree, &layout.placements, &mut text)?.into();
         sample.record(1, start);
         let start = sample.start();
         layout.primitives = super::super::paint::paint(

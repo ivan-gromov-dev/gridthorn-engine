@@ -117,8 +117,9 @@ impl UiRouter {
             x: f64::from(point[0]) * f64::from(layout.scale),
             y: f64::from(point[1]) * f64::from(layout.scale),
         });
-        let scoped = router.event_layout(tree, layout, &event);
-        Self::hit_test(tree, &scoped, point)
+        let mut prepared = super::scopes::RoutingScopes::new(&router, tree, layout);
+        let scoped = prepared.event_layout(&mut router, tree, layout, &event);
+        Self::hit_test(tree, scoped, point)
     }
 
     pub(super) fn pop_layer(&mut self, tree: &UiTree, layout: &UiLayout, result: &mut UiRoute) {
@@ -188,39 +189,6 @@ impl UiRouter {
                         .is_some_and(|p| p.bounds.contains(point) && p.clip.contains(point))
             })
         })
-    }
-
-    pub(super) fn event_layout<'layout>(
-        &mut self,
-        tree: &UiTree,
-        layout: &'layout UiLayout,
-        event: &InputEvent,
-    ) -> Cow<'layout, UiLayout> {
-        let mut scoped = self.input_layout(tree, layout);
-        if let InputEvent::CursorMoved(position) = event {
-            self.cursor_physical = Some([position.x, position.y]);
-            self.refresh_cursor(tree, &scoped);
-        }
-        if matches!(
-            event,
-            InputEvent::CursorMoved(_)
-                | InputEvent::MouseButton { .. }
-                | InputEvent::MouseWheel { .. }
-                | InputEvent::PointerMotion { .. }
-        ) && let Some(index) = self.layer_at_cursor(tree, layout)
-        {
-            let ids: BTreeSet<_> = self.layers[index..]
-                .iter()
-                .filter_map(|layer| tree.node(layer.root))
-                .flat_map(Self::all_ids)
-                .collect();
-            scoped
-                .to_mut()
-                .placements
-                .retain(|p| ids.contains(&p.id) || self.capture == Some(p.id));
-        }
-        self.layer_hovered = self.layer_at_cursor(tree, layout).is_some();
-        scoped
     }
 
     pub(super) fn layer_event(

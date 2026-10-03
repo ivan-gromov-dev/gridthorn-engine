@@ -55,7 +55,7 @@ pub struct UiPlacement {
 pub struct UiLayout {
     pub(super) scale: f32,
     pub(super) text_geometry:
-        std::collections::BTreeMap<UiNodeId, super::text_geometry::TextGeometry>,
+        std::sync::Arc<std::collections::BTreeMap<UiNodeId, super::text_geometry::TextGeometry>>,
     pub(super) placements: Vec<UiPlacement>,
     pub(super) primitives: Vec<gridthorn_render::UiPrimitive>,
 }
@@ -106,7 +106,8 @@ impl UiTree {
         let mut layout = self.arrange_layout(viewport, scale, &mut text)?;
         layout.primitives =
             super::paint::paint(self, &layout.placements, scale, &mut text, None, None, None)?;
-        layout.text_geometry = super::text_geometry::prepare(self, &layout.placements, &mut text)?;
+        layout.text_geometry =
+            super::text_geometry::prepare(self, &layout.placements, &mut text)?.into();
         Ok(layout)
     }
 
@@ -141,7 +142,7 @@ impl UiTree {
         )?;
         Ok(UiLayout {
             scale,
-            text_geometry: std::collections::BTreeMap::new(),
+            text_geometry: std::sync::Arc::default(),
             placements,
             primitives: Vec::new(),
         })

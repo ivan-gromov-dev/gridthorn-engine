@@ -436,6 +436,203 @@ Builds completed before sampling; no concurrent agent-launched builds/tests ran.
 A DPI-2 regression verifies closed/open/modal picking and immutable source geometry
 and paint. Native mixed and Japanese editing smokes passed as correctness checks.
 
+## Shared immutable editing geometry
+
+The next focused increment removes field-geometry deep copies from registered
+input scopes and UiLayout clones. Each fully prepared layout owns an immutable
+Arc<BTreeMap<UiNodeId, TextGeometry>>; cloning shares field values, caret stops
+and selection segments. Fresh tree/router layouts prepare a separate map. Scope
+placement filtering remains private to each scope and does not mutate that map.
+No process-wide cache, dependency or public API is added. Arc Debug preserves
+the previous map contents in UiLayout diagnostics.
+
+Repeated the exact registered-layer probe above twice before/after on the same
+host/toolchain, without UI diagnostics or concurrent agent-launched builds/tests.
+Each run has 18 configurations, eight warm calls, 32 batches of eight and 576
+rows. These are per-call batch means, not individual-event/frame percentiles.
+Only geometry ownership changed; workload/source/flags and feature unification
+remain identical. Means in microseconds, run 1 / run 2:
+
+| Fields | State | 32-event mean before | Mean after sharing |
+| --- | --- | --- | --- |
+| 16 | closed | 137.13 / 138.83 | 49.14 / 53.52 |
+| 16 | open | 205.58 / 209.96 | 131.92 / 131.28 |
+| 16 | modal | 275.95 / 236.89 | 170.10 / 184.23 |
+| 128 | closed | 1157.60 / 943.36 | 303.46 / 318.36 |
+| 128 | open | 1588.54 / 1491.38 | 912.26 / 1148.34 |
+| 128 | modal | 1737.90 / 1814.59 | 1124.70 / 1277.30 |
+| 1024 | closed | 9331.12 / 10333.95 | 2592.14 / 2919.88 |
+| 1024 | open | 15163.35 / 15465.58 | 8281.70 / 8198.14 |
+| 1024 | modal | 17499.75 / 26019.77 | 11911.35 / 12096.98 |
+
+The second modal baseline varied substantially: batch-mean p95 51624.40 us
+versus 18696.35 in run 1. Background load/live clocks remain uncontrolled;
+do not derive a precise universal speedup from its elevated mean. Both final
+modal runs improve against the lower first baseline; final batch-mean p95 is
+13624.80/14642.62 us. This still excludes every other frame stage, asset-font
+editing, multiple overlapping layers and native publication; it does not prove
+the whole-engine 16.67 ms CPU or displayed-frame acceptance gate.
+Final 1024-field empty-route means: closed 322.44/436.68 us, open
+463.53/406.86, modal 525.81/533.95. Placements, ID sets and scope construction
+still repeat per event; atomic tree cloning and focus/hit checks remain.
+
+Ownership regression retains an old layout clone across a text edit and fresh
+DPI-2 router layout, then routes against the old snapshot. Old/fresh values remain
+independent. Weak ownership confirms that neither routing nor the surviving router
+keeps geometry alive after the last layout/scope; transferring primitives also
+releases the layout's geometry. Sharing retains one geometry map per originating
+snapshot, regardless of clone count. Callers retaining multiple fresh layouts
+still retain multiple maps: no aggregate byte cap or process-memory reduction is
+asserted. Fields/placements/paint are bounded by existing tree/layout contracts.
+
+Tradeoff: fresh arrangement allocates an empty Arc map, then successful geometry
+preparation replaces it with a separately owned Arc map; scoped clones increment
+and decrement atomic ownership. A single exploratory flat bitmap-button run
+before/after recorded layout means 7.02→7.52 us (16), 77.66→72.52 (128),
+686.26→736.55 (1024). This is not repeated evidence of layout improvement or a
+causally attributed regression; the measured routing benefit does not make fresh
+layout creation free. Native mixed and Japanese editing smokes passed as
+correctness checks. Targeted composition tests: 52 passed, 2 manual probes ignored.
+
+Logs `target/shared-geometry-before-<1|2>.log` and
+`target/shared-geometry-after-<1|2>.log`; summary
+`target/shared-geometry-summary.csv` includes empty calls and batch-mean p95.
+Exploratory flat logs `target/shared-geometry-flat-<before|after>.log`, summary
+`target/shared-geometry-flat-summary.csv`. Next: repeated layer scope/ID setup,
+then asset-font editing, overlapping layers and remaining domain scaling.
+
+## Batch-local routing scopes
+
+The next increment prepares the base input scope once per route_events call and
+retains at most one lazily prepared pointer scope. Repeated events in the same
+layer/capture scope reuse placements and ID filtering. A popped layer changes the
+stack length and rebuilds the base before the next event, clearing the pointer
+scope. A changed layer under the cursor or capture replaces the pointer scope.
+This is valid because routing only pops layers and tree commands preserve topology
+and registered roots during a batch. Hit_test_layers uses the same preparation.
+All scope state lives in private routing/scopes.rs and is discarded on success or
+error; it is not a persistent router cache. Each call still includes fresh atomic
+tree/router cloning and first scope preparation. Cursor/hover/focus and live
+control-value/enabled checks continue for each event.
+
+Repeated the unchanged registered-layer release probe twice before/after, alone
+without diagnostics/concurrent agent-launched builds or tests. Same host/toolchain,
+18 configs, eight warm calls, 32 batches of eight, 576 rows/run; workload and
+feature unification are unchanged. Scopes reset on every timed call, so the gain
+comes from reuse among the 32 events, not across calls. Means in microseconds:
+
+| Fields | State | 32-event mean before (runs 1/2) | Mean after (runs 1/2) |
+| --- | --- | --- | --- |
+| 16 | closed | 51.80 / 49.23 | 5.86 / 5.50 |
+| 16 | open | 147.63 / 133.60 | 8.50 / 9.24 |
+| 16 | modal | 181.59 / 172.63 | 10.36 / 9.86 |
+| 128 | closed | 324.96 / 301.43 | 26.30 / 29.03 |
+| 128 | open | 871.50 / 818.15 | 48.86 / 49.45 |
+| 128 | modal | 1180.39 / 1180.40 | 56.88 / 57.77 |
+| 1024 | closed | 2820.56 / 2545.59 | 306.61 / 344.43 |
+| 1024 | open | 8343.04 / 7917.84 | 602.64 / 577.47 |
+| 1024 | modal | 11440.99 / 11595.29 | 572.54 / 574.48 |
+
+At 1024 fields final empty-route means are closed 311.16/331.34 us, open
+412.49/459.07, modal 492.01/465.09; baseline empty-route means are respectively
+343.45/314.41, 438.36/405.76 and 497.99/504.94. Empty calls have no repeated
+scope work to remove, so no consistent empty-call gain is claimed. Final modal
+32-event batch-mean p95 is 849.74/668.91 us. Percentiles are still means of eight
+calls, not individual-event/frame tails. The static bitmap/one-layer workload
+does not establish asset-font editing, overlapping-layer burst performance,
+whole-engine CPU/GPU budgets or displayed-frame cadence.
+
+Memory remains bounded to the base plus one pointer placement snapshot per batch;
+both share the caller's immutable field geometry and omit paint for registered
+layers. Temporary membership sets are released after filtering. Changing pointer
+scope replaces the cached snapshot; alternating layers/capture can still rebuild
+on every event. No allocator-byte/process-memory or peak-memory reduction is
+claimed. Plain-tree scopes remain borrowed; no render primitives are cloned on
+that path. Existing immutable layout and atomic rejection contracts are preserved.
+
+Three focused regressions cover two modal dismissals followed by underlying/base
+clicks in one DPI-2 batch, capture movement between layers followed by release and
+new capture, and rejection after a dismissal/scope rebuild and oversized text
+commit. The rejected call restores the original stack, focus and text, and a
+subsequent dismissal works. Targeted composition tests: 55 passed, 2 manual
+probes ignored. Native mixed and Japanese editing smokes passed as correctness
+checks. Raw logs `target/batch-scope-before-<1|2>.log` and
+`target/batch-scope-after-<1|2>.log`; summary `target/batch-scope-summary.csv`
+includes empty routes and batch-mean p95. Next: asset-font editing and overlapping
+layers, then remaining domain scaling and retained-memory attribution.
+
+## Warm asset-font editing with overlapping layers — 2026-10-04
+
+The sibling workbench now owns the ignored public-API probe
+`interface/test/layered_editing.rs::measure_overlapping_font_editing`. It loads
+the existing Noto Sans/Arabic/JP assets through the normal font service, then
+authors three overlapping 600×300 panels at offsets [60,30], [120,60], [180,90].
+Each has one 600×120 text field. All three layers are open; the top is nonmodal
+or modal. Viewport is 1000×800 logical pixels at DPI 1/2. Four short strings use
+English, Russian, Arabic and Japanese scripts. Font-service locale remains en-US:
+these are script fixtures, not a localization-publication benchmark.
+
+```powershell
+cargo test --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_multilingual_workbench --release --locked measure_overlapping_font_editing -- --ignored --nocapture --test-threads=1
+```
+
+Run alone with UI/text diagnostics disabled. Two runs, 32 configurations each,
+ten warm calls plus 100 individually timed calls (3200 raw rows/run). Font loading,
+tree creation, opening, initial layout, input fixtures and text-session stop
+acknowledgment are outside timing. `pointer_32` routes 32 alternating positions in
+exposed areas of the three fields, changing the pointer-scope key. Modal input
+blocks lower fields. `preedit_commit_paint` selects all top-field text, routes
+composition, prepares its paint, routes one of two alternating commits, then
+prepares/replaces the final layout. Timing includes selection, atomic routes,
+shaping/raster preparation, result release and prior-layout replacement. It
+excludes GPU/frame submission, platform requests, native IME and displayed cadence.
+Warm caches see only the fixed preedit and two bounded committed values.
+
+Percentiles below are nearest-rank statistics of individual calls; ranges span
+both top-layer policies and both runs, not combined-percentile calculations.
+All values are microseconds on the previously recorded host/toolchain; background
+activity and live CPU clocks remain uncontrolled.
+
+| Script | DPI | Editing-cycle median range | Editing-cycle p95 range |
+| --- | --- | --- | --- |
+| English | 1 | 108.10–120.90 | 124.60–161.20 |
+| English | 2 | 216.30–237.00 | 276.10–316.40 |
+| Russian | 1 | 89.90–121.00 | 165.70–192.20 |
+| Russian | 2 | 258.90–346.30 | 390.10–502.70 |
+| Arabic | 1 | 58.40–58.70 | 64.60–84.40 |
+| Arabic | 2 | 125.10–148.80 | 213.10–321.30 |
+| Japanese | 1 | 77.90–85.50 | 140.40–151.90 |
+| Japanese | 2 | 199.80–291.80 | 342.30–514.80 |
+
+Across all configurations, 32-pointer median is 15.10–34.70 us and p95
+15.50–37.90 us; largest sampled pointer call 95.80 us. Largest editing cycle
+614.60 us. These small warm fixtures show no new bottleneck requiring a production
+fix. This disposition is limited to the recorded workload; no before/after speedup,
+native whole-engine budget, glyph coverage or general text-size guarantee is
+asserted. Long/unique text, many fields/layers, cold caches, cache churn, clipboard,
+bidi visual-navigation acceptance, actual IME and allocator/retained-byte accounting
+remain open. Modal and nonmodal fixture costs must not be compared as an isolated
+modal-policy effect: pointer paths and background load differ.
+
+Correctness checks verify layer stack/focus, event consumption/order, lower-layer
+modal picking, actual preedit and changed preedit paint in the first excluded warm
+call, committed final text, cleared composition and nonempty final paint. Initial
+probe development lacked the adapter's TextInputChanged(active=false) feedback
+after field-focus changes: commits were suppressed while awaiting stop. Final-value
+validation caught that invalid fixture. Corrected feedback is supplied outside
+timing; early failed runs are excluded. Setup/sampling/validation are separate
+helpers after Clippy's function-length check. No production behavior changed.
+
+Final logs `target/font-editing-<1|2>.log`, summary
+`target/font-editing-summary.csv` (individual configs/p99/max) and
+`target/font-editing-ranges.csv`. Sample acquisition finished before checks/builds.
+Example package Clippy and seven regular tests passed; one manual probe is ignored
+by default and ran twice explicitly. Native --editing-smoke passed for en-US, ru,
+ar-EG and ja, configured 1000×800 physical pixels at DPI 1; stdout/stderr logs
+`target/font-editing-native-<locale>.*.log`. These are injected-event correctness
+smokes, not DPI-2 native or real OS IME acceptance. Next scaling priority is mixed
+ECS/churn and cold localization; retain explicit long-text/cache/layer follow-ups.
+
 ## Execution order
 
 Work through the Milestone 4.5 checklist in ROADMAP. Each increment records its

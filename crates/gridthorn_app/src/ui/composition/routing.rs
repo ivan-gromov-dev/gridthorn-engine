@@ -14,6 +14,7 @@ mod layers;
 mod navigation;
 mod pointer;
 mod presentation;
+mod scopes;
 pub use layers::UiLayer;
 
 /// Device-independent hooks. Controller adapters map buttons/axes to these commands.
@@ -232,12 +233,12 @@ impl UiRouter {
         {
             router.pop_layer(&next, layout, &mut result);
         }
-        let scoped = router.input_layout(&next, layout);
-        router.reconcile(&next, &scoped, &mut result);
+        let mut prepared = scopes::RoutingScopes::new(&router, &next, layout);
+        router.reconcile(&next, prepared.base(), &mut result);
         for (index, event) in events.iter().enumerate() {
-            let scoped = router.event_layout(&next, layout, event);
+            let scoped = prepared.event_layout(&mut router, &next, layout, event);
             if router.layer_event(&next, layout, event, &mut result)
-                || router.event(&mut next, &scoped, event, &mut result)?
+                || router.event(&mut next, scoped, event, &mut result)?
                 || router.block_modal_event(event)
             {
                 result.consumed.push(index);
