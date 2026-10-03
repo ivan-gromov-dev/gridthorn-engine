@@ -87,6 +87,17 @@ impl UiTree {
         Ok(())
     }
 
+    /// Replace one node's style atomically; recompute layout before painting or routing.
+    ///
+    /// # Errors
+    /// Rejects unknown nodes and invalid geometry without changing the tree.
+    pub fn set_style(&mut self, id: UiNodeId, style: UiStyle) -> Result<(), UiCompositionError> {
+        validate_style(&style)?;
+        let node = find_mut(&mut self.root, id).ok_or(UiCompositionError::UnknownNode(id))?;
+        node.style = style;
+        Ok(())
+    }
+
     /// Apply an explicit command atomically. Recompute layout after value changes.
     ///
     /// Disabled controls ignore value commands; scroll and visual commands remain available.
@@ -212,25 +223,9 @@ fn validate_node(
     if !ids.insert(node.id) {
         return Err(UiCompositionError::DuplicateNode(node.id));
     }
-    let style = &node.style;
-    for axis in 0..2 {
-        let valid_length = match style.size[axis] {
-            super::UiLength::Pixels(value) => metric(value),
-            super::UiLength::Fraction(value) => value.is_finite() && (0.0..=1.0).contains(&value),
-            _ => true,
-        };
-        if !valid_length
-            || !metric(style.min_size[axis])
-            || !metric(style.max_size[axis])
-            || style.min_size[axis] > style.max_size[axis]
-            || !metric(style.offset[axis].abs())
-            || !metric(node.scroll_offset[axis])
-        {
-            return Err(UiCompositionError::InvalidMetrics("node sizing/offset"));
-        }
-    }
-    if !style.padding.into_iter().all(metric) || !metric(style.gap) {
-        return Err(UiCompositionError::InvalidMetrics("padding/gap"));
+    validate_style(&node.style)?;
+    if !node.scroll_offset.into_iter().all(metric) {
+        return Err(UiCompositionError::InvalidMetrics("scroll offset"));
     }
     if !node.children.is_empty() && !matches!(node.control, UiControl::Panel) {
         return Err(UiCompositionError::WrongControl(node.id));
@@ -267,6 +262,28 @@ fn validate_node(
     }
     for child in &node.children {
         validate_node(child, depth + 1, ids)?;
+    }
+    Ok(())
+}
+
+fn validate_style(style: &UiStyle) -> Result<(), UiCompositionError> {
+    for axis in 0..2 {
+        let valid_length = match style.size[axis] {
+            super::UiLength::Pixels(value) => metric(value),
+            super::UiLength::Fraction(value) => value.is_finite() && (0.0..=1.0).contains(&value),
+            _ => true,
+        };
+        if !valid_length
+            || !metric(style.min_size[axis])
+            || !metric(style.max_size[axis])
+            || style.min_size[axis] > style.max_size[axis]
+            || !metric(style.offset[axis].abs())
+        {
+            return Err(UiCompositionError::InvalidMetrics("node sizing/offset"));
+        }
+    }
+    if !style.padding.into_iter().all(metric) || !metric(style.gap) {
+        return Err(UiCompositionError::InvalidMetrics("padding/gap"));
     }
     Ok(())
 }

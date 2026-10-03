@@ -67,6 +67,7 @@ they are explicitly marked as implemented.
 | Runtime and public SDK             | Milestones 1–3 complete; APIs remain provisional                                                              |
 | Scenes and game states             | Provisional state stack and atomic scene-owned entity switching                                            |
 | Sprite batching and animation      | Provisional ordered texture batches and sprite-sheet playback                                              |
+| UI property animation              | Provisional frame-time tweens and interruptible offset, size, color and scroll transitions; independent of simulation pause/speed |
 | Text and runtime UI                | Provisional [multilingual text](docs/TEXT.md) and [UI composition/controls](docs/UI.md): sizing, layout, anchors, clipping, scrolling, themes and six reusable controls |
 | Audio                              | Provisional PCM16 WAV assets, queue, and opt-in Kira output adapter                                        |
 | Component/resource reflection      | Provisional explicit registration, scalar metadata and read-only snapshots                                 |

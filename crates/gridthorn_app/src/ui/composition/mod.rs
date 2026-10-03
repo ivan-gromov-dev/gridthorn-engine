@@ -1,4 +1,5 @@
 //! Retained presentation UI with explicit ordered input routing.
+mod animation;
 mod controls;
 mod editing;
 mod errors;
@@ -9,6 +10,7 @@ mod style;
 mod text_geometry;
 mod tree;
 
+pub use animation::{UiAnimationError, UiEasing, UiProperty, UiTransition, UiTween};
 pub use editing::UiSelection;
 pub use routing::{UiLayer, UiNavigation, UiPlatformRequest, UiRoute, UiRouter};
 

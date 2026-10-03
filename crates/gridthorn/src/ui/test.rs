@@ -54,4 +54,5 @@ fn facade_composes_controls_into_render_frame() {
     let frame = crate::RenderFrame::default().with_ui(layout.into_primitives());
     assert_ne!(frame.ui(), []);
 }
+mod animation;
 mod routing;
