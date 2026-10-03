@@ -4,6 +4,12 @@
 //! under construction.
 
 mod runtime;
+/// Provisional retained UI composition and explicitly commanded controls.
+pub mod ui {
+    pub use gridthorn_app::composition::*;
+    #[cfg(test)]
+    mod test;
+}
 pub use runtime::{
     DeterministicRng, RandomStreamError, RandomStreams, Scenario, ScenarioError, ScenarioRuntime,
     ScenarioState, SimulationSnapshot, StateFingerprint, WorldSaveCodec, WorldSaveError,

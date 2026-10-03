@@ -121,6 +121,20 @@ fn ui_vertices(ui: &[super::UiPrimitive], width: u32, height: u32) -> Vec<Sprite
     let mut vertices = Vec::new();
     for primitive in ui {
         match primitive {
+            super::UiPrimitive::Clipped { bounds, children } => {
+                let mut clipped = ui_vertices(children, width, height);
+                let left = bounds.position()[0] / width as f32 * 2.0 - 1.0;
+                let right = (bounds.position()[0] + bounds.size()[0]) / width as f32 * 2.0 - 1.0;
+                let top = 1.0 - bounds.position()[1] / height as f32 * 2.0;
+                let bottom = 1.0 - (bounds.position()[1] + bounds.size()[1]) / height as f32 * 2.0;
+                for quad in clipped.as_chunks_mut::<6>().0 {
+                    for vertex in quad {
+                        vertex.position[0] = vertex.position[0].clamp(left, right);
+                        vertex.position[1] = vertex.position[1].clamp(bottom, top);
+                    }
+                }
+                vertices.extend(clipped);
+            }
             super::UiPrimitive::Rect(rect) => vertices.extend(screen_rect_vertices(
                 rect.position(),
                 rect.size(),

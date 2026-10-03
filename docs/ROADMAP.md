@@ -87,11 +87,13 @@ The provisional runtime UI path now renders ordered colored rectangles and
 5x7 bitmap text in top-left-origin screen pixels through the same colored GPU
 batch. The built-in font covers Latin letters, digits, and common diagnostics
 punctuation. Milestone 4 now adds [font assets and multilingual text](TEXT.md);
-higher-level UI layout and interactive controls remain planned.
+higher-level [UI composition and controls](UI.md) are implemented provisionally
+in Milestone 4 through explicit control commands.
 Mouse-driven runtime buttons now consume the engine-owned frame input boundary,
 report hover and held visuals, and emit one activation only after an inside
 press completes with an inside release. Focus loss or dragging outside cancels
-the pending activation; keyboard focus and higher-level layout remain planned.
+the pending activation; keyboard focus remains planned. Milestone 4 now supplies
+reusable higher-level layout.
 The provisional audio foundation decodes interleaved PCM16 WAV clips without an
 output device and exposes an ordered queue for play, stop, and normalized volume
 commands with stable voice identifiers. An opt-in `native-output` feature now
@@ -204,6 +206,11 @@ for tested Cyrillic/Arabic/Japanese coverage and explicit platform/performance d
 Localization runtime APIs are implemented provisionally on 2026-10-03;
 see [LOCALIZATION.md](LOCALIZATION.md) for validated Fluent catalogs, explicit
 fallback, plural/select, decimal formatting and the four-language headless example.
+UI composition, sizing, layout, anchoring, clipping, scrolling, styling and six
+reusable controls are implemented provisionally on 2026-10-03; see [UI.md](UI.md)
+for explicit value commands, domain/facade/renderer tests and the public
+composed-controls headless/native smoke example. Event routing, focus and complete
+text editing remain the following increment.
 This milestone extends the narrow Milestone 1/2 subsets;
 it does not change their completion status. Implement in the order below, with
 each increment independently buildable, tested and documented. Detailed engine
@@ -217,7 +224,7 @@ and game ownership is defined in [RUNTIME_APIS.md](RUNTIME_APIS.md).
       wrapping and DPI-aware rendering, including Cyrillic and non-Latin scripts.
 - [x] Localization runtime API: locale selection, message IDs, validated catalog
       assets, fallback, parameters, plural/select rules and locale-aware formatting.
-- [ ] UI composition, sizing, layout, anchoring, clipping, scrolling, styling and
+- [x] UI composition, sizing, layout, anchoring, clipping, scrolling, styling and
       reusable controls: labels, buttons, toggles, sliders, lists and text fields.
 - [ ] UI event routing, hit testing, keyboard/controller navigation hooks, focus,
       text editing/selection and pointer capture with explicit world-input consumption.
@@ -370,7 +377,8 @@ desktop keyboard/pointer and Unicode/IME/clipboard input are implemented;
 font assets, fallback and multilingual shaping/rendering are implemented provisionally.
 Localization runtime APIs are implemented provisionally with validated catalogs,
 explicit fallback and locale-aware decimal formatting. UI composition and controls
-are next.
+are implemented provisionally with explicit value commands. UI event routing,
+focus, navigation and text editing/selection are next.
 Milestone 5 adds desktop platform/device controls. Professional debugging and
 the editor are deferred to Milestones 6 and 7 respectively.
 Milestone 2 is complete for the supported subsets documented in the

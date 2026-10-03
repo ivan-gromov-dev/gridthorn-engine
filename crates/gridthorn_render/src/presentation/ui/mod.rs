@@ -122,6 +122,13 @@ impl TextLabel {
 /// Ordered screen-space primitive rendered after world presentation.
 #[derive(Clone, Debug, PartialEq)]
 pub enum UiPrimitive {
+    /// Ordered children clipped to a physical-pixel rectangle, including nested clips.
+    Clipped {
+        /// Physical bounds; its color is ignored.
+        bounds: UiRect,
+        /// Children in painter order.
+        children: Vec<UiPrimitive>,
+    },
     /// Filled rectangle.
     Rect(UiRect),
     /// Built-in 5x7 bitmap text.
