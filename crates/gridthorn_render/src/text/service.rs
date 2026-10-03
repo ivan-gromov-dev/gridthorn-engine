@@ -37,9 +37,10 @@ impl TextSystem {
         families.sort();
         families.dedup();
         database.set_sans_serif_family(&families[0]);
+        let performance = super::performance::TextPerformance::new();
         Ok(Self {
-            layouts: super::layout_cache::LayoutCache::default(),
-            performance: super::performance::TextPerformance::new(),
+            layouts: super::layout_cache::LayoutCache::new(performance.is_some()),
+            performance,
             fonts: FontSystem::new_with_locale_and_db(locale.into(), database),
             cache: SwashCache::new(),
             owner: Arc::new(()),

@@ -62,6 +62,13 @@ only paint. Default services create no collector or timers; timers stop for an
 operation once its storage limit is reached. Glyph raster-cache hits can still
 require reconstruction of the immutable span snapshot.
 
+The same flag also prints `text_layout_cache` at service destruction: hit/miss,
+eviction/oversized-bypass counts, final retained entries/key bytes/glyphs/lines,
+and the independent peak of each retention count. Copied key bytes are UTF-8
+text/family lengths, not allocator capacity or total process/backend memory.
+Cold construction/first-prepare observations in `--performance` are fresh service
+observations, not a controlled cold OS/font-file-cache baseline.
+
 `GRIDTHORN_UI_PERFORMANCE` enables router-owned layout diagnostics. Up to 240
 successful layout calls are stored; `ui_layout` rows print when the final cloned
 router releases the shared collector. Arrangement includes layer ordering;

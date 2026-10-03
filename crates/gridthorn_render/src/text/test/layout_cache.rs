@@ -4,6 +4,27 @@ use crate::{Color, TextAlignment, TextError, TextWrap};
 use std::sync::Arc;
 
 #[test]
+fn eviction_releases_unowned_buffers_and_diagnostics_track_retention() {
+    let mut text = system();
+    text.layouts = LayoutCache::new(true);
+    let weak = {
+        let temporary = text.layout("temporary", &style()).unwrap();
+        Arc::downgrade(&temporary.buffer)
+    };
+    assert!(weak.upgrade().is_some());
+    text.layout("temporary", &style()).unwrap();
+    for index in 0..ENTRY_LIMIT {
+        text.layout(&format!("eviction {index}"), &style()).unwrap();
+    }
+    assert!(weak.upgrade().is_none());
+    let diagnostics = text.layouts.diagnostics.as_ref().unwrap();
+    assert_eq!(diagnostics.hits, 1);
+    assert_eq!(diagnostics.misses, ENTRY_LIMIT + 1);
+    assert_eq!(diagnostics.evictions, 1);
+    assert_eq!(diagnostics.peak[0], ENTRY_LIMIT);
+}
+
+#[test]
 fn service_reuses_only_matching_text_and_complete_style() {
     let mut text = system();
     let settings = style();

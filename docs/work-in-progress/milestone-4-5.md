@@ -733,3 +733,71 @@ DPI 1; refresh/power conditions remain unrecorded. Native mixed smoke and
 headless workflows passed: `target/layout-cache-mixed.log`,
 `target/layout-cache-headless.log`. Remaining review includes raster-snapshot
 preparation, retained memory, OS IME/native DPI 2 and other implemented domains.
+
+## Shaped-layout cache retention review increment
+
+Starting engine HEAD: `5b7463cc98a526ec8bdc593f9ef82b08ac654f8d`, clean tree.
+Examples retain their existing workbench changes. Extended existing opt-in text
+diagnostics with per-service cache hit/miss/eviction/oversized-bypass totals and
+final/peak retained entry/key/glyph/line counts. Default cache instances collect
+no diagnostic counters. Data prints at cache destruction; no per-call logging
+or exact backend byte accounting was introduced.
+
+A Weak-based domain test confirms cached buffers remain alive without a caller,
+then are released after LRU eviction when no external layout remains. Separate
+tests from the preceding increment preserve snapshots still held by callers.
+This verifies ownership release, not allocator/OS page reclamation.
+
+Full `./scripts/verify.ps1` passed, including 46 renderer tests and workspace
+formatting/check/Clippy/tests, generated-project workflows, dependency boundaries
+and whitespace: `target/milestone-4-5-cache-retention-verify.log`. Workbench Clippy,
+7 tests and release build passed: `target/cache-retention-workbench-clippy.log`,
+`target/cache-retention-workbench-tests.log`, `target/cache-retention-build.log`.
+Sampling started after all checks/builds finished, without concurrent
+agent-launched compilation. Headless workflow passed with diagnostics unset:
+`target/cache-retention-headless.log`.
+
+Two release native runs per idle/editing mode and four locales enabled only
+`GRIDTHORN_TEXT_PERFORMANCE=1`. stdout/stderr logs:
+`target/cache-retention-<mode>-<locale>-<1|2>.<stdout|stderr>.log`; cache summary:
+`target/cache-retention-summary.csv`. Every editing run reports 3484 hits and
+245 misses (93.43% hit rate), 181 evictions, zero oversized bypasses, peak/final
+64 entries and peak 70 lines. Peaks by locale are deterministic across repeats:
+
+| Locale | Peak copied key bytes | Peak diagnostic glyphs | Idle retained entries |
+| --- | --- | --- | --- |
+| en-US | 3534 | 1869 | 23 |
+| ru | 4365 | 2068 | 23 |
+| ar-EG | 3814 | 1753 | 23 |
+| ja | 3983 | 1637 | 23 |
+
+Idle reports 10 hits, 23 misses, no evictions or bypasses, and 29 retained lines.
+The bounded replacement stream reaches the entry limit and evicts old inputs;
+the deterministic peaks provide a workload retention envelope rather than an
+universal memory budget or an indefinitely long leak test.
+
+Two existing public `--performance` CPU workloads (four locales, logical DPI 1/2)
+also passed, exercising fresh services, repeated layouts and 110 unique edit
+values per configuration. Logs: `target/cache-retention-cpu-<1|2>.<stdout|stderr>.log`;
+cold observation summary: `target/cache-retention-cold-summary.csv`. Fresh service
+construction observations ranged 7.133–10.337 ms and first prepare 6.734–9.788 ms
+across 16 configurations. These are single observations per configuration/run,
+not percentile distributions, and the OS/font-file cache was not cleared. Each
+CPU configuration reported 7160 hits, 133 misses, 69 evictions, peak/final 64
+entries and zero bypasses. DPI 2 here is CPU geometry/raster testing, not native
+monitor DPI acceptance.
+
+Process memory was read every 50 ms while each child remained alive, through
+diagnostic reporting at teardown, using Process.PeakWorkingSet64 and
+PrivateMemorySize64. Summary: `target/cache-retention-process-summary.csv`.
+Native observed peak working-set values ranged 205.7–211.5 MiB; sampled maximum
+private bytes 380.1–386.7 MiB. CPU-only process observations were 31.3 / 30.9 MiB
+working set and 14.0 / 22.3 MiB sampled private bytes. Polling can miss short-lived
+peaks, including the final shutdown interval; diagnostic buffers/output handling
+are included. These whole-process observations include renderer/driver/font/
+runtime allocations and cannot attribute a cache-only memory delta without an
+equivalent uncached baseline. No memory-limit tuning is justified from this data.
+
+Retention/release checks are complete for this bounded workload. Remaining review
+includes precise allocation/backend memory accounting, whole-engine CPU/GPU/display
+acceptance, native OS IME/DPI 2 and other implemented domain scaling workloads.
