@@ -108,7 +108,10 @@ Implemented provisionally on 2026-10-03. `UiRouter::new(first_clipboard_id)` own
 presentation focus, pointer capture, key/button ownership, modifiers and a focused
 field editor. Call `route(tree, layout, input)` during `Input`, before mapping world
 commands; `route_events` provides the same contract for injected ordered events.
-Both leave the raw snapshot unchanged. A rejected batch preserves the tree/router
+Both leave the raw snapshot unchanged. With no registered layer roots, routing
+borrows the supplied immutable layout for its input scopes. Registered roots use
+filtered owned scopes, including when every registered layer is closed.
+A rejected batch preserves the tree/router
 and returns no platform side effects. Successful effects retain event order.
 
 `UiRoute::world_events` contains only unconsumed events; `consumed` contains their

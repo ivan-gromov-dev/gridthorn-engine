@@ -821,3 +821,150 @@ claim or extraction-specific measurement is made. Next: isolate extraction and
 empty-runtime overhead, then increasing entity/event/control workloads.
 
 Verification: ./scripts/verify.ps1 passed (workspace checks, Clippy, domain and CLI end-to-end tests, dependency boundaries and documentation checks). Initial Clippy range_plus_one finding was corrected before the successful run. Release example build and all four native smoke runs passed.
+
+## Empty runtime and render-frame extraction — 2026-10-03
+
+Engine start: b58a6cd04717ff115973bfa816b971ec60a04c11; sibling HEAD:
+c89adb9a5317007b3469782c1c8da9d8b4b1b04a. Engine started clean; existing sibling
+manifest/lockfile/README changes and untracked workbench were preserved. No example
+sources were changed. No dependency edges or public types changed.
+
+Added independent bounded extraction timing to WindowPerformance around only
+lifecycle.render_frame when a renderer exists. It reads/clones the world snapshot
+in the standard runtime, excludes set_frame/drop of the previous renderer snapshot,
+and is nested inside preparation. Disabled/full extraction collectors take no
+clock reading. Focused collector tests: two passed, including the independent cap.
+
+Added a manually ignored release probe under runtime/test/overhead.rs, using public
+runtime/schedule contracts. Fresh runtime per configuration, startup then 1000
+warm frames, 100 batches of 1000 frames. Configurations: 0/1/32 no-op systems on
+six stages, 0/1/8 fixed ticks per frame with exact synthetic elapsed values.
+GRIDTHORN_RUNTIME_PERFORMANCE unset. Batch wall time includes black_box, loop and
+fixed-step checks; setup/teardown/stdout excluded. Two probe runs passed, 900 batch
+rows each. Empty zero-tick means 2.435/2.386 us; eight ticks 6.842/6.751 us.
+32-system zero-tick means 2.592/2.591 us; eight ticks 7.479/7.239 us. Full table is
+in PERFORMANCE_REVIEW.md. Batch-mean percentiles cannot represent frame tails.
+
+Builds completed before all measurements; no concurrent agent-launched builds or
+tests. Release app test build and workbench build passed. Exact probe command:
+cargo test -p gridthorn_app --release --locked measure_empty_runtime_and_schedule_dispatch -- --ignored --nocapture --test-threads=1.
+Raw logs: target/runtime-overhead-<1|2>.log; target/runtime-overhead-summary.csv.
+Four native Japanese smoke runs passed (idle/editing, twice each, only window
+flag). Logs: target/extraction-<idle|editing>-<1|2>.stderr.log and .stdout.log;
+summary target/extraction-summary.csv. 121 extraction/preparation and 119 redraw
+samples each. Warm phase index >=10: extraction p95 idle 2/1 us, editing 2/2 us;
+editing preparation 1038/1199 us, idle 121/118 us. Microseconds are truncated.
+
+Disposition: no change to dispatch or snapshot cloning warranted by these bounded
+measurements. No populated ECS, event/control count, native IME/DPI 2, backend
+memory or display acceptance claim. Next: populated-world/event scaling and their
+domain contracts; keep broad runtime/world/input/localization review open.
+
+Verification completed: ./scripts/verify.ps1 passed (format, workspace check,
+Clippy, workspace tests including CLI end-to-end fixtures, dependency boundaries
+and diff whitespace). App: 114 passed, 2 ignored (existing desktop clipboard test and
+new manually executed release probe). The two manual release probe runs passed;
+all four native workbench runs passed. Full log:
+target/milestone-4-5-runtime-extraction-verify.log.
+
+## Homogeneous world and input publication scaling — 2026-10-03
+
+Engine HEAD remains b58a6cd04717ff115973bfa816b971ec60a04c11. Previous runtime
+extraction/empty-overhead increment is still uncommitted and preserved. This
+increment adds only two manually ignored domain probes and their module wiring,
+plus performance evidence/roadmap updates; no production behavior changes.
+Sibling HEAD remains c89adb9a5317007b3469782c1c8da9d8b4b1b04a and no sibling files
+were edited. Previously dirty manifests/README and untracked workbench are retained.
+
+Probe files: runtime/test/world_scaling.rs and window/runtime/test/input_scaling.rs
+under gridthorn_app/src. World: 0/1000/10,000/100,000 homogeneous u64 components,
+resident zero-tick idle vs one fixed-tick system incrementing every component.
+32 warm frames, 50 batches of 32, exact final counter values and visited count
+verified outside timing. Two runs passed (400 batch rows each). Idle population
+has no demonstrated overhead trend; 100,000-component traversal means 102.91 and
+124.93 us/frame. No mixed/churn/archetype or game-system generalization.
+
+Input: fresh empty runtime per case, 0/32/1024/16,384 events, pointer / full KeyD
+press-release / indexed mixed-script commits. Eight warm frames, 32 batches of
+eight, exact ordered event content checked after every batch outside timing;
+next snapshot contains no leftover events. Timer includes fixture event cloning,
+InputBuffer ingestion/snapshot, world replacement/drop and runtime run, with no
+native window or input consumer. Two runs passed (384 batch rows each). At 1024
+mean us/frame: pointer 55.38/51.20, keyboard 174.66/172.67, commit 148.87/143.48;
+16,384: pointer 550.79/567.68, keyboard 3301.93/3387.77, commit 3699.07/3767.74.
+Commit bytes/frame: 1558/51,114/840,858 for 32/1024/16,384 events. Full tables,
+methodology and reproducible Cargo commands are in PERFORMANCE_REVIEW.md.
+
+Release test build passed. Each probe was run twice alone with --release --locked,
+--ignored --nocapture --test-threads=1 and GRIDTHORN_RUNTIME_PERFORMANCE unset.
+No concurrent agent-launched build/test work during samples. Logs:
+target/world-scaling-<1|2>.log and target/input-scaling-<1|2>.log; summaries:
+target/world-scaling-summary.csv and target/input-scaling-summary.csv.
+Initial targeted Clippy found precision-loss casting and manual modulus; both
+were corrected before the measured release build. Batch-mean percentiles are not
+frame-tail measurements. No evidence-based need for runtime/world optimization;
+large input burst clone/allocation attribution remains before any input change.
+Next: UI control/routing/localization scaling and mixed/churn ECS workload review.
+
+Host metadata read after probes: CPU registry name AMD Ryzen 5 5600X 6-Core
+Processor; Environment.OSVersion 10.0.26200.0; rustc 1.99.0 (b940084d7 2026-09-28);
+powercfg active scheme Balanced. Live frequency/background load were not measured.
+
+Verification completed: ./scripts/verify.ps1 passed (format, workspace check,
+Clippy, workspace/CLI end-to-end tests, dependency boundaries and whitespace).
+App: 114 passed, 4 ignored (desktop clipboard and three manual probes; the two
+new probes were each executed successfully twice in release mode). Full log:
+target/milestone-4-5-world-input-scaling-verify.log. Production behavior and
+sibling sources are unchanged by this increment; prior increment changes remain.
+
+## Control/routing and localization scaling, plain-scope fix — 2026-10-03
+
+Engine HEAD remains b58a6cd04717ff115973bfa816b971ec60a04c11. Earlier increments'
+uncommitted changes are preserved. Sibling files/dirty manifests, README and
+untracked workbench remain unchanged by this increment. New manual probe modules:
+ui/composition/test/scaling.rs and localization runtime/test/scaling.rs. Private
+production change is Cow-based input/event scopes in routing/layers.rs: borrow
+when layer_roots is empty, otherwise retain owned filtering. No dependency edge
+or public type changes. Atomic tree/router replacement is unchanged.
+
+UI: 16/128/1024 buttons, bitmap font, DPI 1, all controls visible in a tall logical
+viewport; layout, empty route and 32 pointer first/last/miss cases. Eight warm
+calls, 32 batches of eight. Two baseline and two post-fix runs passed (480 rows
+per run). 1024-control first-event-burst means 7141.44/7192.09 → 2144.71/2027.17 us;
+last 7619.23/7554.99 → 2099.14/2104.05; miss 7387.98/7322.85 → 2043.93/1999.91.
+Empty route remains 2017.67/2036.18 us after; layout 2478.85/2538.02 us after,
+not changed by the fix. Remaining large-tree base costs require attribution.
+Before logs target/ui-scaling-<1|2>.log; after ui-scaling-after-<1|2>.log; respective
+-summary.csv files preserve every configuration and batch-mean p95. No layered
+native-workbench speedup claimed: its registered roots retain the owned path.
+
+Localization: four catalogs/locales en-US,ru,ar-EG,ja; exactly 16/256/4096 entries
+per catalog, non-English selection with explicit en-US fallback. 69 configurations
+per run: literal/interpolation/plural-NUMBER/decimal-NUMBER/standalone-decimal plus
+non-English-only fallback lookup. Prebuilt IDs/parameters/catalogs, 100 warm calls,
+50 batches of 100. Two runs passed (3450 rows each); all mean ranges by operation
+are recorded in PERFORMANCE_REVIEW.md, 0.12–1.76 us across the matrix. Locale and
+output consistency verified outside timing. Cold construction/validation/replace
+and failures are outside measurement. No optimization justified for warm calls.
+Logs target/localization-scaling-<1|2>.log; summaries localization-scaling-summary.csv
+and localization-scaling-ranges.csv. Same host/toolchain as the preceding probes.
+
+Builds completed before measurements; no concurrent agent builds/tests during
+sampling. Engine release test build and sibling workbench release build passed.
+Exact Cargo probe commands are in PERFORMANCE_REVIEW.md; both packages are named
+in each to preserve feature unification. 54 targeted UI tests passed, including
+new registration after plain routing, closed filtering, reopening and unchanged
+detached geometry/paint. Native --smoke passed after change; logs:
+target/ui-scope-native.stdout.log and .stderr.log. Initial targeted Clippy
+format_push_string finding was corrected before sampling using writeln!.
+Next: attribute remaining tree/layout/visual-refresh scaling, then layered/text
+routing, cold localization publication and mixed ECS workloads.
+
+Verification completed: ./scripts/verify.ps1 passed (format, workspace check,
+Clippy, workspace/CLI end-to-end tests, dependency boundaries and whitespace).
+App: 115 passed, 5 ignored; new UI/localization manual probes were executed twice
+(and UI twice again after the fix). The native mixed smoke and 54 focused UI
+checks passed. Full log: target/milestone-4-5-ui-localization-scaling-verify.log.
+Changelog correction also removes earlier runtime-diagnostic entries mistakenly
+duplicated in historical release sections; both new runtime/UI entries belong
+only to Unreleased. No staging or commits were performed.

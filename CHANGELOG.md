@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Plain-tree UI routing borrows unchanged immutable layout scopes instead of
+  copying them per event; registered layers retain filtered input scopes.
+
 - Opt-in runtime diagnostics record bounded schedule execution durations, including
   Input state/scene transitions and aggregate fixed updates.
 
@@ -28,8 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   pass, with bounded storage and no cache retained across tree/theme/font changes.
   Optional router layout diagnostics separate arrangement, text geometry and paint.
 
-- Opt-in window diagnostics record bounded preparation and redraw callback CPU
-  timings separately from event-loop waiting.
+- Opt-in window diagnostics record bounded preparation, redraw and render-frame
+  extraction callback CPU timings separately from event-loop waiting.
 
 - Opt-in renderer diagnostics now report asynchronous GPU render-pass timestamps
   where supported, with bounded nonblocking readback and explicit sampling gaps.
@@ -136,9 +139,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Opt-in runtime diagnostics record bounded schedule execution durations, including
-  Input state/scene transitions and aggregate fixed updates.
-
 - Raised the MSRV and pinned local engine/example toolchains to Rust 1.99.0
   to align local Clippy diagnostics with current stable CI; updated the MSRV job
   and generated project manifest.
@@ -197,9 +197,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Opt-in runtime diagnostics record bounded schedule execution durations, including
-  Input state/scene transitions and aggregate fixed updates.
-
 - `gridthorn check` now validates that the Cargo package name and Gridthorn
   dependency requirement agree with `gridthorn.toml` and the running CLI.
 - CI now restores Cargo dependency artifacts and shares one target directory
@@ -241,9 +238,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dependency-growth baselines plus explicit runtime deferrals.
 
 ### Changed
-
-- Opt-in runtime diagnostics record bounded schedule execution durations, including
-  Input state/scene transitions and aggregate fixed updates.
 
 - Raised the project MSRV to Rust 1.97.1 so current `bevy_ecs` and `wgpu`
   releases can be validated.

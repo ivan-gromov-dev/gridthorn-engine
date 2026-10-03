@@ -368,7 +368,10 @@ where
             return;
         }
         if let Some(renderer) = self.renderer.as_mut() {
-            renderer.set_frame(self.lifecycle.render_frame());
+            let extraction_start = self.performance.extraction_start();
+            let frame = self.lifecycle.render_frame();
+            self.performance.extraction(extraction_start);
+            renderer.set_frame(frame);
         }
         self.apply_control(event_loop, &control);
         if let Some(window) = self.window.as_ref() {

@@ -1,4 +1,5 @@
 mod formatting;
+mod scaling;
 mod selection;
 
 use crate::{CatalogAsset, LocaleId, Localization, MessageId, MessageParameters};

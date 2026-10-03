@@ -332,7 +332,16 @@ record implemented and verified increments; measurements and limitations are in
       entity/control/event counts; record measurements and each domain's disposition.
   - [x] Add bounded runtime schedule diagnostics and record repeated native Japanese
         idle/editing samples with explicit wall-clock and phase-index limits.
-  - [ ] Measure empty-runtime/schedule overhead and entity/control/event scaling.
+  - [x] Measure empty-runtime dispatch with 0/1/32 no-op systems per stage and
+        0/1/8 fixed ticks; record isolated native render-frame extraction timings.
+  - [x] Measure homogeneous resident-world/fixed-traversal scaling through 100,000
+        entities and synthetic input publication through 16,384 events per frame.
+  - [x] Measure flat bitmap-button layout/routing through 1024 controls and warm
+        four-locale formatting with catalogs through 4096 messages.
+  - [x] Borrow unchanged plain-tree routing scopes; verify layer transitions and
+        record repeated before/after pointer routing samples.
+  - [ ] Measure mixed ECS/churn, layered/text-control routing and cold localization
+        publication; attribute larger input burst and remaining layout/routing costs.
   - [ ] Record runtime, world, input and localization dispositions and remeasure fixes.
 - [ ] Review assets/reload, scenes/saves, audio and platform lifecycle for I/O,
       memory peaks, worker/publication costs and frame stalls.

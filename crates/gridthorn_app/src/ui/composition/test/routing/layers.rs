@@ -1,5 +1,37 @@
 use super::*;
 
+#[test]
+fn registering_after_plain_routing_hides_then_reopens_detached_layer_geometry() {
+    let mut tree = composition();
+    let layout = tree.layout([400.0; 2], 1.0, None).unwrap();
+    let original = layout.clone();
+    let bounds = layout.placement(UiNodeId(11)).unwrap().bounds;
+    let events = [
+        pointer(
+            f64::from(bounds.position[0]) + 10.0,
+            f64::from(bounds.position[1]) + 10.0,
+        ),
+        mouse(ButtonState::Pressed),
+        mouse(ButtonState::Released),
+    ];
+    let mut router = UiRouter::new(0);
+    let plain = router.route_events(&mut tree, &layout, &events).unwrap();
+    assert_eq!(plain.effects, [(UiNodeId(11), UiEffect::Activated)]);
+    router.register_layer(&tree, UiNodeId(10)).unwrap();
+    let closed = router.route_events(&mut tree, &layout, &events).unwrap();
+    assert_eq!(closed.effects, []);
+    assert_eq!(closed.consumed, []);
+    assert_eq!(closed.world_events, events);
+    router
+        .open_layer(&mut tree, &layout, UiNodeId(10), UiLayer::default())
+        .unwrap();
+    let reopened = router.route_events(&mut tree, &layout, &events).unwrap();
+    assert_eq!(reopened.effects, [(UiNodeId(11), UiEffect::Activated)]);
+    assert_eq!(reopened.consumed, [0, 1, 2]);
+    assert_eq!(layout.placements(), original.placements());
+    assert_eq!(layout.primitives(), original.primitives());
+}
+
 fn composition() -> UiTree {
     let mut tree = tree(vec![UiControl::Button("base".into())]);
     let mut root = tree.root().clone();

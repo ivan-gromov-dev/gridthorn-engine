@@ -1,5 +1,6 @@
 use super::{UiCompositionError, UiControl, UiLayout, UiNodeId, UiRoute, UiRouter, UiTree};
 use gridthorn_input::{ButtonState, InputEvent, KeyCode, LogicalKey, NamedKey, PhysicalKey};
+use std::borrow::Cow;
 
 /// Policy for a context menu, popup or dialog rooted in a direct child panel.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -152,7 +153,14 @@ impl UiRouter {
         }
     }
 
-    pub(super) fn input_layout(&self, tree: &UiTree, layout: &UiLayout) -> UiLayout {
+    pub(super) fn input_layout<'layout>(
+        &self,
+        tree: &UiTree,
+        layout: &'layout UiLayout,
+    ) -> Cow<'layout, UiLayout> {
+        if self.layer_roots.is_empty() {
+            return Cow::Borrowed(layout);
+        }
         let mut scoped = layout.clone();
         self.order_layers(tree, &mut scoped);
         if let Some(index) = self.layers.iter().rposition(|layer| layer.options.modal) {
@@ -163,7 +171,7 @@ impl UiRouter {
                 .collect();
             scoped.placements.retain(|p| ids.contains(&p.id));
         }
-        scoped
+        Cow::Owned(scoped)
     }
 
     pub(super) fn layer_at_cursor(&self, tree: &UiTree, layout: &UiLayout) -> Option<usize> {
@@ -177,12 +185,12 @@ impl UiRouter {
         })
     }
 
-    pub(super) fn event_layout(
+    pub(super) fn event_layout<'layout>(
         &mut self,
         tree: &UiTree,
-        layout: &UiLayout,
+        layout: &'layout UiLayout,
         event: &InputEvent,
-    ) -> UiLayout {
+    ) -> Cow<'layout, UiLayout> {
         let mut scoped = self.input_layout(tree, layout);
         if let InputEvent::CursorMoved(position) = event {
             self.cursor_physical = Some([position.x, position.y]);
@@ -202,6 +210,7 @@ impl UiRouter {
                 .flat_map(Self::all_ids)
                 .collect();
             scoped
+                .to_mut()
                 .placements
                 .retain(|p| ids.contains(&p.id) || self.capture == Some(p.id));
         }

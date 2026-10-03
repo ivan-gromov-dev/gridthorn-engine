@@ -7,6 +7,7 @@ pub(super) struct WindowPerformance {
     enabled: bool,
     preparation: Vec<Duration>,
     redraw: Vec<Duration>,
+    extraction: Vec<Duration>,
 }
 
 impl WindowPerformance {
@@ -15,6 +16,7 @@ impl WindowPerformance {
             enabled: std::env::var_os("GRIDTHORN_WINDOW_PERFORMANCE").is_some(),
             preparation: Vec::new(),
             redraw: Vec::new(),
+            extraction: Vec::new(),
         }
     }
 
@@ -28,6 +30,14 @@ impl WindowPerformance {
 
     pub(super) fn redraw(&mut self, start: Option<Instant>) {
         Self::record(&mut self.redraw, start);
+    }
+
+    pub(super) fn extraction_start(&self) -> Option<Instant> {
+        (self.enabled && self.extraction.len() < SAMPLE_LIMIT).then(Instant::now)
+    }
+
+    pub(super) fn extraction(&mut self, start: Option<Instant>) {
+        Self::record(&mut self.extraction, start);
     }
 
     fn record(samples: &mut Vec<Duration>, start: Option<Instant>) {
@@ -45,7 +55,11 @@ impl Drop for WindowPerformance {
             return;
         }
         eprintln!("window_cpu,phase,sample,elapsed_us");
-        for (phase, samples) in [("preparation", &self.preparation), ("redraw", &self.redraw)] {
+        for (phase, samples) in [
+            ("preparation", &self.preparation),
+            ("redraw", &self.redraw),
+            ("extraction", &self.extraction),
+        ] {
             for (index, elapsed) in samples.iter().enumerate() {
                 eprintln!("window_cpu,{phase},{index},{}", elapsed.as_micros());
             }
