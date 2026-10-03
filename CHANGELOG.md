@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Provisional retained UI composition with logical sizing, row/column/overlay
+  layout, anchors, padding, constraints, nested rectangular clipping, clamped
+  scrolling, themes and reusable labels/buttons/toggles/sliders/lists/text fields.
+  Explicit validated control commands, immutable DPI-specific presentation,
+  contextual errors, domain/facade tests and public composed-controls example.
+
 - Provisional headless localization API with canonical locale/message IDs,
   validated Fluent catalog assets, explicit ordered fallback and atomic replacement,
   typed parameters, cardinal/ordinal/select rules, ICU decimal formatting,

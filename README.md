@@ -36,6 +36,7 @@ deferred platform and performance validation.
 - [Implementation roadmap](docs/ROADMAP.md)
 - [Workspace dependency boundaries](docs/DEPENDENCY_BOUNDARIES.md)
 - [Public API and release policy](docs/PUBLIC_API_POLICY.md)
+- [UI composition and controls](docs/UI.md)
 - [Project terminology](docs/GLOSSARY.md)
 - [Architecture Decision Records](docs/adr/README.md)
 - [Contributor guide](CONTRIBUTING.md)
@@ -66,7 +67,7 @@ they are explicitly marked as implemented.
 | Runtime and public SDK             | Milestones 1–3 complete; APIs remain provisional                                                              |
 | Scenes and game states             | Provisional state stack and atomic scene-owned entity switching                                            |
 | Sprite batching and animation      | Provisional ordered texture batches and sprite-sheet playback                                              |
-| Text and runtime UI                | Provisional [font assets, fallback, Unicode shaping/bidi, measurement, wrapping and DPI](docs/TEXT.md), bitmap text, panels and mouse buttons |
+| Text and runtime UI                | Provisional [multilingual text](docs/TEXT.md) and [UI composition/controls](docs/UI.md): sizing, layout, anchors, clipping, scrolling, themes and six reusable controls |
 | Audio                              | Provisional PCM16 WAV assets, queue, and opt-in Kira output adapter                                        |
 | Component/resource reflection      | Provisional explicit registration, scalar metadata and read-only snapshots                                 |
 | Versioned scene serialization      | Provisional schema 1 TOML, validated prepared loading and migration hooks                                  |
@@ -101,8 +102,16 @@ is Milestone 4: complete input, multilingual text and runtime UI APIs, followed
 by Milestone 5 desktop platform/device controls. The debugging workflow and
 editor move to Milestones 6 and 7. Desktop input, Unicode/IME/clipboard and
 multilingual font rendering and [runtime localization](docs/LOCALIZATION.md) are
-implemented provisionally. Remaining runtime UI/device additions are planned;
+implemented provisionally. [UI composition and controls](docs/UI.md) are implemented
+with explicit value commands; event routing, focus, selection and modal UI remain planned.
+Remaining runtime UI/device additions are planned;
 see [the runtime API scope](docs/RUNTIME_APIS.md) and [roadmap](docs/ROADMAP.md).
+
+Run the public composed UI example (use `--headless` for resize/DPI/control checks):
+
+```console
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_composed_controls --locked
+```
 
 Run the public headless localization example (English, Russian, Arabic and Japanese):
 

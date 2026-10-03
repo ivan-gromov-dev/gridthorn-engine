@@ -16,6 +16,7 @@ pub use scenario::{
 };
 pub use scene::{SceneChange, SceneController};
 pub use state::{GameStateChange, GameStateError, GameStateId, GameStateStack};
+pub use ui::composition;
 pub use ui::{UiButton, UiButtonError, UiButtonInteraction};
 pub use window::{
     ApplicationError, WindowApplication, WindowConfig, WindowControl, WindowLifecycle,

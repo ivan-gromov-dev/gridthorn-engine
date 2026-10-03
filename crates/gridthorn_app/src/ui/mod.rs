@@ -1,3 +1,5 @@
+/// Provisional retained composition, layout and reusable presentation controls.
+pub mod composition;
 mod errors;
 
 pub use errors::UiButtonError;
