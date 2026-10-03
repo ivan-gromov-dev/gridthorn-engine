@@ -10,9 +10,11 @@ use gridthorn_input::{
 use std::collections::BTreeSet;
 
 mod keyboard;
+mod layers;
 mod navigation;
 mod pointer;
 mod presentation;
+pub use layers::UiLayer;
 
 /// Device-independent hooks. Controller adapters map buttons/axes to these commands.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -47,6 +49,8 @@ pub enum UiPlatformRequest {
 /// One ordered routing result. Games explicitly map remaining input to world commands.
 #[derive(Clone, Debug, Default)]
 pub struct UiRoute {
+    /// Layer roots dismissed in event order.
+    pub dismissed: Vec<UiNodeId>,
     /// Events that were not consumed, preserving arrival order.
     pub world_events: Vec<InputEvent>,
     /// Indices consumed from the supplied event stream.
@@ -80,6 +84,9 @@ struct PendingClipboard {
 /// confinement/locking. Reserve unique clipboard IDs for this router.
 #[derive(Clone, Debug)]
 pub struct UiRouter {
+    layers: Vec<layers::OpenLayer>,
+    layer_roots: BTreeSet<UiNodeId>,
+    layer_hovered: bool,
     focus: Option<UiNodeId>,
     capture: Option<UiNodeId>,
     hovered: Option<UiNodeId>,
@@ -101,6 +108,9 @@ impl UiRouter {
     #[must_use]
     pub fn new(first_clipboard_id: u64) -> Self {
         Self {
+            layers: Vec::new(),
+            layer_roots: BTreeSet::new(),
+            layer_hovered: false,
             focus: None,
             capture: None,
             hovered: None,
@@ -213,15 +223,28 @@ impl UiRouter {
         let mut router = self.clone();
         let mut next = tree.clone();
         let mut result = UiRoute::default();
-        router.reconcile(&next, layout, &mut result);
+        while router
+            .layers
+            .last()
+            .is_some_and(|layer| next.node(layer.root).is_none())
+        {
+            router.pop_layer(&next, layout, &mut result);
+        }
+        let scoped = router.input_layout(&next, layout);
+        router.reconcile(&next, &scoped, &mut result);
         for (index, event) in events.iter().enumerate() {
-            if router.event(&mut next, layout, event, &mut result)? {
+            let scoped = router.event_layout(&next, layout, event);
+            if router.layer_event(&next, layout, event, &mut result)
+                || router.event(&mut next, &scoped, event, &mut result)?
+                || router.block_modal_event(event)
+            {
                 result.consumed.push(index);
             } else {
                 result.world_events.push(event.clone());
             }
         }
         router.refresh_visuals(&mut next)?;
+        router.layer_hovered = router.layer_at_cursor(&next, layout).is_some();
         router.request_text(&next, layout, &mut result);
         router.finish(&mut result);
         *self = router;
@@ -243,7 +266,27 @@ impl UiRouter {
         let mut next = tree.clone();
         let mut result = UiRoute::default();
         router.reconcile(&next, layout, &mut result);
-        router.navigation(&mut next, layout, navigation, &mut result)?;
+        let scoped = router.input_layout(&next, layout);
+        if navigation == UiNavigation::Cancel
+            && !router.layers.is_empty()
+            && !router.editor.preedit.is_empty()
+        {
+            router.editor.cancel_composition();
+            router.await_text_stop = true;
+            result
+                .platform
+                .push(UiPlatformRequest::Text(TextInputRequest::Stop));
+        } else if navigation == UiNavigation::Cancel && !router.layers.is_empty() {
+            if router
+                .layers
+                .last()
+                .is_some_and(|layer| layer.options.dismiss_escape)
+            {
+                router.pop_layer(&next, layout, &mut result);
+            }
+        } else {
+            router.navigation(&mut next, &scoped, navigation, &mut result)?;
+        }
         router.refresh_visuals(&mut next)?;
         router.request_text(&next, layout, &mut result);
         router.finish(&mut result);
@@ -322,8 +365,11 @@ impl UiRouter {
     }
 
     fn finish(&self, result: &mut UiRoute) {
-        result.keyboard_blocked = self.focus.is_some() || !self.owned_keys.is_empty();
-        result.pointer_blocked = self.hovered.is_some()
+        let modal = self.layers.iter().any(|layer| layer.options.modal);
+        result.keyboard_blocked |= modal || self.focus.is_some() || !self.owned_keys.is_empty();
+        result.pointer_blocked |= modal
+            || self.layer_hovered
+            || self.hovered.is_some()
             || self.capture.is_some()
             || self.pointer_owned
             || !self.other_buttons.is_empty();

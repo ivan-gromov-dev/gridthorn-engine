@@ -143,6 +143,57 @@ Escape clears focus. `navigate` accepts the same `UiNavigation` commands from a
 game/controller adapter. Controller discovery and native buttons/axes remain
 Milestone 5; these are device-independent navigation hooks.
 
+## Context menus, popups and dialogs
+
+Implemented provisionally on 2026-10-03. `UiLayer` configures `modal`,
+`dismiss_escape` and `dismiss_outside`; all default to false. Roots are direct
+child panels with globally unique IDs. Use an overlay tree root and position
+panels explicitly. Menu items and dialog content use existing controls;
+trigger positioning, secondary-click opening and action-driven closing are
+application policy.
+
+Register initially closed panels with `UiRouter::register_layer` before first
+presentation. `open_layer` opens/reopens a panel above existing layers, remembers
+focus, cancels capture and focuses its first enabled visible control. Supply a
+fresh **tree** layout when opening: router layouts omit closed panels. Invalid
+or duplicate opens reject without mutation. Use `UiRouter::layout` for rendering
+and routing: it omits closed registered panels and paints open panels in opening
+order, preserving subtree order. Recompute after layer changes. Hidden panels
+still participate in tree measurement, so overlay composition is recommended.
+Roots must remain direct child panels on replacement.
+
+The highest modal layer and layers above it form the active input/focus scope.
+Tab and spatial navigation cannot reach underlying controls. Empty modal space
+blocks pointer/keyboard events and continuous world bindings even without a
+focusable control. Nonmodal layers allow interaction outside their root boxes;
+their clipped backgrounds block underlying pointer targets and scrolling.
+`hit_test_layers` exposes the same stack-aware picking for caller-owned queries;
+the older static `hit_test` remains a single-tree query.
+Held key/button ownership survives closing through release. Platform feedback
+remains routable; native `FocusLost` remains a world cancellation signal and
+clears focus/capture without dismissing layers.
+
+Only the top layer handles dismissal. A nonrepeat Escape press closes it when
+enabled; otherwise Escape is consumed and focus remains. IME preedit cancels
+before dismissal through the existing native stop handshake.
+`UiNavigation::Cancel` follows the same policy. Outside dismissal uses any
+pointer-button press outside the clipped root box, consumes that press and its
+release, and never activates underlying controls. Each press closes at most one
+layer. `UiRoute::dismissed` reports roots in event order. `close_layer` closes
+the top layer regardless of policy. Closing restores prior focus only when still
+enabled, visible and inside the surviving modal scope; otherwise focus clears.
+Removed top roots reconcile on routing. Forward platform requests from opening
+and closing just as from routing, including text-session stop/start operations.
+
+The public `composed-controls --layers --headless` workflow covers nested modal
+and context panels, DPI, painter order, dismissal, blocking and focus restoration.
+`--layers --smoke` renders both through the native runtime; interactive `--layers`
+supports Escape/outside-click closing. Domain tests also cover invalid opens,
+disabled restoration targets, hidden panels, background blocking, held releases
+and IME cancellation priority. Large-stack allocation/latency, Linux/macOS native
+behavior, accessibility, automatic trigger placement, menu-specific arrow/submenu
+semantics and transitions remain unmeasured or deferred.
+
 ## Text editing and platform integration
 
 Focused fields consume keyboard/text events separately. Committed text comes only
@@ -207,6 +258,7 @@ merging, IME cancellation/commit, clipboard failures/stale replies and atomic ro
 The `--smoke` workflow passed on the available Windows host on 2026-10-03,
 creating a native window, submitting 120 frames and shutting down successfully.
 The routing version also passed the Windows 120-frame native smoke on 2026-10-03.
+The nested layer version passed the Windows 120-frame native smoke on 2026-10-03.
 This verifies lifecycle execution, not visual or interactive input acceptance.
 Linux/macOS rendering, native interactive
 language/IME behavior, accessibility, large-tree performance,
@@ -214,12 +266,14 @@ layout caching, virtualization, flex/grid constraint solving, border/radius/shad
 styling and live font reload integration remain unvalidated or deferred.
 Full editor extensions (undo/redo, word/double-click navigation, bidi visual-arrow
 affinity, exact font-provided ligature carets, automatic caret/list reveal and caret
-blinking) remain deferred. Focus routing is a single tree scope; ordered modal
-layers/focus restoration and transitions are the following roadmap items.
+blinking) remain deferred. Ordered modal layers and focus restoration are
+implemented provisionally; presentation transitions remain the next roadmap item.
 Routing clones bounded presentation state for atomic failure handling; allocation,
 large-field latency and repeated shaping costs have not been measured.
 
 ```console
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_composed_controls --locked -- --headless
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_composed_controls --locked -- --smoke
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_composed_controls --locked -- --layers --headless
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_composed_controls --locked -- --layers --smoke
 ```
