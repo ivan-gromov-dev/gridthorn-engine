@@ -35,8 +35,9 @@ boundary. UI animation and device events do not change authoritative time.
 Translation support means runtime localization primitives and actionable catalog
 errors. A translation-management application, hosted translation service,
 automatic translation or editorial approval workflow is outside these milestones.
-Use existing asset loading boundaries where sufficient; select a catalog format
-and formatting backend only after a concrete multilingual example validates them.
+The provisional runtime localization service uses validated Fluent catalog assets
+and ICU decimal formatting, exercised by a concrete multilingual headless example;
+see [LOCALIZATION.md](LOCALIZATION.md) for its explicit fallback, syntax and limits.
 
 ## Implementation order and acceptance
 

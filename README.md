@@ -100,9 +100,15 @@ verification, deferrals and maintainer acceptance on 2026-10-02. The next phase
 is Milestone 4: complete input, multilingual text and runtime UI APIs, followed
 by Milestone 5 desktop platform/device controls. The debugging workflow and
 editor move to Milestones 6 and 7. Desktop input, Unicode/IME/clipboard and
-multilingual font rendering are implemented provisionally. Localization and the
-remaining runtime UI/device additions are planned;
+multilingual font rendering and [runtime localization](docs/LOCALIZATION.md) are
+implemented provisionally. Remaining runtime UI/device additions are planned;
 see [the runtime API scope](docs/RUNTIME_APIS.md) and [roadmap](docs/ROADMAP.md).
+
+Run the public headless localization example (English, Russian, Arabic and Japanese):
+
+```console
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_localization --locked
+```
 
 Run the public multilingual text example (Cyrillic, Arabic bidi and Japanese):
 

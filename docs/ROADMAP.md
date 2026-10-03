@@ -201,6 +201,9 @@ Native validation limits are in [INPUT.md](INPUT.md).
 Font assets, script fallback, multilingual shaping/bidi, measurement, wrapping and
 DPI-specific rendering are implemented provisionally on 2026-10-03; see [TEXT.md](TEXT.md)
 for tested Cyrillic/Arabic/Japanese coverage and explicit platform/performance deferrals.
+Localization runtime APIs are implemented provisionally on 2026-10-03;
+see [LOCALIZATION.md](LOCALIZATION.md) for validated Fluent catalogs, explicit
+fallback, plural/select, decimal formatting and the four-language headless example.
 This milestone extends the narrow Milestone 1/2 subsets;
 it does not change their completion status. Implement in the order below, with
 each increment independently buildable, tested and documented. Detailed engine
@@ -212,7 +215,7 @@ and game ownership is defined in [RUNTIME_APIS.md](RUNTIME_APIS.md).
       and focus-loss handling, separate from physical gameplay shortcuts.
 - [x] Font assets, fallback, Unicode shaping, bidirectional text, measurement,
       wrapping and DPI-aware rendering, including Cyrillic and non-Latin scripts.
-- [ ] Localization runtime API: locale selection, message IDs, validated catalog
+- [x] Localization runtime API: locale selection, message IDs, validated catalog
       assets, fallback, parameters, plural/select rules and locale-aware formatting.
 - [ ] UI composition, sizing, layout, anchoring, clipping, scrolling, styling and
       reusable controls: labels, buttons, toggles, sliders, lists and text fields.
@@ -365,7 +368,9 @@ Milestone 3 is complete following maintainer acceptance on 2026-10-02; see
 [the completion review](milestone-3-showcase.md). The next target is Milestone 4:
 desktop keyboard/pointer and Unicode/IME/clipboard input are implemented;
 font assets, fallback and multilingual shaping/rendering are implemented provisionally.
-Localization runtime APIs are next.
+Localization runtime APIs are implemented provisionally with validated catalogs,
+explicit fallback and locale-aware decimal formatting. UI composition and controls
+are next.
 Milestone 5 adds desktop platform/device controls. Professional debugging and
 the editor are deferred to Milestones 6 and 7 respectively.
 Milestone 2 is complete for the supported subsets documented in the

@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Provisional headless localization API with canonical locale/message IDs,
+  validated Fluent catalog assets, explicit ordered fallback and atomic replacement,
+  typed parameters, cardinal/ordinal/select rules, ICU decimal formatting,
+  contextual diagnostics and a public four-language example.
+
 - Repository review and diagnosis skills, domain context routing, conditional
   long-task checkpoints, and a guarded Markdown-only verification mode.
 - Provisional validated font assets, isolated game-owned fallback fonts, advanced
