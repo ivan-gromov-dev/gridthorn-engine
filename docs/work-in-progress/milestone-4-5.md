@@ -282,3 +282,62 @@ Full `./scripts/verify.ps1` passed: formatting, workspace check/Clippy/tests,
 generated-project workflows, dependency boundaries and whitespace. Log:
 `target/milestone-4-5-retained-verify.log`. Both final release native smoke runs
 passed. No public API, dependency edge or sibling example source changed.
+
+## GPU-pass and isolated native workload increment
+
+Starting engine HEAD: `0138eae221cb415fc4cca547b1fa5752d5a92bb2` with a clean tree.
+Examples retain their existing untracked workbench. Added opt-in GPU timestamps
+only on adapters supporting TIMESTAMP_QUERY. One query/readback slot, nonblocking
+device polling and bounded storage avoid waiting in the render loop. Busy slots
+are skipped; errors/pending samples are reported. CPU/GPU frame indices continue
+across pipeline reconfiguration. Default renderer feature requests remain unchanged.
+Tests validate timestamp byte decoding, backend period, incomplete/reversed data,
+non-finite/zero periods; native Vulkan readback is exercised by actual runs.
+
+The sibling workbench adds mutually exclusive `--idle-smoke` / `--editing-smoke`
+and `--locale=en-US|ru|ar-EG|ja`. Editing focuses the field, warms ten host frames,
+selects the complete value and injects bounded mixed-script replacement via the
+public router each subsequent frame; normal localized preview refresh also runs.
+It measures injected text routing/selection/layout rather than OS IME. A domain
+test verifies focus and replacement without unbounded text growth; 6 package tests
+and package Clippy passed. No new dependency or SDK public API was added.
+
+Two native release runs per mode/locale, 119 frames each; warm analysis uses
+frame indices 10–118 (109 CPU/GPU pairs per configuration). All logs report native
+scale factor 1 and physical 1000×800, RTX 3070/Vulkan/616.56/Fifo. Active Windows
+power scheme queried after the runs was Balanced; monitor refresh and CPU power/
+frequency during sampling are not recorded. Log naming:
+`target/workbench-gpu-<idle|editing>-<en-US|ru|ar-EG|ja>[-repeat].log`.
+
+| Mode/locale | GPU pass p95 µs, first/repeat | Renderer encode p95 ms, first/repeat | Host cadence p99 ms, first/repeat |
+| --- | --- | --- | --- |
+| Idle en-US | 32 / 32 | 0.075 / 0.064 | 9.576 / 9.832 |
+| Idle ru | 33 / 33 | 0.074 / 0.060 | 9.630 / 9.672 |
+| Idle ar-EG | 26 / 26 | 0.097 / 0.099 | 11.114 / 9.921 |
+| Idle ja | 30 / 30 | 0.060 / 0.080 | 9.581 / 9.632 |
+| Editing en-US | 31 / 31 | 1.615 / 1.262 | 10.301 / 10.826 |
+| Editing ru | 32 / 32 | 1.345 / 1.393 | 10.257 / 9.969 |
+| Editing ar-EG | 25 / 25 | 1.041 / 1.043 | 9.438 / 9.658 |
+| Editing ja | 29 / 29 | 1.219 / 1.295 | 12.521 / 14.884 |
+
+Idle: all 109 warm frames hit the colored/UI cache, with no colored uploads.
+Editing: no warm cache hits, as expected for replacement every frame. No GPU
+readback errors or pending shutdown samples. Japanese editing repeat collected
+118 total GPU samples with one skipped cold frame; all warm pair counts remain
+109. Other runs collected all 119 samples. Initial mixed smoke also succeeded:
+`target/workbench-gpu-mixed.log`, 119 GPU samples, no skips/errors/pending.
+
+GPU pass timing excludes upload execution, queue waits, resolve/copy work and
+display/compositor timing. Host cadence remains a CPU present-call proxy. These
+measurements establish the pass component only, not whole-GPU/engine CPU budgets
+or acceptance. Native DPI 2, isolated clipboard/IME/pointer/scroll/animation,
+whole-engine CPU and actual displayed intervals remain outstanding. No new
+optimization chosen from these measurements; pass execution is small on this
+host and remaining preparation/transfer/presentation costs need separate review.
+
+Full `./scripts/verify.ps1` passed, including 41 renderer tests, workspace
+formatting/check/Clippy/tests, generated-project workflows, dependency boundaries
+and whitespace. Log: `target/milestone-4-5-gpu-verify.log`. All 16 isolated native
+release runs and the mixed smoke passed; the workbench's 6 tests and package
+Clippy passed. Roadmap completion marks include the GPU-pass diagnostics and
+isolated idle/editing evidence; broader acceptance items remain open.

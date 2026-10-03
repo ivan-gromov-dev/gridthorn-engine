@@ -45,9 +45,17 @@ impl SurfaceRenderer {
             ..RequestAdapterOptions::default()
         }))
         .map_err(RenderSurfaceError::adapter_request)?;
-        let (device, queue) =
-            pollster::block_on(adapter.request_device(&DeviceDescriptor::default()))
-                .map_err(RenderSurfaceError::device_request)?;
+        let performance = super::performance::SurfacePerformance::new();
+        let required_features = if performance.enabled() {
+            adapter.features() & wgpu::Features::TIMESTAMP_QUERY
+        } else {
+            wgpu::Features::empty()
+        };
+        let (device, queue) = pollster::block_on(adapter.request_device(&DeviceDescriptor {
+            required_features,
+            ..DeviceDescriptor::default()
+        }))
+        .map_err(RenderSurfaceError::device_request)?;
         let adapter_info = adapter.get_info();
         info!(
             component = "renderer",
@@ -65,7 +73,7 @@ impl SurfaceRenderer {
             lifecycle: SurfaceLifecycle::default(),
             frame: RenderFrame::default(),
             sprite_pipeline: None,
-            performance: super::performance::SurfacePerformance::new(),
+            performance,
         };
         renderer.resize(width, height)?;
         Ok(renderer)
@@ -167,6 +175,7 @@ impl SurfaceRenderer {
         let encode_time = encode_start.map(|start| start.elapsed());
         let submit_start = self.performance.clock();
         self.queue.submit([encoder.finish()]);
+        pipeline.submitted();
         let submit_time = submit_start.map(|start| start.elapsed());
         let present_start = self.performance.clock();
         self.queue.present(frame);
@@ -201,20 +210,25 @@ impl SurfaceRenderer {
         if self.performance.enabled() {
             let adapter = self.adapter.get_info();
             eprintln!(
-                "render_configuration,adapter={:?},backend={:?},driver={:?},driver_info={:?},width={},height={},present={:?}",
+                "render_configuration,adapter={:?},backend={:?},driver={:?},driver_info={:?},width={},height={},present={:?},timestamp_query={}",
                 adapter.name,
                 adapter.backend,
                 adapter.driver,
                 adapter.driver_info,
                 extent.width,
                 extent.height,
-                configuration.present_mode
+                configuration.present_mode,
+                self.device
+                    .features()
+                    .contains(wgpu::Features::TIMESTAMP_QUERY),
             );
         }
         self.sprite_pipeline = Some(SpritePipeline::new(
             &self.device,
             configuration.format,
             self.performance.enabled(),
+            &self.queue,
+            self.performance.next_frame(),
         ));
         self.configuration = Some(configuration);
         debug!(

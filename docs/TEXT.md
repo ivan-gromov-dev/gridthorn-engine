@@ -96,6 +96,7 @@ raster snapshots reuse colored/UI geometry and an immutable GPU vertex buffer.
 Dirty geometry reuses CPU vector capacity; one high-water vector and one input
 snapshot remain until surface reconfiguration or shutdown. Changed raster storage,
 placement, DPI, clipping/order, camera, colored sprites and overlay invalidate it.
-GPU execution and actual presented intervals remain unmeasured. The span renderer
+Opt-in GPU timestamps measure render-pass execution on supported adapters.
+Whole-frame GPU execution and actual presented intervals remain unmeasured. The span renderer
 is a correctness foundation for modest UI text, not a measured high-throughput
 text renderer. [ADR 0004](adr/0004-multilingual-text.md) records the provisional backend.

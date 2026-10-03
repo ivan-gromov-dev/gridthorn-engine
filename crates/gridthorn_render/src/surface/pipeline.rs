@@ -18,10 +18,17 @@ pub(super) struct SpritePipeline {
     texture_layout: BindGroupLayout,
     performance: bool,
     colored: super::colored_frame::ColoredFrame,
+    gpu: Option<super::gpu_performance::GpuPerformance>,
 }
 
 impl SpritePipeline {
-    pub(super) fn new(device: &Device, format: TextureFormat, performance: bool) -> Self {
+    pub(super) fn new(
+        device: &Device,
+        format: TextureFormat,
+        performance: bool,
+        queue: &Queue,
+        first_frame: usize,
+    ) -> Self {
         let shader = device.create_shader_module(ShaderModuleDescriptor {
             label: Some("gridthorn sprite shader"),
             source: ShaderSource::Wgsl(include_str!("sprite.wgsl").into()),
@@ -102,6 +109,8 @@ impl SpritePipeline {
             texture_layout,
             performance,
             colored: super::colored_frame::ColoredFrame::new(),
+            gpu: (performance && device.features().contains(wgpu::Features::TIMESTAMP_QUERY))
+                .then(|| super::gpu_performance::GpuPerformance::new(device, queue, first_frame)),
         }
     }
 
@@ -114,6 +123,9 @@ impl SpritePipeline {
         frame: &RenderFrame,
         extent: SurfaceExtent,
     ) -> Option<super::performance::PipelineSample> {
+        if let Some(gpu) = &mut self.gpu {
+            gpu.begin(device);
+        }
         let geometry_start = self.performance.then(std::time::Instant::now);
         let changed = self.colored.prepare(frame, extent);
         let geometry_time = geometry_start.map(|start| start.elapsed());
@@ -141,6 +153,10 @@ impl SpritePipeline {
         let mut render_pass = encoder.begin_render_pass(&RenderPassDescriptor {
             label: Some("gridthorn sprite pass"),
             color_attachments: &[Some(color_attachment)],
+            timestamp_writes: self
+                .gpu
+                .as_ref()
+                .and_then(super::gpu_performance::GpuPerformance::writes),
             ..RenderPassDescriptor::default()
         });
         if let Some(vertex_buffer) = vertex_buffer.as_ref() {
@@ -159,6 +175,10 @@ impl SpritePipeline {
             render_pass.set_pipeline(&self.pipeline);
             render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
             render_pass.draw(geometry.world_vertex_count..vertex_count, 0..1);
+        }
+        drop(render_pass);
+        if let Some(gpu) = &self.gpu {
+            gpu.resolve(encoder);
         }
         geometry_time.map(|geometry_time| {
             let vertices = geometry.vertices.len()
@@ -179,6 +199,12 @@ impl SpritePipeline {
                     * std::mem::size_of::<SpriteVertex>(),
             }
         })
+    }
+
+    pub(super) fn submitted(&mut self) {
+        if let Some(gpu) = &mut self.gpu {
+            gpu.submitted();
+        }
     }
 }
 

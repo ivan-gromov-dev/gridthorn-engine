@@ -288,6 +288,10 @@ record implemented and verified increments; measurements and limitations are in
         retained vertex-capacity counters and host present-call cadence.
   - [x] Measure repeated native release smoke runs combining locale changes,
         nested windows and animation; distinguish cache hits and misses.
+  - [x] Add optional asynchronous render-pass GPU timestamps with availability,
+        skipped/error/pending reporting and bounded collection.
+  - [x] Add isolated idle and bounded injected text-editing smoke modes; measure
+        all four locales at native DPI 1 with separate CPU/GPU-pass samples.
   - [ ] Measure isolated idle, editing/selection, clipboard/IME, pointer/slider,
         scrolling, locale-switch, nested-window and animation workloads at DPI 1/2.
   - [ ] Measure whole-engine frame CPU work, GPU execution and actual presented

@@ -47,6 +47,10 @@ impl SurfacePerformance {
         self.enabled
     }
 
+    pub fn next_frame(&self) -> usize {
+        self.samples.len()
+    }
+
     pub fn record(&mut self, sample: FrameSample) {
         if self.samples.len() < SAMPLE_LIMIT {
             let now = Instant::now();

@@ -8,7 +8,7 @@ Milestone 4 remains open until this review and its own native acceptance finish.
 The first increment adds a public-API CPU workload to the sibling workbench and
 records debug/release samples and confirmed duplicate paint in
 [the active checkpoint](work-in-progress/milestone-4-5.md). Reference hardware,
-repeat runs and native CPU/GPU/present measurements remain outstanding.
+display/power metadata and whole-engine CPU/GPU/present acceptance remain outstanding.
 
 The renderer's opt-in `GRIDTHORN_RENDER_PERFORMANCE` environment variable records
 the first 240 successful presented frames in memory and writes `render_cpu` CSV
@@ -33,7 +33,19 @@ intervals are measured between successful CPU present calls; the first is zero,
 and gaps include engine work, event-loop pacing and skipped/suspended rendering.
 These are a cadence proxy, not compositor/display presentation timestamps.
 PresentMon was not found on PATH on the reference host; displayed-frame timing
-and GPU execution remain unmeasured.
+and whole-frame GPU execution remain unmeasured.
+
+When enabled, diagnostics request `TIMESTAMP_QUERY` only if the adapter supports
+it. `timestamp_query` in configuration metadata reports availability. An isolated
+readback slot asynchronously resolves start/end render-pass timestamps; the frame
+loop polls without waiting and skips busy slots. `render_gpu` rows report paired
+frame index and GPU pass microseconds; `render_gpu_summary` reports collected,
+skipped, errored and pending samples. Frame indices continue across reconfiguration.
+Collection is limited to the first 240 successful frames. No blocking readback or
+per-frame printing occurs, and normal runs request no timestamp feature.
+Pass time excludes upload/transfer execution, queue waits, timestamp resolve and
+display/compositor work. Unsupported timestamps, pending shutdown samples and
+sampling gaps are unavailable data, not zero GPU work.
 
 ## Evidence and limits
 

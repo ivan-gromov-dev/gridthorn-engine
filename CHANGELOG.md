@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Opt-in renderer diagnostics now report asynchronous GPU render-pass timestamps
+  where supported, with bounded nonblocking readback and explicit sampling gaps.
+
 - Renderer retains colored/UI geometry and its immutable GPU vertex buffer for
   unchanged snapshots, and reuses CPU vertex capacity when snapshots change.
   Surface reconfiguration recreates the cache; textured resources remain per-frame.
