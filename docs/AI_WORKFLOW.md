@@ -25,6 +25,7 @@ lockfile unless dependency investigation needs it.
 | Runtime and states | `gridthorn_app`, `gridthorn` | [Runtime APIs](RUNTIME_APIS.md), [Architecture](ARCHITECTURE.md) | App runtime/state tests |
 | Keyboard, pointer, text input | `gridthorn_input`, `gridthorn_app` | [Input](INPUT.md) | Input and window domain tests |
 | Font assets and multilingual UI | `gridthorn_assets`, `gridthorn_render`, `gridthorn_app` | [Text](TEXT.md) | Sibling `multilingual-text` example |
+| Locale selection and translated messages | `gridthorn_localization`, `gridthorn` | [Localization](LOCALIZATION.md) | Sibling `localization` example |
 | Assets and reload | `gridthorn_assets` | [Assets](ASSETS.md) | Sibling `asset-reload --smoke` workflow |
 | GPU and presentation | `gridthorn_render`, `gridthorn_app` | [Architecture](ARCHITECTURE.md), [Runtime APIs](RUNTIME_APIS.md) | Surface/presentation tests; affected window example |
 | Audio | `gridthorn_audio`, runtime facade | [Runtime APIs](RUNTIME_APIS.md) | Audio command/output tests; affected audio example |

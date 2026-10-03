@@ -51,3 +51,4 @@ No project decisions have been accepted yet.
 - [0002: Typed authoritative roots for provisional simulation snapshots](0002-typed-simulation-snapshots.md) — Proposed.
 - [0003: Versioned world saves over typed authoritative roots](0003-world-save-envelope.md) — Proposed.
 - [0004: Font assets and isolated multilingual presentation](0004-multilingual-text.md) — Proposed.
+- [0005: Explicit presentation localization with validated Fluent catalogs](0005-localization-catalogs.md) — Proposed.

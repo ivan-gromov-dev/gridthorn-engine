@@ -1,0 +1,23 @@
+[package]
+name = "gridthorn_localization"
+description = "Validated catalogs and presentation localization for Gridthorn"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+
+[dependencies]
+fluent-bundle.workspace = true
+fluent-syntax.workspace = true
+unic-langid.workspace = true
+intl-memoizer.workspace = true
+icu_decimal.workspace = true
+icu_locale_core.workspace = true
+icu_provider.workspace = true
+writeable.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

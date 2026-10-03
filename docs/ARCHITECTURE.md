@@ -34,6 +34,7 @@ crates/
 ├── gridthorn_render       # renderer abstraction and 2D pipeline
 ├── gridthorn_assets       # loading, handles, dependencies, and hot reload
 ├── gridthorn_input
+├── gridthorn_localization # validated catalogs and presentation locale services
 ├── gridthorn_audio
 ├── gridthorn_scene        # scenes, serialization, and migrations
 ├── gridthorn_simulation   # fixed ticks, clock, and headless execution

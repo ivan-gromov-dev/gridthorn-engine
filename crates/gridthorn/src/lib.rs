@@ -9,6 +9,15 @@ pub use runtime::{
     ScenarioState, SimulationSnapshot, StateFingerprint, WorldSaveCodec, WorldSaveError,
 };
 mod version;
+/// Provisional headless locale selection, validated Fluent catalogs and formatting.
+pub mod localization {
+    pub use gridthorn_localization::{
+        CatalogAsset, CatalogError, LocaleId, Localization, LocalizationError, LocalizationIdError,
+        LocalizedMessage, MessageId, MessageParameters,
+    };
+    #[cfg(test)]
+    mod test;
+}
 pub use gridthorn_app::WindowScaleFactor;
 
 pub use gridthorn_assets::{FontAsset, FontAssetError};
