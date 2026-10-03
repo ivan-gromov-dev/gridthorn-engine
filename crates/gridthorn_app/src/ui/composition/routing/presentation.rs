@@ -35,6 +35,7 @@ impl UiRouter {
             &mut text,
             Some(self),
             Some(&mut sample),
+            Some(&layout.text_geometry),
         )?;
         sample.record(2, start);
         if let Some(performance) = &self.performance {
@@ -87,6 +88,7 @@ impl UiRouter {
         &self,
         tree: &UiTree,
         placement: &UiPlacement,
+        geometry: &super::super::text_geometry::TextGeometry,
         scale: f32,
         text: &mut Option<&mut TextSystem>,
         output: &mut Vec<UiPrimitive>,
@@ -100,7 +102,6 @@ impl UiRouter {
         let UiControl::TextField { value, .. } = &node.control else {
             return Ok(());
         };
-        let geometry = super::super::text_geometry::prepare_field(tree, value, placement, text)?;
         let selection = if value == &self.editor.value {
             self.editor.selection
         } else {

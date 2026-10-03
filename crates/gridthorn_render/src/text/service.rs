@@ -11,6 +11,7 @@ use super::{
 /// Supply all fallback assets at construction; create a new service after a font reload.
 /// Mutable access serializes cache work; immutable layouts/snapshots can cross threads.
 pub struct TextSystem {
+    pub(super) performance: Option<super::performance::TextPerformance>,
     pub(super) fonts: FontSystem,
     pub(super) cache: SwashCache,
     pub(super) owner: Arc<()>,
@@ -36,6 +37,7 @@ impl TextSystem {
         families.dedup();
         database.set_sans_serif_family(&families[0]);
         Ok(Self {
+            performance: super::performance::TextPerformance::new(),
             fonts: FontSystem::new_with_locale_and_db(locale.into(), database),
             cache: SwashCache::new(),
             owner: Arc::new(()),
@@ -48,6 +50,10 @@ impl TextSystem {
     /// # Errors
     /// Rejects unknown primary families, invalid metrics and oversized input/layout.
     pub fn layout(&mut self, text: &str, style: &TextStyle) -> Result<TextLayout, TextError> {
+        let start = self
+            .performance
+            .as_ref()
+            .and_then(|performance| performance.start(0));
         style.validate()?;
         if text.len() > 65536 {
             return Err(TextError::TooLarge);
@@ -115,12 +121,16 @@ impl TextSystem {
                 glyphs,
             });
         }
-        Ok(TextLayout {
+        let layout = TextLayout {
             owner: self.owner.clone(),
             buffer,
             lines,
             measurement,
-        })
+        };
+        if let Some(performance) = &mut self.performance {
+            performance.record(0, start, text.len());
+        }
+        Ok(layout)
     }
 
     /// Drop raster cache allocations. Existing immutable snapshots remain usable.

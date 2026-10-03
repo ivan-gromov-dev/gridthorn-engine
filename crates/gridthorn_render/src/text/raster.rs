@@ -91,6 +91,10 @@ impl TextSystem {
         scale: f32,
         color: Color,
     ) -> Result<RasterText, TextError> {
+        let start = self
+            .performance
+            .as_ref()
+            .and_then(|performance| performance.start(1));
         if !scale.is_finite() || scale <= 0.0 || scale > 8.0 {
             return Err(TextError::InvalidMetrics);
         }
@@ -157,11 +161,16 @@ impl TextSystem {
                 );
             }
         }
-        Ok(RasterText {
+        let units = pixels.len();
+        let raster = RasterText {
             pixels: pixels.into(),
             position: [0.0, 0.0],
             scale,
             measurement: layout.measurement,
-        })
+        };
+        if let Some(performance) = &mut self.performance {
+            performance.record(1, start, units);
+        }
+        Ok(raster)
     }
 }

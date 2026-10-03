@@ -8,6 +8,9 @@ pub(super) fn paint(
     text: &mut Option<&mut TextSystem>,
     router: Option<&super::UiRouter>,
     mut performance: Option<&mut super::layout_performance::LayoutSample>,
+    geometry: Option<
+        &std::collections::BTreeMap<super::UiNodeId, super::text_geometry::TextGeometry>,
+    >,
 ) -> Result<Vec<UiPrimitive>, UiCompositionError> {
     let mut output = Vec::new();
     for placement in placements {
@@ -42,9 +45,11 @@ pub(super) fn paint(
             placement.clip
         };
         append_clipped(&mut primitives, content, clip, scale)?;
-        if let Some(router) = router {
+        if let Some(router) = router
+            && let Some(geometry) = geometry.and_then(|geometry| geometry.get(&placement.id))
+        {
             let start = performance.as_ref().and_then(|sample| sample.start());
-            router.paint_field(tree, placement, scale, text, &mut primitives)?;
+            router.paint_field(tree, placement, geometry, scale, text, &mut primitives)?;
             if let Some(sample) = performance.as_deref_mut() {
                 sample.record(3, start);
             }

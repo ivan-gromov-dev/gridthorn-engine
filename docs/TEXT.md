@@ -97,6 +97,9 @@ Dirty geometry reuses CPU vector capacity; one high-water vector and one input
 snapshot remain until surface reconfiguration or shutdown. Changed raster storage,
 placement, DPI, clipping/order, camera, colored sprites and overlay invalidate it.
 Opt-in GPU timestamps measure render-pass execution on supported adapters.
+`GRIDTHORN_TEXT_PERFORMANCE` collects bounded successful shaping/layout and
+raster-snapshot CPU timings, call totals and input/output sizes; the sampling
+protocol and limits are in [the performance review](PERFORMANCE_REVIEW.md).
 Whole-frame GPU execution and actual presented intervals remain unmeasured. The span renderer
 is a correctness foundation for modest UI text, not a measured high-throughput
 text renderer. [ADR 0004](adr/0004-multilingual-text.md) records the provisional backend.

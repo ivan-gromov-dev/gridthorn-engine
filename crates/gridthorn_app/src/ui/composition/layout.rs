@@ -105,7 +105,7 @@ impl UiTree {
     ) -> Result<UiLayout, UiCompositionError> {
         let mut layout = self.arrange_layout(viewport, scale, &mut text)?;
         layout.primitives =
-            super::paint::paint(self, &layout.placements, scale, &mut text, None, None)?;
+            super::paint::paint(self, &layout.placements, scale, &mut text, None, None, None)?;
         layout.text_geometry = super::text_geometry::prepare(self, &layout.placements, &mut text)?;
         Ok(layout)
     }

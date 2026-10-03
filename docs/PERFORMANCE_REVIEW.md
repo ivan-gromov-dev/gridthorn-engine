@@ -49,11 +49,25 @@ sampling gaps are unavailable data, not zero GPU work.
 
 ## Evidence and limits
 
+`GRIDTHORN_TEXT_PERFORMANCE` enables per-service text diagnostics. At most 8192
+successful layout calls and 8192 successful rasterize calls are stored separately.
+`text_cpu` rows print at service destruction; `text_cpu_summary` reports stored
+and total successful counts, making truncation explicit. Layout units are input
+UTF-8 bytes; rasterize units are output horizontal pixel spans, not glyph/pixel
+counts or GPU bytes. Durations include validation, shaping/layout diagnostics or
+raster snapshot construction respectively, excluding returned-result destruction
+and collector publication. Failed calls are not sampled. Indices are independent
+operation counters, not host/present frames; the probe covers all callers, not
+only paint. Default services create no collector or timers; timers stop for an
+operation once its storage limit is reached. Glyph raster-cache hits can still
+require reconstruction of the immutable span snapshot.
+
 `GRIDTHORN_UI_PERFORMANCE` enables router-owned layout diagnostics. Up to 240
 successful layout calls are stored; `ui_layout` rows print when the final cloned
 router releases the shared collector. Arrangement includes layer ordering;
 text geometry and paint are separate phases. Focused-decoration time is nested
-within paint and includes focused field geometry, selection/caret and preedit.
+within paint and consumes prepared field geometry for selection/caret decoration;
+active preedit work is included and still prepares its separate composition text.
 Indices count successful layout calls, not host or presented frames. Busy
 collector locks skip samples, reported by `ui_layout_summary`; collection never
 waits on a held lock. Default routers allocate no collector and take no phase

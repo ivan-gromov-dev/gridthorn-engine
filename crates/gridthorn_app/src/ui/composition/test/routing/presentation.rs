@@ -1,6 +1,40 @@
 use super::*;
 
 #[test]
+fn focused_decoration_consumes_prepared_geometry_without_a_font_service() {
+    let mut tree = field("Привет مرحبًا 日本語 e\u{301}");
+    let mut router = UiRouter::new(0);
+    let raw = tree.layout([200.0; 2], 2.0, None).unwrap();
+    router
+        .navigate(&mut tree, &raw, UiNavigation::Next)
+        .unwrap();
+    router
+        .select(
+            &tree,
+            UiSelection {
+                anchor: 0,
+                caret: value(&tree).len(),
+            },
+        )
+        .unwrap();
+    let layout = router.layout(&tree, [200.0; 2], 2.0, None).unwrap();
+    let placement = layout.placement(UiNodeId(1)).unwrap();
+    let geometry = &layout.text_geometry[&UiNodeId(1)];
+    let mut expected = Vec::new();
+    router
+        .paint_field(&tree, placement, geometry, 2.0, &mut None, &mut expected)
+        .unwrap();
+    assert_ne!(expected, []);
+    tree.theme.text = Some(gridthorn_render::TextStyle::new("missing font", 24.0));
+    let mut actual = Vec::new();
+    router
+        .paint_field(&tree, placement, geometry, 2.0, &mut None, &mut actual)
+        .unwrap();
+    assert_eq!(actual, expected);
+    assert!(router.layout(&tree, [200.0; 2], 2.0, None).is_err());
+}
+
+#[test]
 fn undecorated_router_preserves_tree_layout_and_clipped_paint() {
     let mut tree = field("Привет مرحبًا 日本語 e\u{301}");
     let mut root = tree.root().clone();

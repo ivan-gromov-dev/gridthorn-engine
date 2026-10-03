@@ -28,6 +28,10 @@ with at most 1 MiB of copied UTF-8 keys (excluding map metadata).
 Further measurements still execute normally after the limit. Bitmap measurement,
 paint and editing geometry retain their existing behavior.
 
+Router layout prepares field geometry once for hit testing, native text anchors
+and focused caret/selection decoration. Active preedit still prepares its separate
+composition text; changed field content, placement or theme requires fresh layout.
+
 `UiLength` supports intrinsic `Auto`, fixed `Pixels`, parent-relative `Fraction`
 (0–1) and `Fill`. Minimum/maximum sizes include padding. Fractions resolve
 against available parent content, even in auto parents; this is not a cyclic

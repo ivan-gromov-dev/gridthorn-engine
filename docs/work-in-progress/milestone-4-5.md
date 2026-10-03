@@ -532,3 +532,124 @@ text cache or a visibility/sizing semantic change. Remaining review includes
 paint/raster preparation, closed-layer sizing, allocations, OS IME/native DPI 2
 and whole-engine CPU/GPU/display acceptance. This component improvement does not
 close the milestone's native frame-budget gate.
+
+## Focused field geometry reuse increment
+
+Starting engine HEAD: `0d46bcc63d198a783a44c0c4245700bcd97d9cdc`, clean tree.
+Examples retain their prior manifest/README/workbench changes. Review found that
+router layout prepares each visible field's geometry for input/native anchors,
+then focused-decoration painting repeats preparation/shaping of the same field.
+The fix passes the already prepared geometry into decoration paint. Selection,
+caret, clipping and stale-editor-value fallback remain unchanged; active preedit
+still prepares its distinct composition string. This is a focused duplication
+removal, not a persistent text/raster cache or a promise of a whole-frame gain.
+
+The domain regression test paints caret/selection from a prepared geometry without
+a font service, verifies identical primitives, and confirms fresh layout still
+requires a valid asset-font service. Existing routing/selection/preedit/DPI and
+sibling workbench tests cover normal workflows. No SDK API/dependency edge or
+example source change was added.
+
+Before probes: two release editing runs per en-US/ja locale, with only
+`GRIDTHORN_UI_PERFORMANCE=1`, no concurrent agent-launched build/test work.
+Logs: `target/ui-decoration-before-<locale>-<1|2>.log`. Final measurements started
+after repository verification and the package release build finished.
+
+Full `./scripts/verify.ps1` passed, including 111 application tests (1 existing
+ignored), workspace formatting/check/Clippy/tests, generated-project workflows,
+dependency boundaries and whitespace. Log:
+`target/milestone-4-5-decoration-verify.log`. Workbench package Clippy, 7 tests and
+release build passed: `target/ui-decoration-workbench-clippy.log`,
+`target/ui-decoration-workbench-tests.log`, `target/ui-decoration-build.log`.
+
+Final release editing probes: two runs per four locales with only UI diagnostics
+enabled and no concurrent agent-launched compilation. Logs:
+`target/ui-decoration-after-<locale>-<1|2>.log`; summary:
+`target/ui-decoration-summary.csv`. All editing runs collected 113 successful
+layout calls with zero collector skips. Analysis excludes the first ten layout
+calls, leaving 103 samples per run; nearest-rank p95 values below are microseconds.
+Native metadata remains physical 1000×800, DPI 1. Adapter/refresh/power conditions
+are not recorded by this probe, as in the preceding arrangement cohort.
+
+| Locale | Focused decoration before, first/repeat | Focused decoration after, first/repeat | Paint before, first/repeat | Paint after, first/repeat |
+| --- | --- | --- | --- | --- |
+| en-US | 138 / 111 | 1 / 1 | 1313 / 1023 | 1223 / 1059 |
+| ru | Not measured | 1 / 1 | Not measured | 1237 / 1061 |
+| ar-EG | Not measured | 1 / 1 | Not measured | 1162 / 1020 |
+| ja | 130 / 128 | 1 / 1 | 1962 / 1810 | 1914 / 1587 |
+
+Focused time is nested paint, with integer microsecond reporting. Paint now calls
+decoration only for prepared text fields, avoiding no-op decoration calls on other
+nodes as well as duplicate field shaping. Layout-phase total is computed per row
+from arrangement + text geometry + paint, excluding nested focused time. Japanese
+total p95 before was 4.486 / 4.049 ms; after 5.413 / 3.711 ms. This spread does
+not establish a whole-layout or whole-frame percentile improvement; the supported
+claim is elimination of duplicate geometry preparation and reduced focused cost.
+
+Native mixed smoke and headless public workflows passed:
+`target/ui-decoration-mixed.log`, `target/ui-decoration-headless.log`.
+Remaining paint cost includes caption shaping/rasterization; review it separately
+before introducing retained raster caches. Native OS IME/DPI 2, whole-engine CPU,
+GPU/display acceptance and remaining domain scaling reviews remain outstanding.
+
+## Text-service shaping/raster phase increment
+
+Starting engine HEAD remains `0d46bcc63d198a783a44c0c4245700bcd97d9cdc`; the
+focused-field reuse increment was still uncommitted and is preserved. Examples
+retain their prior changes. Added private opt-in `GRIDTHORN_TEXT_PERFORMANCE`
+collection per font service, with independent limits of 8192 successful layout
+and rasterize operations. Default services create no collector or timers.
+Full collectors stop taking timestamps for that operation but retain successful
+call totals. Failed operations are excluded. Rows print only at service drop.
+
+Layout duration includes validation, shaping and detached layout construction;
+raster duration includes validation, glyph-cache lookup/iteration, pixel-span
+merging and immutable snapshot construction. Layout units are UTF-8 input bytes;
+raster units are output spans, not sampled pixels or uploaded GPU bytes. The
+probe includes every caller, including measurement and editing geometry; it is
+not a paint-only timer. Independent indices must not be paired as native frames.
+The domain test covers separate operation limits and counts beyond truncation.
+
+Full `./scripts/verify.ps1` passed (including 42 renderer tests), along with
+workbench package Clippy, 7 tests and release build. Logs:
+`target/milestone-4-5-text-phases-verify.log`,
+`target/text-phases-workbench-clippy.log`, `target/text-phases-workbench-tests.log`,
+`target/text-phases-build.log`. Native sampling began after all checks/builds
+finished. No sibling example source change was needed. Disabled-diagnostics
+headless workflow passed with no `text_cpu` rows: `target/text-phases-headless.log`.
+
+Two sequential native release runs per idle/editing mode and four locales passed
+with only `GRIDTHORN_TEXT_PERFORMANCE=1` enabled and no concurrent agent-launched
+build/test work. Logs: `target/text-phases-<mode>-<locale>-<1|2>.log`; summary:
+`target/text-phases-summary.csv`. Native logs report physical 1000×800 and DPI 1;
+adapter/refresh/power conditions are not logged by this probe. Each idle run
+performed only 33 layout and 10 rasterize calls for initial preparation. Each
+editing run performed 3729 layout and 1130 rasterize calls, exactly 33 and 10
+per each of the 113 router layouts in the established workload. Successful totals
+equal stored totals in every run; no truncation occurred.
+
+| Editing locale | All layout-call CPU sum ms, first/repeat | All rasterize-call CPU sum ms, first/repeat | Layout call p95 µs, first/repeat | Rasterize call p95 µs, first/repeat |
+| --- | --- | --- | --- | --- |
+| en-US | 147.670 / 152.270 | 38.380 / 38.950 | 100 / 105 | 106 / 106 |
+| ru | 169.720 / 144.390 | 48.230 / 43.090 | 120 / 95 | 146 / 123 |
+| ar-EG | 186.790 / 177.540 | 36.590 / 33.840 | 158 / 154 | 83 / 78 |
+| ja | 298.010 / 299.000 | 40.750 / 38.500 | 425 / 426 | 118 / 115 |
+
+Sums include cold/initial operations over the full run and use integer
+microsecond reporting. Per-call nearest-rank percentiles exclude the first 100
+calls of each operation independently (3629 layout and 1030 raster samples).
+These exclusions are not matched host frames and must not be used to form
+whole-frame samples. Calls have differing text sizes; these are workload call
+distributions, not normalized per-character costs. Idle has no samples after
+that exclusion, not a zero-cost shaping/raster benchmark. Raster output totals
+are deterministic across repeats: approximately 1.84–2.56 million spans for the
+editing cohorts, but no allocation/memory or GPU-upload budget is inferred.
+
+The measured review priority is shaping, including arrangement/geometry as well
+as paint, rather than glyph rasterization alone. Code review shows every dirty
+UI layout still reshapes unchanged captions and reconstructs their snapshots;
+these timings do not individually identify which captions repeat. The next
+focused cache decision must validate text/style/font-owner matching, eviction,
+bounded retained memory and cold/warm behavior before implementing persistent
+reuse. Native OS IME/DPI 2, whole-engine CPU/GPU/display acceptance and other
+domain scaling reviews remain open.

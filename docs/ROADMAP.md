@@ -307,6 +307,10 @@ record implemented and verified increments; measurements and limitations are in
           localized-preview effects and cached/dirty layout preparation.
     - [x] Separate router arrangement/text-geometry/paint costs and reuse repeated
           asset-font measurements within a bounded single arrangement pass.
+    - [x] Reuse prepared field geometry for focused caret/selection painting;
+          preserve preedit preparation and native text-anchor behavior.
+    - [x] Add bounded text-service layout/rasterize diagnostics with independent
+          sample limits, successful-call totals and input/output size counters.
   - [ ] Profile remaining shaping/rasterization, invalidation, hidden-node sizing,
         focused editing/preedit, routing and allocation costs; resolve measured issues.
 - [ ] Review and optimize measured rendering/presentation bottlenecks: text/sprite
