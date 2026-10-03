@@ -2,6 +2,12 @@
 
 mod presentation;
 mod surface;
+mod text;
+
+pub use text::{
+    RasterText, TextAlignment, TextError, TextGlyph, TextLayout, TextLine, TextMeasurement,
+    TextStyle, TextSystem, TextWrap,
+};
 
 pub use presentation::{
     AnimationClip, AnimationClipError, AnimationPlayback, AnimationPlayer, Camera2d, Color,

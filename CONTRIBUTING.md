@@ -20,6 +20,20 @@ sh ./scripts/verify.sh
 
 The POSIX boundary check uses `python3` to parse Cargo metadata.
 
+The generated-project CLI lifecycle test seeds its dependencies from the
+workspace lockfile and runs the CLI and nested Cargo commands offline. Run the
+workspace build checks first to populate the local dependency cache; this test
+must not depend on crates.io availability after compilation.
+
+For changes containing only Markdown prose or agent instructions, use
+`./scripts/verify.ps1 -DocsOnly` or `sh ./scripts/verify.sh --docs-only`.
+This mode rejects non-Markdown staged, unstaged, and untracked changes and checks
+tracked diff whitespace. Review links and claims separately, validate changed
+skills with the system skill validator, and exercise any changed executable
+snippets. Code, configuration, scripts, and release candidates require full
+verification; CI continues running full checks on all supported platforms.
+The docs-only gate examines local changes, not already committed branch changes.
+
 Individual checks are also available:
 
 ```console
@@ -48,9 +62,10 @@ in [docs/adr/README.md](docs/adr/README.md). User-visible changes belong in
 
 ## Repository structure
 
-Read the nearest `AGENTS.md` before changing a subtree. The root file defines
+Read the applicable `AGENTS.md` chain before changing a subtree. The root file defines
 repository-wide organization rules; nested files add crate, test, documentation,
-script, or CI-specific constraints.
+script, or CI-specific constraints. [AI workflow](docs/AI_WORKFLOW.md) maps domains
+to their contracts and checks; load the relevant scope rather than every document.
 
 Production code is grouped by domain. Crate roots and `mod.rs` files compose
 modules and public exports rather than storing unrelated implementation. Tests

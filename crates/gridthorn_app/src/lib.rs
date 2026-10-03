@@ -19,5 +19,5 @@ pub use state::{GameStateChange, GameStateError, GameStateId, GameStateStack};
 pub use ui::{UiButton, UiButtonError, UiButtonInteraction};
 pub use window::{
     ApplicationError, WindowApplication, WindowConfig, WindowControl, WindowLifecycle,
-    WindowViewport, WindowedApplication,
+    WindowScaleFactor, WindowViewport, WindowedApplication,
 };

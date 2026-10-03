@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Repository review and diagnosis skills, domain context routing, conditional
+  long-task checkpoints, and a guarded Markdown-only verification mode.
+- Provisional validated font assets, isolated game-owned fallback fonts, advanced
+  Unicode shaping and bidi, logical measurement/wrapping/alignment, antialiased
+  DPI-specific text snapshots in ordered runtime UI, and native `WindowScaleFactor`.
+  Fixture tests and the public multilingual example cover Cyrillic, Arabic and Japanese.
 - Provisional Unicode text sessions independent of physical shortcuts, ordered
   commits and IME preedit/lifecycle/cancellation, UTF-8 cursor offsets, physical
   candidate-window anchors, and focus/suspend cancellation without automatic restart.
@@ -17,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Generated-project CLI lifecycle verification uses cached workspace dependencies
+  offline, avoiding registry timeout failures after the workspace checks pass.
+- Release guidance now uses the full release range, the correct patch increment,
+  compatibility-aware version selection, and selective lockfile inspection.
 - Defer GPU surface configuration until a renderable frame, coalescing resize
   events and recovery requests. This avoids the reproduced NVIDIA/Vulkan native
   exception during shutdown before the first presentation.

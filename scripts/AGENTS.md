@@ -11,6 +11,3 @@
   before cleanup.
 - Keep `verify.ps1` and `verify.sh` behaviorally aligned with each other and CI.
   Shared policy changes must update both platform entrypoints.
-- Do not narrate ordinary commands with comments inside script blocks. Reserve
-  an in-block comment for a non-obvious portability or safety constraint that
-  cannot be expressed through a function or variable name.

@@ -14,6 +14,8 @@ pub use errors::ApplicationError;
 pub use lifecycle::WindowLifecycle;
 pub use runtime::WindowedApplication;
 pub use viewport::WindowViewport;
+mod dpi;
+pub use dpi::WindowScaleFactor;
 mod capture;
 mod clipboard;
 mod key_mapping;

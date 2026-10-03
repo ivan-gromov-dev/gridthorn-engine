@@ -126,6 +126,14 @@ pub enum UiPrimitive {
     Rect(UiRect),
     /// Built-in 5x7 bitmap text.
     Text(TextLabel),
+    /// Shaped, antialiased font-asset text in logical coordinates at a specific DPI.
+    ShapedText(crate::RasterText),
+}
+
+impl From<crate::RasterText> for UiPrimitive {
+    fn from(text: crate::RasterText) -> Self {
+        Self::ShapedText(text)
+    }
 }
 
 impl From<UiRect> for UiPrimitive {
