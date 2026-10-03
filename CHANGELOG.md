@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Opt-in text diagnostics report shaped-layout cache hits, misses, evictions and
+  peak retained entry/key/glyph/line counts.
+
 - Text services reuse shaped layouts through a bounded service-local LRU keyed
   by text and complete style; immutable clones share shaping and diagnostic data.
 
