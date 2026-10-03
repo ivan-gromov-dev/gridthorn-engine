@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Provisional Unicode text sessions independent of physical shortcuts, ordered
+  commits and IME preedit/lifecycle/cancellation, UTF-8 cursor offsets, physical
+  candidate-window anchors, and focus/suspend cancellation without automatic restart.
+- Ordered plain-text clipboard read/write requests with caller correlation,
+  Unicode results, typed focus/content/platform failures, and lazy native access.
+
 ### Fixed
 
 - Defer GPU surface configuration until a renderable frame, coalescing resize

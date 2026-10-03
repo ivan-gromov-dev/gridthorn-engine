@@ -79,6 +79,12 @@ impl WindowLifecycle for RuntimeWindowLifecycle {
     fn started(&mut self, _control: &mut WindowControl) -> Result<(), ApplicationError> {
         self.runtime
             .world()
+            .insert_resource(gridthorn_input::TextInput::default());
+        self.runtime
+            .world()
+            .insert_resource(gridthorn_input::Clipboard::default());
+        self.runtime
+            .world()
             .insert_resource(gridthorn_input::PointerCapture::default());
         self.runtime.startup()?;
         self.frame_timer.start(Instant::now());
@@ -88,6 +94,22 @@ impl WindowLifecycle for RuntimeWindowLifecycle {
     fn idle(&mut self, control: &mut WindowControl) -> Result<(), ApplicationError> {
         let elapsed = self.frame_timer.advance(Instant::now());
         self.run_elapsed_frame(elapsed)?;
+        if let Some(Some(area)) = self
+            .runtime
+            .world()
+            .update_resource_with(gridthorn_input::TextInput::take_request)
+        {
+            control.text_input = Some(area);
+        }
+        if let Some(requests) = self
+            .runtime
+            .world()
+            .update_resource_with(gridthorn_input::Clipboard::take_requests)
+        {
+            for request in requests {
+                control.clipboard(request);
+            }
+        }
         if let Some(Some(mode)) = self
             .runtime
             .world()

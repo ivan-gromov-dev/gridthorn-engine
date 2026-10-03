@@ -54,7 +54,7 @@ they are explicitly marked as implemented.
 | CLI                                | Project commands, compatibility checks, source watch, release builds, scenario listing and headless launch |
 | Public SDK facade                  | Version API plus provisional lifecycle and schedule APIs                                                   |
 | App and renderer internals         | Window/surface lifecycle and basic colored-sprite pipeline implemented                                     |
-| Keyboard and mouse input           | Provisional [desktop input](docs/INPUT.md): physical/logical keys, modifiers, repeat, ordered events, wheel and capture                                                           |
+| Keyboard and mouse input           | Provisional [desktop input](docs/INPUT.md): physical/logical keys, modifiers, repeat, ordered events, wheel, capture, Unicode/IME text sessions and plain-text clipboard |
 | World and schedules                | ECS lifecycle schedule spike implemented                                                                   |
 | Game commands and world control    | Ordered commands and controllable entity example implemented                                               |
 | Texture assets                     | PNG/PNM decoding and textured-sprite presentation implemented                                              |

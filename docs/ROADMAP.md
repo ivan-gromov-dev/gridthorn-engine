@@ -194,6 +194,9 @@ supported scope, verification, maintainer acceptance and explicit deferrals.
 
 Started on 2026-10-02. The first desktop input increment is implemented with
 engine-owned keyboard/wheel events and native capture feedback; see [INPUT.md](INPUT.md).
+Unicode/IME text sessions, plain-text clipboard and focus/suspend cancellation
+are implemented provisionally on 2026-10-03, with domain/runtime tests.
+Native validation limits are in [INPUT.md](INPUT.md).
 This milestone extends the narrow Milestone 1/2 subsets;
 it does not change their completion status. Implement in the order below, with
 each increment independently buildable, tested and documented. Detailed engine
@@ -201,7 +204,7 @@ and game ownership is defined in [RUNTIME_APIS.md](RUNTIME_APIS.md).
 
 - [x] Complete desktop keyboard coverage: physical keys, logical keys, modifiers,
       repeat and ordered events; mouse wheel and pointer capture semantics.
-- [ ] Unicode text input, IME composition/commit/cancellation, clipboard access
+- [x] Unicode text input, IME composition/commit/cancellation, clipboard access
       and focus-loss handling, separate from physical gameplay shortcuts.
 - [ ] Font assets, fallback, Unicode shaping, bidirectional text, measurement,
       wrapping and DPI-aware rendering, including Cyrillic and non-Latin scripts.
@@ -351,7 +354,8 @@ Project declarations, dedicated binary routing, explicit ticks/seeds, and failur
 diagnostics are covered by command tests and the public scenarios-snapshots example.
 Milestone 3 is complete following maintainer acceptance on 2026-10-02; see
 [the completion review](milestone-3-showcase.md). The next target is Milestone 4:
-desktop keyboard/pointer input is implemented; Unicode/IME text input is next.
+desktop keyboard/pointer and Unicode/IME/clipboard input are implemented;
+font assets, fallback and multilingual shaping/rendering are next.
 Milestone 5 adds desktop platform/device controls. Professional debugging and
 the editor are deferred to Milestones 6 and 7 respectively.
 Milestone 2 is complete for the supported subsets documented in the

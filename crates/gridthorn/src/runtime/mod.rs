@@ -45,6 +45,10 @@ pub use gridthorn_world::{
 };
 
 pub use gridthorn_input::{
+    Clipboard, ClipboardError, ClipboardOperation, ClipboardRequest, ClipboardResponse,
+    ImeCursorArea, TextInput, TextInputError, TextInputEvent, TextInputRequest,
+};
+pub use gridthorn_input::{
     KeyLocation, KeyboardEvent, LogicalKey, Modifiers, NamedKey, NativeKey, PhysicalKey,
     PointerCapture, PointerCaptureError, PointerCaptureMode, PointerCaptureStatus, ScrollPhase,
     WheelDelta,
