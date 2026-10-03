@@ -70,6 +70,12 @@ impl RuntimeWindowLifecycle {
 }
 
 impl WindowLifecycle for RuntimeWindowLifecycle {
+    fn scale_factor_changed(&mut self, scale_factor: f64) {
+        self.runtime
+            .world()
+            .insert_resource(super::WindowScaleFactor(scale_factor));
+    }
+
     fn resized(&mut self, width: u32, height: u32) {
         self.runtime
             .world()

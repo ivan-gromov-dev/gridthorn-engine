@@ -101,8 +101,9 @@ owner and explicitly requests a new session. Native cancellation precedes
 `FocusLost`; headless `InputBuffer` injection also cancels outstanding preedit.
 All text events are presentation data; fixed simulation consumes game commands.
 No normalization, grapheme navigation, field validation, selection editing or
-automatic gameplay-event consumption is performed. Text-field/UI routing and
-Unicode font rendering are subsequent Milestone 4 increments.
+automatic gameplay-event consumption is performed. Text-field/UI routing remains
+a subsequent Milestone 4 increment. [Unicode font rendering](TEXT.md) is now
+implemented provisionally with an independent presentation service.
 
 `Clipboard::read(id)` and `write(id, text)` queue ordered one-shot operations.
 Caller-owned `u64` identities correlate `InputEvent::Clipboard(ClipboardResponse)`
@@ -133,8 +134,8 @@ cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_text_input -- --smoke
 ```
 
-The native monitor prints committed text and preedit to the terminal; no Unicode
-font renderer is claimed. F4 opens/updates the session, F5 closes it, Control/Super+C
+The native monitor prints committed text and preedit to the terminal; the separate
+`multilingual-text` example demonstrates asset-font rendering. F4 opens/updates the session, F5 closes it, Control/Super+C
 copies its game-owned document, Control/Super+V appends clipboard text, and Escape
 exits outside preedit. The example explicitly reopens text on focus return.
 `--smoke` checks native session activation and, when original clipboard text can

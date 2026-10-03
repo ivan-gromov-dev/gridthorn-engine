@@ -9,6 +9,13 @@ pub use runtime::{
     ScenarioState, SimulationSnapshot, StateFingerprint, WorldSaveCodec, WorldSaveError,
 };
 mod version;
+pub use gridthorn_app::WindowScaleFactor;
+
+pub use gridthorn_assets::{FontAsset, FontAssetError};
+pub use gridthorn_render::{
+    RasterText, TextAlignment, TextError, TextGlyph, TextLayout, TextLine, TextMeasurement,
+    TextStyle, TextSystem, TextWrap,
+};
 
 /// Provisional coordinates, tilemaps, picking, placement, and navigation; enable `grid`.
 #[cfg(feature = "grid")]

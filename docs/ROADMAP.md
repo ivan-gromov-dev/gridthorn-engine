@@ -86,7 +86,8 @@ looping, one-shot completion, pause, resume, and restart in presentation time.
 The provisional runtime UI path now renders ordered colored rectangles and
 5x7 bitmap text in top-left-origin screen pixels through the same colored GPU
 batch. The built-in font covers Latin letters, digits, and common diagnostics
-punctuation; richer font assets, layout, and interactive widgets remain planned.
+punctuation. Milestone 4 now adds [font assets and multilingual text](TEXT.md);
+higher-level UI layout and interactive controls remain planned.
 Mouse-driven runtime buttons now consume the engine-owned frame input boundary,
 report hover and held visuals, and emit one activation only after an inside
 press completes with an inside release. Focus loss or dragging outside cancels
@@ -197,6 +198,9 @@ engine-owned keyboard/wheel events and native capture feedback; see [INPUT.md](I
 Unicode/IME text sessions, plain-text clipboard and focus/suspend cancellation
 are implemented provisionally on 2026-10-03, with domain/runtime tests.
 Native validation limits are in [INPUT.md](INPUT.md).
+Font assets, script fallback, multilingual shaping/bidi, measurement, wrapping and
+DPI-specific rendering are implemented provisionally on 2026-10-03; see [TEXT.md](TEXT.md)
+for tested Cyrillic/Arabic/Japanese coverage and explicit platform/performance deferrals.
 This milestone extends the narrow Milestone 1/2 subsets;
 it does not change their completion status. Implement in the order below, with
 each increment independently buildable, tested and documented. Detailed engine
@@ -206,7 +210,7 @@ and game ownership is defined in [RUNTIME_APIS.md](RUNTIME_APIS.md).
       repeat and ordered events; mouse wheel and pointer capture semantics.
 - [x] Unicode text input, IME composition/commit/cancellation, clipboard access
       and focus-loss handling, separate from physical gameplay shortcuts.
-- [ ] Font assets, fallback, Unicode shaping, bidirectional text, measurement,
+- [x] Font assets, fallback, Unicode shaping, bidirectional text, measurement,
       wrapping and DPI-aware rendering, including Cyrillic and non-Latin scripts.
 - [ ] Localization runtime API: locale selection, message IDs, validated catalog
       assets, fallback, parameters, plural/select rules and locale-aware formatting.
@@ -355,7 +359,8 @@ diagnostics are covered by command tests and the public scenarios-snapshots exam
 Milestone 3 is complete following maintainer acceptance on 2026-10-02; see
 [the completion review](milestone-3-showcase.md). The next target is Milestone 4:
 desktop keyboard/pointer and Unicode/IME/clipboard input are implemented;
-font assets, fallback and multilingual shaping/rendering are next.
+font assets, fallback and multilingual shaping/rendering are implemented provisionally.
+Localization runtime APIs are next.
 Milestone 5 adds desktop platform/device controls. Professional debugging and
 the editor are deferred to Milestones 6 and 7 respectively.
 Milestone 2 is complete for the supported subsets documented in the

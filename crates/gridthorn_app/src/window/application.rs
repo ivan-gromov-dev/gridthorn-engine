@@ -113,6 +113,7 @@ where
             let target = WindowSurfaceTarget::new(window.clone());
             self.renderer = Some(SurfaceRenderer::new(target, size.width, size.height)?);
         }
+        self.lifecycle.scale_factor_changed(window.scale_factor());
         self.window = Some(window);
         self.lifecycle.resized(size.width, size.height);
 
@@ -302,6 +303,9 @@ where
 
         match event {
             WindowEvent::CloseRequested => event_loop.exit(),
+            WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
+                self.lifecycle.scale_factor_changed(scale_factor);
+            }
             WindowEvent::Resized(size) => {
                 self.lifecycle.resized(size.width, size.height);
                 if let Some(renderer) = self.renderer.as_mut()

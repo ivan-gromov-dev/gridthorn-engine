@@ -63,6 +63,12 @@ simulation semantics, plugins, CLI, and tools.
 
 ## Development tooling
 
+Milestone 4 uses provisional `fontdb` font-asset validation and `cosmic-text`
+shaping/layout/fallback with Swash rasterization. All types remain behind the
+engine-owned API; system font discovery is disabled in service construction.
+See [the text contract](TEXT.md) and [ADR 0004](adr/0004-multilingual-text.md).
+Only `std` and `swash` backend features are enabled; fontconfig is disabled.
+
 | Tool            | Status    | Use                                                             |
 | --------------- | --------- | --------------------------------------------------------------- |
 | `rustfmt`       | Build     | Canonical Rust formatting.                                      |
@@ -86,7 +92,7 @@ These choices are intentionally not Milestone 0 dependencies.
 | Area                   | Current direction                      | Status      | Decision point                                                                                             |
 | ---------------------- | -------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------- |
 | Debug/editor UI        | `egui`                                 | Provisional | Integrate the first runtime debug overlay without coupling game UI to it.                                  |
-| Text shaping/rendering | `glyphon` / `cosmic-text`              | Candidate   | Milestone 4: validate shaping, bidi, fallback, DPI, atlas behavior and `wgpu` compatibility.                                 |
+| Text shaping/rendering | `fontdb` / `cosmic-text` / Swash        | Provisional | Implemented private shaping/bidi/fallback and DPI raster spans; atlas/performance and broader platform validation deferred. |
 | Audio                  | `kira`                                 | Provisional | Opt-in native adapter implemented; validate streaming, latency, and cross-platform recovery.                |
 | File watching          | `notify`                               | Candidate   | Add with asset hot reload and CLI development mode.                                                        |
 | Cargo integration      | `cargo_metadata`                       | Candidate   | Add when CLI project discovery requires structured Cargo metadata.                                         |

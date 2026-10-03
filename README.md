@@ -66,7 +66,7 @@ they are explicitly marked as implemented.
 | Runtime and public SDK             | Milestones 1–3 complete; APIs remain provisional                                                              |
 | Scenes and game states             | Provisional state stack and atomic scene-owned entity switching                                            |
 | Sprite batching and animation      | Provisional ordered texture batches and sprite-sheet playback                                              |
-| Text and runtime UI                | Provisional bitmap text, screen panels, and mouse buttons                                                  |
+| Text and runtime UI                | Provisional [font assets, fallback, Unicode shaping/bidi, measurement, wrapping and DPI](docs/TEXT.md), bitmap text, panels and mouse buttons |
 | Audio                              | Provisional PCM16 WAV assets, queue, and opt-in Kira output adapter                                        |
 | Component/resource reflection      | Provisional explicit registration, scalar metadata and read-only snapshots                                 |
 | Versioned scene serialization      | Provisional schema 1 TOML, validated prepared loading and migration hooks                                  |
@@ -99,8 +99,16 @@ The [Milestone 3 completion review](docs/milestone-3-showcase.md) records scope,
 verification, deferrals and maintainer acceptance on 2026-10-02. The next phase
 is Milestone 4: complete input, multilingual text and runtime UI APIs, followed
 by Milestone 5 desktop platform/device controls. The debugging workflow and
-editor move to Milestones 6 and 7. These additions are planned, not implemented;
+editor move to Milestones 6 and 7. Desktop input, Unicode/IME/clipboard and
+multilingual font rendering are implemented provisionally. Localization and the
+remaining runtime UI/device additions are planned;
 see [the runtime API scope](docs/RUNTIME_APIS.md) and [roadmap](docs/ROADMAP.md).
+
+Run the public multilingual text example (Cyrillic, Arabic bidi and Japanese):
+
+```console
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_multilingual_text
+```
 
 ```console
 cargo run -p gridthorn_cli -- scenario list ../gridthorn-examples/scenarios-snapshots

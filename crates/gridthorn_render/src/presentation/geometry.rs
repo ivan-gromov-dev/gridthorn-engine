@@ -131,6 +131,25 @@ fn ui_vertices(ui: &[super::UiPrimitive], width: u32, height: u32) -> Vec<Sprite
             super::UiPrimitive::Text(label) => {
                 vertices.extend(text_vertices(label, width as f32, height as f32));
             }
+            super::UiPrimitive::ShapedText(text) => {
+                let origin = text.position().map(|value| value * text.scale_factor());
+                for pixel in text.pixels.iter() {
+                    let position = [origin[0] + pixel.position[0], origin[1] + pixel.position[1]];
+                    if position[0] + pixel.width as f32 > 0.0
+                        && position[1] + 1.0 > 0.0
+                        && position[0] < width as f32
+                        && position[1] < height as f32
+                    {
+                        vertices.extend(screen_rect_vertices(
+                            position,
+                            [pixel.width as f32, 1.0],
+                            pixel.color,
+                            width as f32,
+                            height as f32,
+                        ));
+                    }
+                }
+            }
         }
     }
     vertices

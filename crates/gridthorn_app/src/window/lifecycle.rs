@@ -5,6 +5,9 @@ use super::{ApplicationError, WindowControl};
 
 /// Provisional hooks for exercising application lifecycle behavior.
 pub trait WindowLifecycle {
+    /// Publish physical pixels per logical pixel after creation and every DPI change.
+    fn scale_factor_changed(&mut self, _scale_factor: f64) {}
+
     /// Publish the actual physical size after creation and every resize, including zero.
     fn resized(&mut self, _width: u32, _height: u32) {}
 
