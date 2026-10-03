@@ -18,6 +18,7 @@ impl UiRouter {
         mut text: Option<&mut TextSystem>,
     ) -> Result<UiLayout, UiCompositionError> {
         let mut layout = tree.layout(viewport, scale, text.as_deref_mut())?;
+        self.order_layers(tree, &mut layout);
         layout.primitives =
             super::super::paint::paint(tree, &layout.placements, scale, &mut text, Some(self))?;
         Ok(layout)

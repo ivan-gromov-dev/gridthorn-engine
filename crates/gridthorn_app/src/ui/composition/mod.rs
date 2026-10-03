@@ -10,7 +10,7 @@ mod text_geometry;
 mod tree;
 
 pub use editing::UiSelection;
-pub use routing::{UiNavigation, UiPlatformRequest, UiRoute, UiRouter};
+pub use routing::{UiLayer, UiNavigation, UiPlatformRequest, UiRoute, UiRouter};
 
 pub use controls::{UiCommand, UiControl, UiEffect, UiVisualState};
 pub use errors::UiCompositionError;

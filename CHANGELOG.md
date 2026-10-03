@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Provisional UI popup/dialog layers with ordered painting, modal input/focus
+  scopes, focus restoration and configurable Escape/outside-click dismissal.
+
 - Provisional retained UI event router with clipped painter-order hit testing,
   keyboard/controller navigation hooks, focus and pointer capture, explicit
   event/continuous world-input consumption, Unicode grapheme selection/editing,

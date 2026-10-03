@@ -2,6 +2,7 @@ use super::super::*;
 use gridthorn_input::{ButtonState, CursorPosition, InputEvent, KeyCode, MouseButton};
 mod clipboard;
 mod editing;
+mod layers;
 mod navigation;
 mod pointer;
 

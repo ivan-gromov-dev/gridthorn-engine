@@ -230,7 +230,7 @@ and game ownership is defined in [RUNTIME_APIS.md](RUNTIME_APIS.md).
       reusable controls: labels, buttons, toggles, sliders, lists and text fields.
 - [x] UI event routing, hit testing, keyboard/controller navigation hooks, focus,
       text editing/selection and pointer capture with explicit world-input consumption.
-- [ ] Context menus, popups and dialogs: ordered layers, modal scopes, focus
+- [x] Context menus, popups and dialogs: ordered layers, modal scopes, focus
       restoration, configurable Escape/outside-click dismissal and input blocking.
 - [ ] Presentation animation primitives for UI properties and transitions,
       independent of authoritative simulation time.
@@ -381,7 +381,9 @@ Localization runtime APIs are implemented provisionally with validated catalogs,
 explicit fallback and locale-aware decimal formatting. UI composition and controls
 are implemented provisionally with explicit value commands, ordered event routing,
 hit testing, focus/navigation hooks, text editing/selection, local capture and
-explicit world-input consumption. Context menus, popups and modal dialogs are next.
+explicit world-input consumption. Context menus, popups and modal dialogs are
+implemented provisionally with ordered layers, modal scopes, focus restoration
+and configurable dismissal. Presentation transitions are next.
 Milestone 5 adds desktop platform/device controls. Professional debugging and
 the editor are deferred to Milestones 6 and 7 respectively.
 Milestone 2 is complete for the supported subsets documented in the
