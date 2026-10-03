@@ -16,9 +16,9 @@ fn assets() -> Vec<FontAsset> {
     .collect()
 }
 
-fn system() -> TextSystem {
+pub(super) fn system() -> TextSystem {
     TextSystem::new("en-US", &assets()).expect("font service")
 }
-fn style() -> TextStyle {
+pub(super) fn style() -> TextStyle {
     TextStyle::new("Noto Sans", 24.0)
 }

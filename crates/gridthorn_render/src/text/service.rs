@@ -11,6 +11,7 @@ use super::{
 /// Supply all fallback assets at construction; create a new service after a font reload.
 /// Mutable access serializes cache work; immutable layouts/snapshots can cross threads.
 pub struct TextSystem {
+    pub(super) layouts: super::layout_cache::LayoutCache,
     pub(super) performance: Option<super::performance::TextPerformance>,
     pub(super) fonts: FontSystem,
     pub(super) cache: SwashCache,
@@ -37,6 +38,7 @@ impl TextSystem {
         families.dedup();
         database.set_sans_serif_family(&families[0]);
         Ok(Self {
+            layouts: super::layout_cache::LayoutCache::default(),
             performance: super::performance::TextPerformance::new(),
             fonts: FontSystem::new_with_locale_and_db(locale.into(), database),
             cache: SwashCache::new(),
@@ -60,6 +62,12 @@ impl TextSystem {
         }
         if !self.families.contains(&style.family) {
             return Err(TextError::UnknownFamily(style.family.clone()));
+        }
+        if let Some(layout) = self.layouts.get(text, style) {
+            if let Some(performance) = &mut self.performance {
+                performance.record(0, start, text.len());
+            }
+            return Ok(layout);
         }
         let mut buffer = Buffer::new(
             &mut self.fonts,
@@ -123,10 +131,11 @@ impl TextSystem {
         }
         let layout = TextLayout {
             owner: self.owner.clone(),
-            buffer,
-            lines,
+            buffer: Arc::new(buffer),
+            lines: lines.into(),
             measurement,
         };
+        self.layouts.insert(text, style, &layout);
         if let Some(performance) = &mut self.performance {
             performance.record(0, start, text.len());
         }

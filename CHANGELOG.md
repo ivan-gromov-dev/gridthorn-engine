@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Text services reuse shaped layouts through a bounded service-local LRU keyed
+  by text and complete style; immutable clones share shaping and diagnostic data.
+
 - Optional bounded text-service diagnostics distinguish shaping/layout and
   immutable raster-snapshot preparation, with operation counts and output sizes.
 

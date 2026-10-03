@@ -653,3 +653,83 @@ focused cache decision must validate text/style/font-owner matching, eviction,
 bounded retained memory and cold/warm behavior before implementing persistent
 reuse. Native OS IME/DPI 2, whole-engine CPU/GPU/display acceptance and other
 domain scaling reviews remain open.
+
+## Service-local shaped layout reuse increment
+
+Starting engine HEAD: `06c7678a5bbdd5526f0fd4cddd163cd06d0bbd1a`, clean tree.
+Examples retain their existing workbench/manifest changes. Implemented a private
+per-service LRU for identical text and complete TextStyle. Validation still runs
+before cache lookup; family, font size, line height, width, wrapping and alignment
+all participate. Each service fixes its font set/shaping locale and owns its cache;
+recreating it after font reload cannot reuse a prior service's entries.
+
+TextLayout now shares its immutable backend buffer and line diagnostics through
+Arc; cache hits clone ownership handles rather than copying buffer/glyph arrays.
+Returned layouts survive eviction/service destruction for diagnostics; rasterize
+still rejects a foreign service owner. DPI and color remain raster inputs rather
+than logical-shaping keys. Glyph-cache clearing retains shaped layouts, consistent
+with the existing raster-only clearing contract. No public API or dependency edge
+was added, and no raster snapshot cache was introduced.
+
+The LRU retains at most 64 entries, 256 KiB copied text/family keys, 16384
+diagnostic glyphs and 1024 diagnostic lines; limits cause eviction, while an
+individually oversized result is returned without retention. Limits do not count
+opaque Buffer allocations, font/glyph-cache memory, map/allocator overhead or
+layouts retained by callers. This is a bounded retention policy, not an exact
+whole-service byte budget. Tests exercise complete-style/text matching, font-owner
+isolation, invalid metrics after warm reuse, LRU recency, aggregate key/glyph/line
+limits, oversized rejection and rasterization of still-live layouts after eviction.
+
+Full `./scripts/verify.ps1` passed, including 45 renderer tests, workspace
+formatting/check/Clippy/tests, generated-project workflows, dependency boundaries
+and whitespace: `target/milestone-4-5-layout-cache-verify.log`. Workbench package
+Clippy, 7 tests and release build passed: `target/layout-cache-workbench-clippy.log`,
+`target/layout-cache-workbench-tests.log`, `target/layout-cache-build.log`.
+Final native measurements started after all checks/builds completed, with no
+concurrent agent-launched build/test work. No example source changes were needed.
+
+Two native release runs per idle/editing mode and all four locales used only
+`GRIDTHORN_TEXT_PERFORMANCE=1`, matching the preceding text-service baseline.
+Logs: `target/layout-cache-text-<mode>-<locale>-<1|2>.log`; summary:
+`target/layout-cache-text-summary.csv`. Each editing run still records 3729 layout
+and 1130 rasterize calls without truncation. Input-byte and output-span aggregates
+match the before cohort exactly in all eight editing runs. Counts measure public
+layout requests, including cache hits, not actual shaping executions. Idle still
+records only 33 initial layout and 10 initial raster calls.
+
+| Editing locale | All layout-call CPU sum before ms, first/repeat | All layout-call CPU sum after ms, first/repeat | All rasterize-call CPU sum after ms, first/repeat |
+| --- | --- | --- | --- |
+| en-US | 147.670 / 152.270 | 29.700 / 26.890 | 38.900 / 40.300 |
+| ru | 169.720 / 144.390 | 37.710 / 26.940 | 59.130 / 40.340 |
+| ar-EG | 186.790 / 177.540 | 28.430 / 28.230 | 34.830 / 34.440 |
+| ja | 298.010 / 299.000 | 33.630 / 33.180 | 42.090 / 40.200 |
+
+Sums include cold/initial work. Per-call p95 excludes the first 100 calls of each
+operation, independently, as before; Japanese layout p95 is now 113 / 117 µs
+versus 425 / 426 µs. Raster p95 remains 116 / 116 µs, versus 118 / 115 µs before.
+The cache reduces repeated shaping; it does not reduce request counts or eliminate
+raster snapshot construction. Retained backend/allocator memory and cold service
+construction time have not been measured in this increment.
+
+A separate eight-run editing cohort enabled only `GRIDTHORN_UI_PERFORMANCE=1`,
+matching the prior decoration-reuse UI baseline. Logs:
+`target/layout-cache-ui-<locale>-<1|2>.log`; summary:
+`target/layout-cache-ui-summary.csv`. All runs collected 113 layout calls with
+zero skips; excluding the first ten gives 103 warm samples. Total is computed
+per row as arrangement + text geometry + paint, excluding nested focused paint.
+Nearest-rank p95/p99 values below are milliseconds.
+
+| Locale | UI-layout total p95 after, first/repeat | UI-layout total p99 after, first/repeat |
+| --- | --- | --- |
+| en-US | 0.624 / 0.849 | 0.674 / 1.400 |
+| ru | 0.867 / 0.681 | 1.059 / 0.718 |
+| ar-EG | 0.620 / 0.605 | 0.674 / 0.664 |
+| ja | 0.733 / 0.721 | 0.778 / 0.782 |
+
+Japanese UI-layout p95 before was 5.413 / 3.711 ms, en-US 2.585 / 2.429 ms in
+the decoration-reuse cohort. This is a layout-component improvement, not
+whole-engine frame CPU/GPU/display acceptance. Native logs report 1000×800 and
+DPI 1; refresh/power conditions remain unrecorded. Native mixed smoke and
+headless workflows passed: `target/layout-cache-mixed.log`,
+`target/layout-cache-headless.log`. Remaining review includes raster-snapshot
+preparation, retained memory, OS IME/native DPI 2 and other implemented domains.

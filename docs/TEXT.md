@@ -97,6 +97,15 @@ Dirty geometry reuses CPU vector capacity; one high-water vector and one input
 snapshot remain until surface reconfiguration or shutdown. Changed raster storage,
 placement, DPI, clipping/order, camera, colored sprites and overlay invalidate it.
 Opt-in GPU timestamps measure render-pass execution on supported adapters.
+Each text service retains an LRU of up to 64 shaped layouts keyed by complete
+text/style. Logical layout reuse is independent of raster DPI/color. Cached and
+returned layouts share immutable shaping/diagnostic storage; eviction does not
+invalidate returned layouts. The cache is isolated to that service's fonts/locale
+and disappears with it; replacing the service after font reload starts fresh.
+Limits additionally cap copied keys at 256 KiB, diagnostic glyphs at 16384 and
+lines at 1024. Oversized entries are not retained. These are retention limits,
+not a byte budget for opaque backend buffers, font caches or caller-held layouts.
+`clear_raster_cache` continues to clear glyph raster data, leaving shaped layouts.
 `GRIDTHORN_TEXT_PERFORMANCE` collects bounded successful shaping/layout and
 raster-snapshot CPU timings, call totals and input/output sizes; the sampling
 protocol and limits are in [the performance review](PERFORMANCE_REVIEW.md).

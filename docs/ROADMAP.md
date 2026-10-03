@@ -311,6 +311,8 @@ record implemented and verified increments; measurements and limitations are in
           preserve preedit preparation and native text-anchor behavior.
     - [x] Add bounded text-service layout/rasterize diagnostics with independent
           sample limits, successful-call totals and input/output size counters.
+    - [x] Reuse shaped layouts within each font service using a bounded text/style
+          LRU; verify style changes, font-owner isolation, eviction and live snapshots.
   - [ ] Profile remaining shaping/rasterization, invalidation, hidden-node sizing,
         focused editing/preedit, routing and allocation costs; resolve measured issues.
 - [ ] Review and optimize measured rendering/presentation bottlenecks: text/sprite
