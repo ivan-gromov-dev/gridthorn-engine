@@ -213,6 +213,10 @@ composed-controls headless/native smoke example. Event routing, clipped hit test
 focus/navigation hooks, grapheme-aware text editing/selection, local pointer capture
 and explicit world-input consumption are implemented provisionally on 2026-10-03;
 see [UI.md](UI.md) for the supported editor/navigation subset and validation limits.
+Presentation-property tweens and interruptible transitions are implemented
+provisionally on 2026-10-03, with explicit unscaled frame duration independent of
+simulation pause/speed; see [UI.md](UI.md) for property bounds, lifecycle policy,
+domain/facade tests and the composed-controls animation workflow.
 This milestone extends the narrow Milestone 1/2 subsets;
 it does not change their completion status. Implement in the order below, with
 each increment independently buildable, tested and documented. Detailed engine
@@ -232,7 +236,7 @@ and game ownership is defined in [RUNTIME_APIS.md](RUNTIME_APIS.md).
       text editing/selection and pointer capture with explicit world-input consumption.
 - [x] Context menus, popups and dialogs: ordered layers, modal scopes, focus
       restoration, configurable Escape/outside-click dismissal and input blocking.
-- [ ] Presentation animation primitives for UI properties and transitions,
+- [x] Presentation animation primitives for UI properties and transitions,
       independent of authoritative simulation time.
 - [ ] Validate public APIs through sibling examples of multilingual text editing,
       composed controls and nested modal/context windows; include headless behavior

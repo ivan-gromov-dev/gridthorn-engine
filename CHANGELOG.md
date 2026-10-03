@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Provisional presentation `UiTween`, easing and interruptible `UiTransition`
+  APIs for logical offset/size, linear RGBA colors and requested scrolling.
+  Explicit unscaled frame time, local pause/resume, atomic application errors,
+  public lifecycle tests and composed-controls animation workflows.
+
 - Provisional UI popup/dialog layers with ordered painting, modal input/focus
   scopes, focus restoration and configurable Escape/outside-click dismissal.
 

@@ -10,6 +10,7 @@ the facade only re-exports it. No new dependency edge or backend was added.
 requested scroll offset and ordered children. Only panels own child nodes.
 `UiTree::new` validates the complete tree; `replace` atomically replaces it.
 Invalid IDs, sizes, control data and commands return `UiCompositionError`.
+`set_style(id, style)` atomically replaces one node's validated style.
 Node reads are immutable. Change values with explicit commands or replace the
 composition; layouts never silently follow subsequent edits.
 
@@ -192,7 +193,64 @@ supports Escape/outside-click closing. Domain tests also cover invalid opens,
 disabled restoration targets, hidden panels, background blocking, held releases
 and IME cancellation priority. Large-stack allocation/latency, Linux/macOS native
 behavior, accessibility, automatic trigger placement, menu-specific arrow/submenu
-semantics and transitions remain unmeasured or deferred.
+semantics and automatic layer enter/exit choreography remain unmeasured or deferred.
+
+## Presentation animation
+
+Implemented provisionally on 2026-10-03 through `gridthorn::ui`. `UiTween<N>`
+interpolates finite scalar/vector channels with `Linear`, quadratic `EaseIn` /
+`EaseOut`, or cubic `SmoothStep` easing. Easing is bounded and monotonic, with
+exact endpoints and no overshoot. Caller-supplied `Duration` advances time;
+zero duration immediately samples the destination and large deltas clamp there.
+Intermediates use double precision to avoid overflow between finite f32 endpoints.
+
+`UiTransition` applies one `UiProperty` to a stable `UiNodeId`: logical-pixel
+`Offset`, fixed pixel `Size`, linear RGBA `Foreground` / `Background`, or requested
+`Scroll`. Supply both endpoints explicitly, including colors resolved by game
+policy from its theme/visual state. Size replaces auto/fraction/fill policies;
+layout still applies min/max constraints. Scroll requires a scroll-enabled node
+and layout clamps the requested offset to its content extent. Geometry endpoints
+obey existing 65536-pixel bounds (offsets may be negative); RGBA channels must be
+finite and between zero and one. Color alpha affects only that override, not a
+whole subtree's opacity. Other style fields and control values are preserved.
+
+Constructing a transition does not edit the tree. `advance(tree, Duration::ZERO)`
+installs the start or zero-duration destination; subsequent calls return whether
+it is finished. Retarget from the current sample without a positional jump;
+the new duration and easing restart. Local pause/resume ignores paused deltas
+and preserves pause through retargeting. Drop a transition to cancel at its last
+applied value. Completed transitions reapply their exact endpoint until removed.
+Invalid endpoints/kinds reject without changing animation state. Unknown nodes
+or invalid destination operations preserve the tree and elapsed animation time,
+with node-specific `UiAnimationError` diagnostics. External style edits are not
+read back into retargeting; the caller owns conflicting writes and ordering.
+
+Advance during `Update` using `FrameTiming::frame_elapsed()`, the **unscaled host
+duration**, including paused simulation frames. Do not use fixed-tick duration,
+tick index or simulation-scaled time. Prepare a fresh layout after applying
+samples, before painting or routing; refresh text-session anchors through an
+empty routed batch when focused text geometry moved. `run_frame(fixed_steps)`
+supplies no elapsed host time; use `run_timed_frame` or an explicitly injected
+presentation delta for headless animation. Tweens do not read an ambient clock,
+modify simulation controls, enqueue commands or require a window/GPU.
+
+Games own enter/exit choreography: open a layer before animating entry, keep it
+open while animating exit, then explicitly close it. Focus, modal blocking and
+dismissal continue to follow the router's layer contract throughout; no hidden
+delayed close or animation-driven focus changes occur. Keyframe timelines,
+repeat/yoyo playback, springs, transforms, subtree opacity and automatic
+style-state transitions remain deferred.
+
+Domain tests cover easing, time partitioning, zero/large deltas, finite extremes,
+pause, interruption, property application, validation and atomic failure. The
+public facade lifecycle test animates during simulation pause and speed changes
+and prepares a render frame. `composed-controls --animations --headless` covers
+control and panel transitions, background alpha, interruption and DPI 1/2;
+`--animations --smoke` and `--layers --animations --smoke` exercise native rendering.
+Both Windows workflows passed 120-frame lifecycle smoke on 2026-10-03. This proves
+native submission/shutdown, not visual acceptance, interactive device behavior or
+Linux/macOS support. Per-frame layout allocation and animation performance remain
+unmeasured.
 
 ## Text editing and platform integration
 
@@ -267,7 +325,7 @@ styling and live font reload integration remain unvalidated or deferred.
 Full editor extensions (undo/redo, word/double-click navigation, bidi visual-arrow
 affinity, exact font-provided ligature carets, automatic caret/list reveal and caret
 blinking) remain deferred. Ordered modal layers and focus restoration are
-implemented provisionally; presentation transitions remain the next roadmap item.
+implemented provisionally, along with explicit presentation-property transitions.
 Routing clones bounded presentation state for atomic failure handling; allocation,
 large-field latency and repeated shaping costs have not been measured.
 
@@ -276,4 +334,7 @@ cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_composed_controls --locked -- --smoke
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_composed_controls --locked -- --layers --headless
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_composed_controls --locked -- --layers --smoke
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_composed_controls --locked -- --animations --headless
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_composed_controls --locked -- --animations --smoke
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_composed_controls --locked -- --layers --animations --smoke
 ```
