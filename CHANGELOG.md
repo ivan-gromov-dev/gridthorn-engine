@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Registered-layer UI routing avoids copying render primitives and uses ordered
+  ID sets for placement filtering; prepared text geometry and painter order remain intact.
+
+- UI trees index node IDs through immutable child paths shared by clones,
+  rebuilding on validated replacement to avoid repeated whole-tree searches.
+
 - Plain-tree UI routing borrows unchanged immutable layout scopes instead of
   copying them per event; registered layers retain filtered input scopes.
 

@@ -105,7 +105,10 @@ UI/text and rendering. Opt-in bounded renderer/GPU-pass and window
 preparation/redraw/extraction, runtime schedule and UI layout-phase diagnostics
 are documented in the performance review,
 with measured workload evidence and limits. Plain-tree routing now reuses
-immutable input layout scopes.
+immutable input layout scopes. UI node reads/commands use indexed child paths,
+with measured construction and retention tradeoffs in the review.
+  Registered-layer input scopes omit paint copies and filter membership through
+  ordered ID sets, with measured text-field routing limits in the review.
 Milestone 4 remains open until this performance gate and
 native language/IME acceptance finish, followed by Milestone 5 desktop
 platform/device controls. The debugging workflow and

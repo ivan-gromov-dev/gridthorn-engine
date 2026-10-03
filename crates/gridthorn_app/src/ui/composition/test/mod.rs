@@ -1,5 +1,7 @@
 mod controls;
+mod layered_scaling;
 mod layout;
+mod node_lookup;
 mod scaling;
 mod validation;
 

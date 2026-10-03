@@ -1,6 +1,60 @@
 use super::*;
 
 #[test]
+fn layered_hit_testing_preserves_detached_text_geometry_and_paint() {
+    let mut tree = composition();
+    let mut root = tree.root().clone();
+    root.children[1].children[0].control = UiControl::TextField {
+        value: "Review".into(),
+        placeholder: String::new(),
+    };
+    tree.replace(root).unwrap();
+    let layout = tree.layout([400.0; 2], 2.0, None).unwrap();
+    let original = layout.clone();
+    let mut router = UiRouter::new(0);
+    router.register_layer(&tree, UiNodeId(10)).unwrap();
+    router.register_layer(&tree, UiNodeId(20)).unwrap();
+    for state in ["closed", "open", "modal"] {
+        if state != "closed" {
+            router
+                .open_layer(
+                    &mut tree,
+                    &layout,
+                    UiNodeId(10),
+                    UiLayer {
+                        modal: state == "modal",
+                        ..UiLayer::default()
+                    },
+                )
+                .unwrap();
+        }
+        let bounds = layout.placement(UiNodeId(11)).unwrap().bounds;
+        let target = router.hit_test_layers(
+            &tree,
+            &layout,
+            [bounds.position[0] + 10.0, bounds.position[1] + 10.0],
+        );
+        assert_eq!(
+            target,
+            if state == "closed" {
+                None
+            } else {
+                Some(UiNodeId(11))
+            }
+        );
+        if state != "closed" {
+            router.close_layer(&tree, &layout);
+        }
+    }
+    assert_eq!(
+        layout.text_geometry[&UiNodeId(11)].value,
+        original.text_geometry[&UiNodeId(11)].value
+    );
+    assert_eq!(layout.placements(), original.placements());
+    assert_eq!(layout.primitives(), original.primitives());
+}
+
+#[test]
 fn registering_after_plain_routing_hides_then_reopens_detached_layer_geometry() {
     let mut tree = composition();
     let layout = tree.layout([400.0; 2], 1.0, None).unwrap();

@@ -340,7 +340,12 @@ record implemented and verified increments; measurements and limitations are in
         four-locale formatting with catalogs through 4096 messages.
   - [x] Borrow unchanged plain-tree routing scopes; verify layer transitions and
         record repeated before/after pointer routing samples.
-  - [ ] Measure mixed ECS/churn, layered/text-control routing and cold localization
+  - [x] Index UI node reads/commands by validated child paths; verify replacement,
+        clone isolation and depth/node limits, and measure construction tradeoffs.
+    - [x] Measure registered closed/open/modal text-field routing through 1024 fields;
+          omit input-scope paint copies and replace linear layer membership scans,
+          with repeated before/after samples and detached-layout regression coverage.
+    - [ ] Measure mixed ECS/churn, overlapping-layer/asset-font editing and cold localization
         publication; attribute larger input burst and remaining layout/routing costs.
   - [ ] Record runtime, world, input and localization dispositions and remeasure fixes.
 - [ ] Review assets/reload, scenes/saves, audio and platform lifecycle for I/O,

@@ -5,6 +5,7 @@ mod editing;
 mod errors;
 mod layout;
 mod layout_performance;
+mod node_index;
 mod paint;
 mod routing;
 mod style;

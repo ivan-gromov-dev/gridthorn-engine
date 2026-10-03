@@ -126,7 +126,7 @@ impl UiTree {
         let mut placements = Vec::new();
         let mut measurements = super::text_measurement::TextMeasurements::new(&self.theme, text);
         arrange(
-            &self.root,
+            self.root(),
             UiBounds {
                 position: [0.0; 2],
                 size: viewport,

@@ -968,3 +968,98 @@ checks passed. Full log: target/milestone-4-5-ui-localization-scaling-verify.log
 Changelog correction also removes earlier runtime-diagnostic entries mistakenly
 duplicated in historical release sections; both new runtime/UI entries belong
 only to Unreleased. No staging or commits were performed.
+
+## Indexed UI node reads/commands — 2026-10-03
+
+Starting engine revision e75b1a43beca31925e7a7396106d21ff8dfd55a7, clean working tree.
+Sibling unchanged; prior manifest/lockfile/README dirt and untracked workbench
+preserved. Production files: new node_index.rs plus composition mod/tree/layout;
+regressions under composition/test/node_lookup.rs. No dependency/public type
+expansion. UiTree holds Arc<NodeIndex> with ID → boxed child path; private root
+ensures topology replacement is owned by tree.rs. New/replace validate before
+building index; commands/styles do not change shape. Clones share metadata and
+retain independent mutable roots; Debug keeps root/theme output via a narrowly
+reasoned missing_fields_in_debug allowance. Initial Clippy finding was corrected
+with that explicit contract before final verification.
+
+Inspection: previous node reads and commands walked all siblings recursively;
+paint and visual refresh repeat these lookups. Same public UI release probe now
+adds construction/drop, including source root cloning/validation/index creation
+and release. Both implementations ran twice, 18 configs, eight warm calls,
+32 batches of eight, 576 raw rows per run. Sampling ran after all builds, without
+concurrent agent-launched build/test work. Feature unification held constant by
+naming app and localization packages in the exact existing probe command.
+
+At 1024 buttons: layout means 3172.63/2687.73 → 713.66/728.03 us; empty routing
+1975.26/1944.58 → 154.72/146.32 us; 32 first pointer events 2221.78/2046.54 →
+214.39/185.68 us. Construction/drop 153.71/172.90 → 211.20/230.55 us. Full table
+and limits in PERFORMANCE_REVIEW.md. Low-count layout is effectively unchanged
+within variation; construction is more expensive at every measured size. No
+whole-engine/native gain or single-call percentile is asserted.
+
+Raw logs target/node-index-before-<1|2>.log and node-index-after-<1|2>.log;
+combined summary target/node-index-summary.csv. Probe source and flags identical
+before/after. Flat index copies 1024 child indices (8192 bytes on this host), plus
+unmeasured map/allocator metadata. Per-index existing shape bounds conservatively
+limit payload to 4096*63 usize values (~1.969 MiB on 64-bit); this is a structural
+bound rather than allocator/process memory measurement. Caller-retained trees
+may hold multiple topologies; clone sharing does not impose a process-wide cap.
+
+58 targeted UI tests passed, including four semantic regressions for replaced/
+moved/reordered IDs, sparse u64::MAX IDs, old-clone isolation, failed replacement,
+unknown IDs and valid 4096-node / depth-63 trees. Release test build and sibling
+workbench release build passed. Native --smoke passed; logs node-index-native
+.stdout.log / .stderr.log under target. Next: layered/text routing and retained
+memory, allocation/layout attribution and remaining domain scaling.
+
+Verification completed: ./scripts/verify.ps1 passed (format, workspace check,
+Clippy, workspace and CLI end-to-end tests, dependency boundaries, diff whitespace).
+App: 119 passed, 5 ignored; the UI manual probe ran twice before and twice after.
+Native mixed smoke passed. Full log: target/milestone-4-5-node-index-verify.log.
+No staging/commits. Sibling HEAD c89adb9a5317007b3469782c1c8da9d8b4b1b04a and its
+existing Cargo.lock/Cargo.toml/README modifications and untracked workbench remain.
+
+## Registered-layer text-field routing — 2026-10-03
+
+Continued on engine e75b1a43beca31925e7a7396106d21ff8dfd55a7 with the preceding
+indexed-node increment still uncommitted; preserved all those changes. Sibling
+HEAD and existing dirt unchanged. Added domain-owned manual layered_scaling.rs
+and a DPI-2 closed/open/modal detached-layout regression in test/routing/layers.rs.
+Production change is confined to routing/layers.rs: input scopes copy geometry
+and placements without render primitives, and placement filters use BTreeSet IDs
+instead of repeated linear membership searches. Placement order, immutable raw
+layout, modal policy and atomic routing semantics are preserved. No dependencies.
+
+Same release probe ran twice before, twice with paint-only change, twice with
+combined change: 16/128/1024 bitmap fields, closed/open/modal, empty/32 pointer
+events; 18 configurations, eight warm calls, 32 batches of eight (576 rows/run).
+Layout/registration/opening outside timing; atomic clones/scopes/results inside.
+No concurrent agent-launched builds/tests during sampling. Asset-font editing,
+overlapping layers and native publication are excluded. Detailed protocol/table
+and limits are in PERFORMANCE_REVIEW.md. Intermediate paint-only samples were
+not stable enough to claim open/modal gains; membership filtering was then fixed.
+
+At 1024 fields/32 events means before → combined (run 1/2): closed
+16981.21/17724.97 → 9593.86/9800.97 us; open 31208.49/31140.13 →
+15020.45/15677.30; modal 38009.30/38067.18 → 18477.88/17484.05.
+Closed empty-route means did not improve (679.92/686.87 → 774.98/738.60).
+Modal burst still exceeds 16.67 ms. No whole-engine/frame-budget claim.
+Filtered scopes retain no paint but still copy text geometry per event; no
+allocator-byte or process-memory delta was measured. Follow-up: repeated scope
+setup, geometry copies, focus checks and hit testing, then shaped editing/layers.
+
+Logs target/layered-before-<1|2>.log, paint-only layered-after-<1|2>.log,
+combined layered-final-<1|2>.log; summary layered-summary.csv. Focused domain
+tests: 51 passed, 2 manual probes ignored. Release probe build and sibling release
+build passed. Native --smoke and --editing-smoke --locale=ja passed; logs
+layered-native-mixed / layered-native-editing .stdout.log/.stderr.log under target.
+Initial regression attempted to inspect a private routing method; rewritten to
+exercise public hit_test_layers without widening production visibility.
+Full verification log: target/milestone-4-5-layered-routing-verify.log.
+No staging or commits. README/UI/roadmap/changelog updated in the same increment.
+
+Verification completed: ./scripts/verify.ps1 passed (format, workspace check,
+Clippy, workspace/CLI tests, dependency boundaries and diff whitespace). App:
+120 passed, 6 manual probes ignored. Final release probe ran twice separately;
+native mixed and Japanese editing smokes passed. Both repositories' prior dirt
+remains preserved.

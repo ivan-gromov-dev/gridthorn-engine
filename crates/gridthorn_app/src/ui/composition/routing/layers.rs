@@ -1,6 +1,6 @@
 use super::{UiCompositionError, UiControl, UiLayout, UiNodeId, UiRoute, UiRouter, UiTree};
 use gridthorn_input::{ButtonState, InputEvent, KeyCode, LogicalKey, NamedKey, PhysicalKey};
-use std::borrow::Cow;
+use std::{borrow::Cow, collections::BTreeSet};
 
 /// Policy for a context menu, popup or dialog rooted in a direct child panel.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -136,7 +136,7 @@ impl UiRouter {
 
     pub(super) fn order_layers(&self, tree: &UiTree, layout: &mut UiLayout) {
         let original = layout.placements.clone();
-        let managed: Vec<_> = self
+        let managed: BTreeSet<_> = self
             .layer_roots
             .iter()
             .filter_map(|id| tree.node(*id))
@@ -145,7 +145,7 @@ impl UiRouter {
         layout.placements.retain(|p| !managed.contains(&p.id));
         for layer in &self.layers {
             if let Some(node) = tree.node(layer.root) {
-                let ids = Self::all_ids(node);
+                let ids: BTreeSet<_> = Self::all_ids(node).into_iter().collect();
                 layout
                     .placements
                     .extend(original.iter().filter(|p| ids.contains(&p.id)).copied());
@@ -161,10 +161,15 @@ impl UiRouter {
         if self.layer_roots.is_empty() {
             return Cow::Borrowed(layout);
         }
-        let mut scoped = layout.clone();
+        let mut scoped = UiLayout {
+            scale: layout.scale,
+            text_geometry: layout.text_geometry.clone(),
+            placements: layout.placements.clone(),
+            primitives: Vec::new(),
+        };
         self.order_layers(tree, &mut scoped);
         if let Some(index) = self.layers.iter().rposition(|layer| layer.options.modal) {
-            let ids: Vec<_> = self.layers[index..]
+            let ids: BTreeSet<_> = self.layers[index..]
                 .iter()
                 .filter_map(|layer| tree.node(layer.root))
                 .flat_map(Self::all_ids)
@@ -204,7 +209,7 @@ impl UiRouter {
                 | InputEvent::PointerMotion { .. }
         ) && let Some(index) = self.layer_at_cursor(tree, layout)
         {
-            let ids: Vec<_> = self.layers[index..]
+            let ids: BTreeSet<_> = self.layers[index..]
                 .iter()
                 .filter_map(|layer| tree.node(layer.root))
                 .flat_map(Self::all_ids)

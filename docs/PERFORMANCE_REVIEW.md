@@ -325,6 +325,117 @@ identical to these measurements):
 cargo test -p gridthorn_app -p gridthorn_localization --release --locked measure_control_and_pointer_routing_scaling -- --ignored --nocapture --test-threads=1
 cargo test -p gridthorn_app -p gridthorn_localization --release --locked measure_localization_catalog_and_formatting_scaling -- --ignored --nocapture --test-threads=1
 ```
+## Indexed UI node lookup
+
+A follow-up on 2026-10-03 isolated repeated whole-tree ID search: paint and router
+visual refresh perform many node reads/commands, each formerly walking the root
+recursively. UiTree now owns a private immutable BTreeMap from ID to child-index
+path. Validation precedes construction; successful replace builds a new index,
+and style/value/visual/scroll commands leave topology intact. Cloned trees share
+lookup metadata through Arc while keeping independently owned mutable nodes.
+The root is private to the tree owner so topology changes go through replace.
+Public node IDs, command/error behavior, painter order and Debug output are retained.
+
+The same UI probe now additionally measures repeated construction/drop through
+UiTree::new(tree.root().clone(), default_theme), including fixture-node cloning,
+validation and index allocation/drop. Graph authoring and initial setup remain
+outside timing. The baseline and changed implementation each ran twice, with the
+same 18 configurations, eight warm calls and 32 batches of eight calls (576 rows
+per run). Existing no-layer scope borrowing is present in both versions. These
+are warm batch means, not cold OS observations or individual-frame percentiles.
+
+| Buttons | Operation | Before mean us/call, runs 1 / 2 | After mean us/call, runs 1 / 2 |
+| --- | --- | --- | --- |
+| 16 | Construction/drop | 2.30 / 1.54 | 4.33 / 3.25 |
+| 16 | Layout | 9.06 / 7.27 | 7.70 / 7.26 |
+| 16 | Empty routing | 2.60 / 2.57 | 2.19 / 2.24 |
+| 128 | Construction/drop | 11.99 / 13.32 | 19.63 / 19.68 |
+| 128 | Layout | 116.73 / 126.67 | 78.67 / 83.97 |
+| 128 | Empty routing | 42.54 / 42.44 | 16.09 / 16.75 |
+| 1024 | Construction/drop | 153.71 / 172.90 | 211.20 / 230.55 |
+| 1024 | Layout | 3172.63 / 2687.73 | 713.66 / 728.03 |
+| 1024 | Empty routing | 1975.26 / 1944.58 | 154.72 / 146.32 |
+| 1024 | 32 first-button pointer events | 2221.78 / 2046.54 | 214.39 / 185.68 |
+| 1024 | 32 last-button pointer events | 2246.53 / 2064.12 | 184.72 / 140.09 |
+| 1024 | 32 outside pointer events | 2111.59 / 2010.84 | 229.81 / 182.33 |
+
+Repeated lookup costs shift from sibling searches to map lookup and traversal of
+one stored path; construction and replacement pay for building paths. Copied path
+payload for the flat 1024-button probe is 1024 usize values (8192 bytes on this
+64-bit host). The existing 4096-node and depth-63 limits bound any one index to
+at most 4096*63 child indices (1.969 MiB on 64-bit), excluding map entries, slice
+headers, Arc and allocator metadata. This is a conservative structural bound,
+not measured process memory or allocator retention. Clones of one topology share
+one index; different replacements/caller-retained trees may own multiple indices.
+
+Four new domain regressions cover moved/reordered sparse IDs, clone isolation,
+rejected replacement and unknown commands, and accepted depth/node-count limits.
+The focused UI suite passed 58 tests. Release workbench mixed native smoke also
+passed; no native performance gain is inferred from a correctness smoke. Remaining
+work includes measured retained/backend memory and layered/text routing, mixed
+control trees and further allocation/layout cost attribution. No dependency or
+public API expansion accompanies the index.
+## Registered-layer text-field routing
+
+The release probe `measure_layered_text_routing_scaling` measures one registered
+direct-child panel with 16/128/1024 bitmap fields, each containing `Review 123`.
+All fields are visible in the detached raw layout; the layer is closed, open
+nonmodal or open modal. DPI is 1; viewport is `[300, fields * 30 + 100]` logical
+pixels. This includes retained geometry/paint for closed roots via the public raw
+layout path, rather than router layout that omits closed-root text geometry.
+It excludes asset-font shaping, typing/preedit, overlapping layers and native input.
+
+```powershell
+cargo test -p gridthorn_app -p gridthorn_localization --release --locked measure_layered_text_routing_scaling -- --ignored --nocapture --test-threads=1
+```
+
+Each of 18 configurations warms eight calls then records 32 batches of eight;
+two runs per implementation, 576 CSV rows per run. Fixture/layout/registration
+and opening are outside timing. Calls include atomic tree/router cloning, scope
+construction/filtering, routing and result release. Input is empty or 32
+CursorMoved events over the first field, without clicks or edits. Checks outside
+timing verify consumption/world-event order, absent effects and unchanged source
+placements/paint. Percentiles are batch means, not single-call/frame tails.
+Host/toolchain are unchanged; live clock/background activity are uncontrolled.
+
+| Fields | State | 32-event mean before, us (runs 1/2) | Mean after, us (runs 1/2) |
+| --- | --- | --- | --- |
+| 16 | closed | 192.20 / 187.61 | 137.57 / 133.02 |
+| 16 | open | 251.14 / 240.25 | 208.48 / 204.72 |
+| 16 | modal | 287.05 / 285.82 | 282.79 / 242.17 |
+| 128 | closed | 1582.61 / 1551.16 | 1130.57 / 1023.72 |
+| 128 | open | 2212.19 / 2194.55 | 1583.40 / 1497.05 |
+| 128 | modal | 2571.17 / 2515.12 | 1813.38 / 1700.86 |
+| 1024 | closed | 16981.21 / 17724.97 | 9593.86 / 9800.97 |
+| 1024 | open | 31208.49 / 31140.13 | 15020.45 / 15677.30 |
+| 1024 | modal | 38009.30 / 38067.18 | 18477.88 / 17484.05 |
+
+Scopes previously cloned full paint and searched linear ID lists inside placement
+filters. They now copy scale/placements/prepared text geometry without primitives;
+BTreeSet membership preserves the existing placement sequence. An intermediate
+paint-only implementation was sampled twice: at 1024 fields/32 events closed
+means were 13152.20/14259.86 us, open 31553.28/28909.18, modal
+42679.26/35758.18. It does not establish stable open/modal improvement alone.
+Final empty-route means at 1024 fields are 774.98/738.60 us closed,
+508.11/547.97 open, 588.89/623.28 modal. Closed empty routing did not improve
+against 679.92/686.87 us before. Small-case set construction is not assumed cheaper.
+
+Input scopes retain no paint. Copied geometry/placements and temporary ID sets
+remain proportional to the supplied layout/tree and are released with the scope;
+no persistent cache is added. This is an ownership observation, not measured
+allocator bytes or process memory. Geometry/scope setup still repeats per event,
+and atomic tree clones remain. The 1024-field modal burst still exceeds 16.67 ms
+on average; these samples do not satisfy the native workbench acceptance gate.
+Next: attribute copies, repeated scope setup, hit testing and focus checks, then
+cover asset-font editing and overlapping layers.
+
+Raw logs: `target/layered-before-<1|2>.log`, paint-only
+`target/layered-after-<1|2>.log`, final `target/layered-final-<1|2>.log`;
+`target/layered-summary.csv` includes empty routes and batch-mean p95.
+Builds completed before sampling; no concurrent agent-launched builds/tests ran.
+A DPI-2 regression verifies closed/open/modal picking and immutable source geometry
+and paint. Native mixed and Japanese editing smokes passed as correctness checks.
+
 ## Execution order
 
 Work through the Milestone 4.5 checklist in ROADMAP. Each increment records its

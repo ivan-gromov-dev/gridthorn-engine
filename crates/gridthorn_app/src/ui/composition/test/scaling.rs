@@ -17,6 +17,7 @@ fn measure_control_and_pointer_routing_scaling() {
     println!("ui_scaling,operation,controls,events,batch,calls,elapsed_ns");
     for count in [16, 128, 1024] {
         for operation in [
+            "construction",
             "layout",
             "route_empty",
             "route_first",
@@ -56,7 +57,7 @@ fn measure(count: u16, operation: &str) {
             f64::from(bounds.position[1]) + 10.0,
         ]
     };
-    let events = if matches!(operation, "layout" | "route_empty") {
+    let events = if matches!(operation, "construction" | "layout" | "route_empty") {
         Vec::new()
     } else {
         (0..32)
@@ -92,7 +93,7 @@ fn measure(count: u16, operation: &str) {
             events.len()
         );
     }
-    if operation == "layout" {
+    if matches!(operation, "construction" | "layout") {
         assert_eq!(
             tree.layout(viewport, 1.0, None).unwrap().placements().len(),
             usize::from(count) + 1
@@ -127,7 +128,9 @@ fn run_batch(
     operation: &str,
 ) {
     for _ in 0..CALLS {
-        if operation == "layout" {
+        if operation == "construction" {
+            black_box(UiTree::new(tree.root().clone(), UiTheme::default()).unwrap());
+        } else if operation == "layout" {
             black_box(tree.layout(viewport, 1.0, None).unwrap());
         } else {
             black_box(

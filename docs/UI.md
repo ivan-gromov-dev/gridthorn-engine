@@ -11,6 +11,9 @@ requested scroll offset and ordered children. Only panels own child nodes.
 `UiTree::new` validates the complete tree; `replace` atomically replaces it.
 Invalid IDs, sizes, control data and commands return `UiCompositionError`.
 `set_style(id, style)` atomically replaces one node's validated style.
+Node reads use an immutable index of child paths built after validation and
+rebuilt on successful replacement. Tree clones share the index while retaining
+independent node values. Style/value/visual commands preserve topology.
 Node reads are immutable. Change values with explicit commands or replace the
 composition; layouts never silently follow subsequent edits.
 
@@ -111,6 +114,8 @@ commands; `route_events` provides the same contract for injected ordered events.
 Both leave the raw snapshot unchanged. With no registered layer roots, routing
 borrows the supplied immutable layout for its input scopes. Registered roots use
 filtered owned scopes, including when every registered layer is closed.
+These scopes copy placements and prepared text geometry without copying render
+primitives; ordered ID sets filter layer membership without changing painter order.
 A rejected batch preserves the tree/router
 and returns no platform side effects. Successful effects retain event order.
 
