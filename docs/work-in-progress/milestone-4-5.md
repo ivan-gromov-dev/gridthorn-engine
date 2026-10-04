@@ -1946,3 +1946,96 @@ Fullverify passed target/narrow-cache-full-verify.log with process-local shared
 engine target/sequentialtests. Sibling14passed/3ignored,Clippy/build pass; native8
 editing/preedit ru/ja repeats pass,119render each,GPU4x119/4x118+1skip,errors0/pendingfalse.
 Finalformat/bothwhitespace pass; env scopedtoolprocesses,no staging/commits.
+
+## 2026-10-04 Text cache memory checkpoint
+
+Engine starts clean at e907c020f05db9341107edde027b939b98c0df47; sibling existing
+changes preserved. New ignored renderer memory probe holds six release phases,
+asserts retention budgets and verifies narrow backend buffers release under
+pressure. Two separate Windows process acquisitions pass. Diagnostic capacity
+3ordinary layouts430150bytes ->5including narrow886648bytes (+456498bytes);
+line pressure15entries/3850lines/192586bytes. No production change. Private/
+resident process ranges, sampling transitions and excluded backend/allocator
+storage documented in PERFORMANCE_REVIEW; no exact heap or allocation peak claim.
+Two existing long-text pressure probes pass; all four scripts hit100/100 for
+single layouts,8repeat/32working-set hits100/100;96working-set hits0/100, and
+256repeat/32working-set hits0/100. Larger line budget does not eliminate bounded
+working-set churn. Evidence target/cache-memory-{1,2}.{log}, sampleCSVs and
+cache-pressure-current-{1,2}.log. Next cold fallback/raster allocation attribution
+and remaining native/platform/domain acceptance. No staging/commits.
+
+Full ./scripts/verify.ps1 passed (target/cache-memory-full-verify.log), including
+Clippy, workspace tests and dependency boundaries; shared target/sequential tests
+scoped to process. Clippy's slice-size diagnostic corrected with size_of_val,
+without changing the recorded capacity. Final whitespace check passed.
+
+## 2026-10-04 Fresh-service Japanese attribution checkpoint
+
+Engine e907c020f05db9341107edde027b939b98c0df47; previous memory-probe changes
+preserved. New ignored text/test/cold_japanese.rs separates service creation,
+first layout, warm-font unique request and identity-verified hit. Two release
+runs pass160freshservices each, primarySans/JP,256repeats widths1/12/600 plus
+64repeats width600. Fallback unique p9511.879-13.802ms for256 persists after
+warming; JP1.739-4.421ms. Service not OS/process cold; no backend attribution
+or production optimization claim. Raster64/DPI1 first/repeat equality passes;
+full spans1766016/1760696bytes vs clipped220752/225876bytes. These are retained
+per-snapshot slice bytes, excluding backend/scratch/allocator/GPU and peakheap.
+Evidence target/cold-japanese-{1,2}.log and summaryCSVs; full conditions in review.
+Next allocation instrumentation and broader cold/unique/native/domain acceptance.
+No sibling source changes, staging or commits.
+
+Full ./scripts/verify.ps1 passed (target/cold-japanese-full-verify.log), including
+Clippy, workspace tests and dependency boundaries; shared target/sequential tests
+scoped to process. Final formatting and whitespace checks passed.
+
+## 2026-10-04 Raster temporary storage checkpoint
+
+Existing uncommitted memory/cold probes preserved at enginee907c020f05db9341107edde027b939b98c0df47.
+Workspace unsafe forbid prevents custom allocator hook; no rule/dependency change.
+Test-only raster storage flag sums outputVec/glyph cache vectors/scratch capacities,
+not allocator events or totalheap.2release diagnostic runs identical: outputVec
+1835008bytes full/229376clipped; glyphvectors121856Sans/82432JPbytes for both.
+Production explicitly drops GlyphSpans before snapshot construction; shorter
+temporary lifetime, no speedup/OSpeak claim.2diagnostic-free after probes pass,
+including full output equality/clipped smaller. Evidence target/raster-storage-*
+logs; full conditions/exclusions in review. Next external allocator/backend peak
+attribution and broader workload/native acceptance. No staging/commits/sibling edits.
+
+Full ./scripts/verify.ps1 passed (target/raster-storage-full-verify.log), including
+Clippy, all workspace tests, dependency boundaries and raster equivalence/error
+coverage. Process-local shared target/sequential tests; final formatting and
+whitespace checks passed.
+
+## 2026-10-04 Complex localization publication checkpoint
+
+Enginee907c020f05db9341107edde027b939b98c0df47 and previous working tree preserved.
+New runtime/test/complex_publication.rs ignoredrelease probe:16/256/4096messages,
+4locales,20freshservices percase,16-message chains and nested string/plural/NUMBER.
+2runs pass240services each, candidate replacement, cyclic candidate rejection,
+oldasset/string lifetime and publishedstate preservation. At4096messages
+validationp9523.393-30.713ms,candidatevalidation23.766-35.468ms,replace1.591-2.108ms,
+firstformat51.5-99.8us. Freshservice/inmemory,warmprocess; noheap/worker/nativeframe
+or backendphase claim. Initial trial appendedextra cyclicmessage; final fixture
+replacesanchor to ensure4096case rejects cycle rather than4097messagebudget,
+and asserts contextualcyclic Validation error. Evidence target/complex-localization-*
+logs/CSVs. No production/sibling/dependency changes, staging or commits.
+Fullverify passed target/complex-localization-full-verify.log; sharedtarget/sequential
+tests process-scoped. Next expanded asset-font layers/mixed ECS/input attribution
+and remaining heap/native/domain acceptance. Finalformat/whitespace checks passed.
+
+## 2026-10-04 Expanded asset-font layer checkpoint
+
+Enginee907c020f05db9341107edde027b939b98c0df47/siblingc89adb9a5317007b3469782c1c8da9d8b4b1b04a
+existing changes preserved. Sibling domain expanded_fonts probe measures48configs:
+3/16/64 layers x1/16 unique shortfields x4scripts xDPI1/2,10warm+20timedlayoutcalls.
+Initial childoverlay trial failedfirstfocus; correctedcolumnflow before2retained
+runs. Bothpassfocus/topfieldhits; finalrunadds exactprimitivecount verification.
+At1024fields p95en55.75-59.98/75.75-81.31msDPI1/2,ja188.00-233.69/294.62-307.17ms.
+CPU preparation only, noediting/GPU/display/heap/actualcachemiss attribution.
+Evidence target/expanded-fonts-* logs/summaryCSVs. No production/dependencychange;
+next phase attribution for expandedfontprep and mixedECS/input/nativeacceptance.
+No staging/commits.
+
+Expanded-font fullverify passed target/expanded-fonts-full-verify.log with process
+sharedtarget/sequentialtests. Sibling14passed/4ignored, all-targetClippy passed;
+final manualprobe passes all48configs. Finalbothrepo formatting/whitespace passed.

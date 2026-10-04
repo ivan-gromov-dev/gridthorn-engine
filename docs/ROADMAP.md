@@ -378,8 +378,18 @@ record implemented and verified increments; measurements and limitations are in
           effective clips; preserve raster limits/visible output and remeasure.
     - [x] Attribute narrow Japanese composition misses to line-budget bypass;
           calibrate bounded line retention, verify eviction/release and remeasure.
-    - [ ] Attribute long Japanese fallback misses/raster allocations and long-field editing costs; measure asset-font expanded layers, broader mixed ECS/component churn and complex cold localization
-        publication; attribute larger input burst and remaining layout/routing costs.
+    - [x] Measure retained text-cache diagnostic capacity and separate-process
+          private/resident memory through narrow layouts, pressure and release.
+    - [x] Separate fresh-service Japanese layout, warm-font unique misses, hits,
+          first/repeated raster calls and retained clipped/full output storage.
+    - [x] Measure raster construction-vector and glyph-span capacities; release
+          request-local glyph spans before snapshot construction and verify output.
+    - [x] Measure fresh-service complex localization validation/publication with
+          reference chains, nested selectors/numbers and rejected cyclic candidates.
+    - [x] Measure expanded asset-font layout/paint through64 overlapping layers
+          and1024 unique fields, four scripts and synthetic DPI1/2.
+    - [ ] Attribute long Japanese fallback misses/raster allocations and long-field editing costs; measure broader mixed ECS/component churn;
+        attribute larger input burst and remaining layout/routing costs.
   - [ ] Record runtime, world, input and localization dispositions and remeasure fixes.
 - [ ] Review assets/reload, scenes/saves, audio and platform lifecycle for I/O,
       memory peaks, worker/publication costs and frame stalls.

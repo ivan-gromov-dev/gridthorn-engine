@@ -2846,3 +2846,271 @@ Full ./scripts/verify.ps1 passed with process-local shared target/sequential tes
 Sibling package14passed/3ignored, all-target Clippy/release build passed. Final
 formatting/engine+sibling whitespace passed. No sibling source change this increment,
 staging or commits; environment overrides scoped to tool processes.
+
+## 2026-10-04 Text cache memory after line-budget calibration
+
+At engine e907c020f05db9341107edde027b939b98c0df47, two separate release
+processes ran the ignored renderer `measure_layout_cache_memory` probe alone.
+It warms three Japanese strings (256 phrase repetitions) at widths 600/1/12,
+clears retention, then holds six phases for one second each. Three width-600
+layouts model ordinary fields; widths 1/12 of the first string add composition
+layouts. Twenty unique 256-line strings force line-budget eviction. Weak backend
+buffer handles verify both narrow buffers are released after pressure. Every
+phase asserts all four retention budgets. No production behavior changed.
+
+| Phase | Entries | Lines | Engine diagnostic capacity bytes |
+| --- | ---: | ---: | ---: |
+| Warm empty | 0 | 0 | 0 |
+| Three ordinary fields | 3 | 192 | 430150 |
+| Ordinary plus two narrow fields | 5 | 4032 | 886648 |
+| Line pressure | 15 | 3850 | 192586 |
+| Cache cleared / service dropped | 0 | 0 | 0 |
+
+The extra retained engine diagnostic capacity is 456498 bytes (445.8 KiB).
+This sums entry-vector capacity, key/family strings, diagnostic line slices,
+glyph-vector capacity and glyph-family strings. It excludes backend buffers,
+Arc headers, allocator overhead, font/shaping caches and caller-held layouts;
+it is neither total heap allocation nor a cache memory upper bound.
+
+The external Windows sampler launches the release unit-test executable directly
+with `--ignored --exact text::layout_cache::memory_test::measure_layout_cache_memory
+--nocapture --test-threads=1`, redirects stdout, and polls its PID every 50 ms.
+It reads phase markers and `Process.PrivateMemorySize64`/`WorkingSet64`.
+Across the two acquisitions, ordinary-field private bytes are 14495744–15261696;
+narrow-phase samples are 13873152–17887232. The corresponding sampled resident
+ranges are 22159360–22585344 and 22335488–25579520 bytes. These process-wide
+ranges include phase transitions, allocator reuse and unrelated backend storage;
+they do not isolate an incremental backend-buffer cost. This is sampled memory,
+not a captured allocation peak. Even the last six samples vary during narrow
+phases, so a settled heap delta is not claimed.
+
+After clearing retention, private bytes are 10366976–10989568 and resident bytes
+19107840–19161088. Dropping the service reduces these to 2600960–2879488 and
+11882496–12300288 respectively. Remaining process memory is not proof of a leak;
+buffer lifetime is checked directly. The larger cache remains a provisional
+bounded retention tradeoff; exact backend heap peaks and broader domain memory
+acceptance remain open. Evidence: `target/cache-memory-{1,2}.log` and
+`target/cache-memory-{1,2}-samples.csv`. Build the executable with
+`cargo test -p gridthorn_render --release measure_layout_cache_memory --no-run`;
+use the executable path Cargo reports, rather than sampling Cargo's parent PID.
+
+Two release runs of `measure_long_text_and_cache_pressure` also pass after the
+calibration (36 layout configurations and 16 full-raster configurations per run,
+100 calls each). All four scripts retain 100/100 hits for working-set 1 at
+8/64/256 repetitions, and for working-set 32 at 8 repetitions. At 64 repetitions
+and working-set 32, Japanese retains 100/100 hits; English/Russian/Arabic each
+have zero. All working-set 96 cases and all 256-repetition working-set 32 cases
+have zero hits. Caller-held original geometry remains valid after churn, and
+missing-glyph checks pass. The larger line budget does not remove pressure from
+the entry/glyph budgets. These full-raster measurements do not exercise clipped
+UI rasterization. Evidence: `target/cache-pressure-current-{1,2}.log`; command:
+`cargo test -p gridthorn_render --release measure_long_text_and_cache_pressure
+-- --ignored --nocapture --test-threads=1`, with text diagnostics unset.
+
+## 2026-10-04 Fresh-service Japanese phases and raster output storage
+
+New ignored renderer `measure_cold_japanese_phases` separates service creation,
+first layout, changed-string layout and identical changed-string cache hit.
+Two release runs use the three existing asset fonts, en-US locale, primary
+Noto Sans versus Noto Sans JP, font size20, 256 repetitions at widths1/12/600
+and64 repetitions at width600. Each configuration has20 fresh-service samples
+without warmup, for160 service creations per run. Asset validation happens before
+measurement. Services are fresh within an already-running process: this is not
+cold OS file I/O, first process startup, or isolated backend-function attribution.
+The changed string appends ` 1`, retaining nearly identical content/coverage.
+
+| Primary / repetitions / width | First-layout p95 ms | Warm-font unique p95 ms |
+| --- | ---: | ---: |
+| Sans /256/1 | 13.199–14.434 | 13.008–13.711 |
+| Sans /256/12 | 13.318–14.988 | 13.211–13.802 |
+| Sans /256/600 | 11.764–12.181 | 11.879–12.635 |
+| JP /256/1 | 2.770–4.530 | 2.553–4.421 |
+| JP /256/12 | 2.629–2.655 | 2.106–2.212 |
+| JP /256/600 | 1.970–2.191 | 1.739–2.239 |
+| Sans /64/600 | 3.122–3.319 | 3.026–3.030 |
+| JP /64/600 | 0.566–0.570 | 0.432–0.447 |
+
+Nearest-rank p95 is sample19 of20 sorted individual calls; a small-sample host
+tail, not an acceptance threshold. Service-creation p95 ranges0.837–1.939ms
+across configurations/runs. Every hit shares the preceding layout's backend
+buffer; hit p95 is0.4–1.4us, near timer granularity. Missing glyphs are zero.
+The primary/fallback comparison includes changed glyph metrics/layout and does
+not isolate fallback search from shaping or diagnostic geometry. It does show
+that this fallback-heavy unique-string cost persists after warming font state;
+the retention calibration primarily helps identical requests. No automatic
+primary-family selection or backend optimization is implemented in this increment.
+
+For64repetitions/width600/DPI1, each service additionally measures its first full
+raster call, repeated full call and glyph-cache-warm clipped call with a600x40
+physical clip. First/repeated full snapshots compare equal. The first snapshot
+remains caller-held for this comparison; output bytes are per snapshot, not total
+live storage. The clipped output is strictly smaller on every sample.
+
+| Primary | First full p95 ms | Repeated full p95 ms | Warm clipped p95 ms | Full / clipped output bytes |
+| --- | ---: | ---: | ---: | ---: |
+| Sans | 1.728–1.729 | 1.348–1.642 | 0.264–0.284 | 1766016 /220752 |
+| JP | 1.353–1.379 | 0.993–1.080 | 0.215–0.256 | 1760696 /225876 |
+
+Output bytes use the engine-owned `TextPixel` slice size (28bytes per span on
+this host). They exclude Arc headers, construction-vector capacity, request-local
+glyph-span storage, backend glyph images, allocator overhead and GPU buffers.
+The probe neither counts allocation events nor measures temporary/total heap
+peaks. Layout/service CSV output_bytes=0 means unmeasured, not zero allocation.
+The clipped acquisition follows full raster and is not a cold clipped comparison.
+Only DPI1 and this fixed top clip are covered; no frame/display distribution is
+inferred. Allocation instrumentation and broader cold/unique workloads remain open.
+
+Reproduce with `cargo test -p gridthorn_render --release
+measure_cold_japanese_phases -- --ignored --nocapture --test-threads=1`, with
+GRIDTHORN_TEXT_PERFORMANCE unset. Evidence: target/cold-japanese-{1,2}.log and
+target/cold-japanese-{1,2}-summary.csv. The probe verifies cache identity, coverage,
+snapshot equivalence and smaller clipped storage. Existing memory-probe working
+tree changes are preserved; no sibling source change or production change.
+
+## 2026-10-04 Raster temporary-container capacity and early release
+
+The workspace forbids unsafe code, so no custom GlobalAlloc instrumentation is
+introduced. A test-only GRIDTHORN_RASTER_STORAGE_PROBE flag reports output-vector
+capacity, target snapshot slice bytes and request-local glyph-span vector capacity
+immediately before snapshot construction. It sums the cached per-glyph vectors
+and scratch vector, excluding HashMap buckets/entries, backend image/shaping
+caches, allocator overhead and Arc headers. This is a container-capacity
+measurement, not allocation event counting or a total/temporary heap peak.
+
+Two separate release acquisitions of the existing cold Japanese probe report
+identical capacities for all20 samples per primary font and raster operation:
+
+| Primary / output | Output Vec capacity bytes | Snapshot slice bytes | Glyph vectors plus scratch bytes |
+| --- | ---: | ---: | ---: |
+| Sans / full | 1835008 | 1766016 | 121856 |
+| JP / full | 1835008 | 1760696 | 82432 |
+| Sans / clipped | 229376 | 220752 | 121856 |
+| JP / clipped | 229376 | 225876 | 82432 |
+
+First/repeated full calls have identical reported capacity on this workload.
+Clipping reduces output capacity but retains the same glyph-vector capacity:
+the first visible lines still cover the repeated glyph set. Summing these columns
+is not an observed heap peak; they have different lifetimes. Instrumented timings
+include environment lookup/stdout diagnostics and are excluded from latency claims.
+The probe is compiled only into renderer unit tests; normal builds have no new
+environment flag, diagnostic output or instrumentation overhead.
+
+Rasterization now explicitly drops request-local GlyphSpans after output assembly
+and before converting the output vector to its immutable snapshot. This frees
+the measured82432/121856 bytes of vector capacity (plus unmeasured map storage)
+earlier, avoiding its lifetime overlap with snapshot construction. It does not
+change glyph-cache retention or prove a corresponding OS/private-byte reduction.
+No allocator, dependency, raster safety limit or public API changes. Existing
+coverage/order/tint/fractional-DPI/clipping/error regressions remain the verification
+contracts. Two diagnostic-free release cold Japanese probes pass after this change,
+including repeated full output equality and smaller clipped output. No speedup
+or total heap-peak reduction is claimed from this lifetime change.
+
+Reproduce capacity acquisition by setting GRIDTHORN_RASTER_STORAGE_PROBE=1 for
+the renderer release unit-test `measure_cold_japanese_phases`, run alone with
+`--ignored --nocapture --test-threads=1`. Keep GRIDTHORN_TEXT_PERFORMANCE unset.
+Evidence: target/raster-storage-{1,2}.log; diagnostic-free after runs:
+target/raster-storage-after-{1,2}.log. Full allocator/backend peak attribution
+remains open; the safe container probe does not complete that acceptance item.
+
+## 2026-10-04 Complex fresh-service localization publication
+
+The new ignored localization-domain probe `measure_complex_localization_publication`
+extends the earlier simple catalog fixture. It uses16/256/4096 messages, four
+locales (en-US/ru/ar-EG/ja), and20 fresh-service samples per configuration with
+no warmup exclusions. Each16-message group has an anchor and a15-reference
+chain. Non-anchor messages combine a string selector with nested cardinal plural
+selection and NUMBER minimumFractionDigits2. The deepest formatted message
+resolves the chain with role=worker, n=2 and amount=12345.5. Russian selects Few;
+other fixture locales select Other (the fixture omits Arabic two). All catalogs
+have the same English test labels; this tests locale rules, not translation quality.
+
+Source generation and parameter construction are outside the timed intervals.
+Separate measurements cover source validation, service construction, first
+format, candidate validation, explicit replacement and invalid-candidate validation.
+A revision changes every anchor. Publication is verified by formatting the deepest
+message; old asset handles and owned formatted strings remain valid. The rejected
+candidate replaces node-0's value with a self-reference without adding messages;
+the probe requires a cyclic-reference Validation error, rather than a message-count
+or syntax rejection, and verifies the published string and locale chain remain.
+This models a caller discarding failed decoding before publication; it does not
+claim that replace_catalog itself processes invalid source.
+
+Two release runs each pass240fresh services, valid candidate replacements and
+cyclic-candidate rejections. Nearest-rank p95 is sample19 of20 sorted individual
+calls. Ranges below span all four locales and both runs, in microseconds:
+
+| Messages | Initial validate p95 | Construct p95 | First format p95 | Replace p95 | Reject cyclic candidate p95 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 16 | 62.0–134.3 | 4.4–15.3 | 26.2–73.1 | 5.8–13.4 | 68.6–113.2 |
+| 256 | 1409.9–2192.9 | 47.7–69.7 | 33.2–71.9 | 62.4–101.2 | 1201.9–1895.9 |
+| 4096 | 23392.9–30713.1 | 581.1–949.6 | 51.5–99.8 | 1590.7–2108.2 | 22238.6–30024.7 |
+
+At4096messages source size is736337–736593UTF8bytes; candidate-validation p95
+is23766.4–35467.7us across runs/locales. Validation includes parsing, supported
+expression/type checks and reference-graph validation; these backend phases are
+not individually attributed. Replacement includes preparing the new bundle and
+releasing the runtime's old bundle; an old asset handle remains caller-held.
+First format includes resolver/number/plural initialization for the referenced
+message, not formatting every catalog message. Fresh services occur in a warm
+process with in-memory source: this is not cold OS I/O or worker handoff.
+
+Disposition: preserve explicit off-polling candidate validation and bounded
+publication. The measured large complex validation can exceed one60Hz frame;
+that comparison is a workload observation, not a real frame-stall measurement
+or guaranteed limit. No runtime optimization/public API/dependency change is
+introduced. Allocation/heap peaks, wider reference fanout/depth, alternate selector
+branches and background handoff remain unmeasured. Milestone acceptance stays open.
+
+Reproduce with `cargo test -p gridthorn_localization --release
+measure_complex_localization_publication -- --ignored --nocapture --test-threads=1`.
+Evidence: target/complex-localization-{1,2}.log and summaryCSVs. Full verification
+passed via ./scripts/verify.ps1 (target/complex-localization-full-verify.log).
+
+## 2026-10-04 Expanded public asset-font layers
+
+The sibling workbench ignored `measure_expanded_font_layers` probe extends the
+bitmap-layer fixture to real asset fonts through public SDK APIs. It uses3/16/64
+overlapping clipped panels with1/16 fields each, four content scripts, synthetic
+DPI1/2, a1000x800 logical viewport and Noto Sans20 with the existing Arabic/JP
+fallback assets. Panel children use column flow: all16 fields fit a720-high panel.
+Each field appends a unique layer/field suffix. All layers remain painted; only
+the last is modal. Font/tree construction, initial raw layout and opening layers
+are outside timing. Each of48configurations makes10 warm and20 measured full
+router layout calls, including text shaping/raster and focused decoration.
+
+Two complete release acquisitions pass. Focus stays on the first top-layer
+field and hit testing resolves that field. Each layout contains one text primitive
+per authored field, up to1024. A subsequent complete run also asserts the exact
+primitive count for every call. The initial trial had overlaid children; column
+flow was fixed before both retained measurements. No production change is made.
+
+| Content script /1024 fields | DPI1 layout/paint p95 ms | DPI2 layout/paint p95 ms |
+| --- | ---: | ---: |
+| English | 55.75–59.98 | 75.75–81.31 |
+| Russian | 63.88–65.47 | 95.82–120.10 |
+| Arabic | 81.68–93.42 | 102.01–117.23 |
+| Japanese | 188.00–233.69 | 294.62–307.17 |
+
+P95 is nearest-rank sample19 of20 sorted individual calls, and ranges span the
+two acquisitions. This is intentionally heavy overlapping paint with unique
+strings. A1024-key working set exceeds the64-entry text-layout cache, but actual
+hit/miss phase totals are not acquired here. Do not assign all cost to misses,
+fallback or routing without attribution. Layers are not occlusion culled or
+virtualized, no texts are edited during timing, and script labels do not imply
+locale/catalog changes. Font loading and cold first-frame costs are excluded.
+No GPU submission, actual display intervals, OSIME/clipboard or heap peaks are
+measured. These timings do not establish realtime acceptance for1024 fields.
+
+Disposition: expanded asset-font preparation is a remaining measured scaling
+cost, especially Japanese and DPI2; attribute shaping/raster/layout/router phases
+before choosing caching, virtualization or occlusion behavior. Such behaviors
+would need explicit lifecycle/input contracts rather than being inferred from
+this overlapping fixture. Wider mixed ECS/input and native acceptance remain open.
+
+Reproduce from the sibling workspace with `cargo test
+-p gridthorn_example_multilingual_workbench --release --locked
+measure_expanded_font_layers -- --ignored --nocapture --test-threads=1`, diagnostics
+unset. Evidence target/expanded-fonts-{1,2}.log and summaryCSVs in engine target;
+final count-asserting acquisition target/expanded-fonts-final.log. This adds only
+sibling domain test/documentation and preserves its existing working tree.

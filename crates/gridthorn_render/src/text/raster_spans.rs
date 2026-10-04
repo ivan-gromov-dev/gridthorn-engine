@@ -18,6 +18,16 @@ pub(super) struct GlyphSpans {
 }
 
 impl GlyphSpans {
+    #[cfg(test)]
+    pub(super) fn diagnostic_storage_bytes(&self) -> usize {
+        self.scratch.capacity() * std::mem::size_of::<GlyphSpan>()
+            + self
+                .entries
+                .values()
+                .map(|spans| spans.capacity() * std::mem::size_of::<GlyphSpan>())
+                .sum::<usize>()
+    }
+
     pub(super) fn new(tint: [f32; 4], reuse: bool) -> Self {
         Self {
             tint,

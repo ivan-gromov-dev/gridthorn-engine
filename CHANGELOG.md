@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Text rasterization releases request-local glyph-span storage before constructing
+  the immutable raster snapshot, shortening temporary buffer lifetime.
+
 - Text layout-cache line retention rises from 1024 to 4096 to admit measured
   narrow Japanese composition working sets, removing repeated warm shaping while
   preserving the existing entry/key/glyph limits and bounded LRU eviction.

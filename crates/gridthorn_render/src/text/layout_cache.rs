@@ -140,3 +140,7 @@ impl Drop for LayoutCache {
 #[cfg(test)]
 #[path = "test/layout_cache.rs"]
 mod test;
+
+#[cfg(test)]
+#[path = "test/layout_cache_memory.rs"]
+mod memory_test;

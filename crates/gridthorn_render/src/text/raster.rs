@@ -186,6 +186,17 @@ impl TextSystem {
             }
         }
         let units = pixels.len();
+        #[cfg(test)]
+        if std::env::var_os("GRIDTHORN_RASTER_STORAGE_PROBE").is_some() {
+            let output_capacity_bytes = pixels.capacity() * std::mem::size_of::<TextPixel>();
+            let snapshot_bytes = std::mem::size_of_val(pixels.as_slice());
+            let glyph_storage_bytes = spans.diagnostic_storage_bytes();
+            println!(
+                "raster_storage,clipped={},output_capacity_bytes={output_capacity_bytes},snapshot_bytes={snapshot_bytes},glyph_storage_bytes={glyph_storage_bytes}",
+                clip.is_some()
+            );
+        }
+        drop(spans);
         let raster = RasterText {
             pixels: pixels.into(),
             position: [0.0, 0.0],

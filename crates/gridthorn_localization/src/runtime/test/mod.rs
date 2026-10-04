@@ -22,4 +22,5 @@ fn text(service: &Localization, id: &str, parameters: &MessageParameters) -> Str
         .unwrap()
         .text
 }
+mod complex_publication;
 mod publication;

@@ -1,3 +1,4 @@
+mod cold_japanese;
 mod geometry;
 mod layout;
 mod narrow_layout;
