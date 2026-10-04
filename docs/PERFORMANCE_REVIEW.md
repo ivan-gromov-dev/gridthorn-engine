@@ -952,3 +952,162 @@ shared target/sequential-test settings, including workspace tests, generated-pro
 CLI smoke, dependency boundaries and whitespace. Log target/raster-spans-verify.log;
 overrides restored. Native Workbench acceptance and the remaining domain matrix
 stay open.
+
+## Assets, scalar scenes and typed world-save I/O (2026-10-04)
+
+Baseline 545c6ad61a3a3d8ba5b9148674ada3fecbd7ae18, clean engine tree at start,
+Rust 1.99.0 and previously recorded Windows host. Ignored domain probes exercise
+public subsystem APIs; only test fixture visibility changes in world-save tests.
+No dependencies or public signatures changed. Release runs are sequential, two
+per domain, no concurrent agent-launched builds/checks during timing acquisition.
+Every config has two excluded cycles plus 20 timed individual calls per operation.
+Percentiles are nearest-rank per run; with 20 samples p99 equals max. Disk cache,
+CPU clocks, antivirus/background activity and power conditions are uncontrolled;
+these are warm repeated-file measurements, not physical-disk cold throughput.
+
+```console
+cargo test -p gridthorn_assets --release --locked measure_asset_reload_io_and_publication -- --ignored --nocapture --test-threads=1
+cargo test -p gridthorn_scene --release --locked measure_scene_persistence_scaling -- --ignored --nocapture --test-threads=1
+cargo test -p gridthorn_app --release --locked measure_world_save_io_scaling -- --ignored --nocapture --test-threads=1
+```
+
+### Reload propagation and publication
+
+Raw fixtures: 16/128/1024 files of 4096 bytes and 128 files of 65536 bytes.
+Texture fixture: sixteen 256x256 P6 PPM images (196623 encoded bytes/image,
+262144 decoded RGBA bytes/image). All configurations have a reverse-lexical chain:
+asset-0000 depends on asset-0001, continuing to the last leaf. Each initially
+unchanged scan is followed by a phase alternating edits to that leaf. Both a
+synchronous store and independent background worker scan the same files. File
+creation/editing, initial registration/dependency validation, correctness checks
+and printing are outside timed spans. Synchronous scan includes reads, byte
+comparison, propagation, ordering, decoding, preparation and commit. Frame request
+is timed separately; request-to-poll includes worker scheduling, scan, a 1 ms sleep
+between empty polls and publication. It is not an isolated worker CPU duration.
+Ready poll times only the call that returns Some; empty_poll_max is the largest
+empty call during that request. Scan results must exactly match reversed IDs;
+source snapshots are checked after publication and old bytes remain immutable.
+
+The old algorithm repeatedly scanned the complete graph for propagation and
+selected each ready node by scanning the remaining set. Changed reverse chains
+incurred quadratic traversal work. Reload now builds borrowed reverse adjacency,
+visits dependents once and uses dependency counts plus an ordered ready set.
+The lexicographically smallest currently ready ID is selected after every removal,
+including newly ready IDs. Unchanged scans return after all file reads/comparisons.
+Reads, decode/prepare and atomic commit/rollback semantics are preserved.
+
+| 1024 x 4096 raw, changed leaf | Before median ms | After median ms | Before p95 ms | After p95 ms |
+| --- | --- | --- | --- | --- |
+| Synchronous scan | 198.322–204.406 | 59.889–61.271 | 215.341–221.681 | 62.965–63.839 |
+| Request-to-poll | 202.850–207.470 | 61.470–62.526 | 214.257–219.019 | 63.103–67.600 |
+| Ready poll | 0.481–0.502 | 0.432–0.521 | 0.649–0.778 | 0.684–0.895 |
+
+After unchanged 1024-file scans: median 55.432–57.107 ms, p95 59.453–60.489 ms;
+before median 57.371–58.446 ms. Changed-chain preparation improves roughly 3.3x;
+publication is not claimed faster. Content polling still reads every registered
+file, so large synchronous scans remain unsuitable for frame polling. Worker
+round-trip latency is not a frame stall; completed snapshot destruction can be.
+
+| Changed fixture after fix | Scan p95 ms | Ready poll p95 ms |
+| --- | --- | --- |
+| 16 x 4096 raw | 1.108–1.193 | 0.004–0.005 |
+| 128 x 4096 raw | 8.364–9.017 | 0.046–0.060 |
+| 128 x 65536 raw | 26.373–26.448 | 0.916–1.231 |
+| 16 x 256x256 PPM | 25.936–26.962 | 0.767–1.141 |
+
+Shutdown after idle completion is recorded once per config, not as a percentile
+or active-I/O lifecycle benchmark. Graph regressions cover dynamically ready
+lexical priority, unchanged external prerequisites, diamond overlap, and a reversed
+1024-node chain; existing tests cover failed batch rollback/retry, retained texture
+identity, worker failure and frame-boundary publication. PNG, branching/large fanout,
+concurrent editing, active shutdown and cold filesystem cases remain open.
+
+### Scalar scene persistence
+
+100/1000/10000 scene-owned entities each have registered Health with one positive
+u64 scalar; one persistent entity must survive every replacement. Each cycle
+captures, encodes to TOML, parses, prepares independent domain values, then commits
+replacement. Parsed documents match capture; every loaded scalar is validated and
+persistent ownership preserved. Commit includes old-scene removal/new insertion.
+Document/source generation, equality checks, sorting/assertions and final local
+value destruction are outside timed spans. This service performs no filesystem I/O.
+
+| 10000 entities, 1348993-byte document | Median ms | p95 ms |
+| --- | --- | --- |
+| Capture | 5.498–5.944 | 7.010–7.120 |
+| TOML encode | 31.254–34.452 | 36.508–40.739 |
+| TOML parse | 49.238–50.337 | 54.353–56.965 |
+| Prepare | 3.656–4.117 | 5.018–6.576 |
+| Commit | 2.106–2.422 | 2.890–3.163 |
+
+At 1000 entities encode p95 2.645–3.253 ms and parse 5.067–5.728 ms.
+Large-scene TOML work exceeds a 16.67 ms frame-sized interval in this fixture;
+callers must coordinate explicit preparation/load boundaries. This does not imply
+an automatic asynchronous scene loader or a new format. No registry/ECS mutation
+optimization is justified by these samples; serializer/parser and allocation
+attribution remain open. Many registered types, nested game adapters, unregistered
+world populations and native loading stalls remain unmeasured.
+
+### Typed world saving
+
+Root Vec<u64> has 1024/16384/262144 increasing integers, one queued command, one
+named RNG stream and default fixed configuration. Existing test codec creates a
+comma-separated payload plus command suffix; encode includes per-number String
+allocation/join, decode parses numbers. Snapshot cloning and codec cost remain
+inside the engine save/load spans. Each cycle saves/loads in-memory, then saves
+through create-new sibling/write/sync/rename and loads the actual file. Canonical
+saves, exact file bytes and no leaked temporary files are checked outside timing.
+This measures the specified game codec, not a pure envelope serializer or arbitrary
+nested authoritative-world throughput. File loading is synchronous and warm.
+
+| 262144 values, 1724250-byte document | Median ms | p95 ms |
+| --- | --- | --- |
+| Save document | 18.260–18.935 | 21.310–23.482 |
+| Load document | 6.511–6.621 | 7.154–7.705 |
+| Save file | 22.127–22.841 | 23.648–24.399 |
+| Load file | 12.751–12.888 | 14.145–14.354 |
+
+No claim that save/load fits a live frame. Keep the existing explicit between-tick
+contract; durability is not traded for a faster save. Game-codec and snapshot-clone
+attribution, complex roots/queues/RNG registries, error-path latency, files near the
+16 MiB limit and network/cold storage remain open. No production save/scene change
+is justified before attributing costs to envelope versus game codec/library/I/O.
+
+### Separate process-resident memory observations
+
+Windows PowerShell launches each compiled release test executable directly in a
+fresh process with its one ignored probe filter, --ignored --nocapture
+--test-threads=1 and GRIDTHORN_IO_MEMORY=1. Start-Process uses hidden windows and
+separate stdout/stderr files. Every 50 ms the monitor refreshes Process and records
+the maximum PeakWorkingSet64 until exit. The flag adds a 500 ms hold after all
+configs/cleanup to permit the final cumulative peak read; it does not alter timed
+operations. Exit codes are checked and the flag restored. These extra runs are
+excluded from latency statistics because monitoring can perturb scheduling.
+
+| Entire probe matrix in one fresh process | Peak working set bytes | MiB |
+| --- | --- | --- |
+| Assets before graph fix | 39731200 | 37.89 |
+| Assets after graph fix | 40169472 | 38.31 |
+| Scalar scenes | 95457280 | 91.04 |
+| World saves | 29720576 | 28.34 |
+
+This is cumulative process-resident memory across setup/all configs/validation,
+including binary/runtime pages and allocator retention. It is not Rust heap,
+allocation count, phase-by-phase peaks, a cold idle-subtracted budget, system file
+cache or a cross-domain comparison on equivalent workloads. Only one memory run
+per row; no memory reduction is claimed. Actual peak-byte ownership/retention and
+allocator instrumentation remain open.
+
+Logs: target/asset-io-<1|2>.log (before), asset-io-after-<1|2>.log,
+scene-io-<1|2>.log, world-save-io-<1|2>.log; summaries
+io-review-summary.csv and asset-io-before-after-summary.csv. Memory logs:
+asset-memory-before.stdout/stderr.log and gridthorn_<assets|scene|app>-memory.stdout/stderr.log;
+records asset-memory-before.csv and io-process-memory.csv. Manual probes remain
+ignored by default; no CI timing thresholds or platform-wide budgets are promised.
+Verification and public asset-reload smoke outcome are recorded in the checkpoint.
+
+Full ./scripts/verify.ps1 passed with the previously documented process-local
+shared target/sequential tests; settings restored (target/io-review-verify.log).
+Public sibling asset-reload --smoke passed dependency publication, rollback after
+intentional malformed image, recovery and shutdown (target/io-review-asset-smoke.log).
+No displayed-frame or cross-platform performance acceptance is implied.

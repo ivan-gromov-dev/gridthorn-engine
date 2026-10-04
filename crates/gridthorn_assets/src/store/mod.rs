@@ -1,3 +1,4 @@
+mod dependency_graph;
 mod errors;
 mod identity;
 mod storage;

@@ -125,22 +125,15 @@ impl AssetStore {
             }
             snapshots.insert(id.clone(), bytes);
         }
-        loop {
-            let previous_len = affected.len();
-            for (id, entry) in &self.entries {
-                if entry
-                    .dependencies
-                    .iter()
-                    .any(|dependency| affected.contains(dependency))
-                {
-                    affected.insert(id.clone());
-                }
-            }
-            if previous_len == affected.len() {
-                break;
-            }
+        if affected.is_empty() {
+            return Ok(Vec::new());
         }
-        let order = self.dependency_order(affected);
+        let order = super::dependency_graph::DependencyGraph::new(
+            self.entries
+                .iter()
+                .map(|(id, entry)| (id, &entry.dependencies)),
+        )
+        .reload_order(affected);
         let mut prepared = BTreeMap::new();
         for id in &order {
             let bytes = &snapshots[id];
@@ -217,23 +210,5 @@ impl AssetStore {
             }
         }
         false
-    }
-
-    fn dependency_order(&self, mut pending: BTreeSet<AssetId>) -> Vec<AssetId> {
-        let mut ordered = Vec::with_capacity(pending.len());
-        while let Some(id) = pending
-            .iter()
-            .find(|id| {
-                self.entries[*id]
-                    .dependencies
-                    .iter()
-                    .all(|dependency| !pending.contains(dependency))
-            })
-            .cloned()
-        {
-            pending.remove(&id);
-            ordered.push(id);
-        }
-        ordered
     }
 }

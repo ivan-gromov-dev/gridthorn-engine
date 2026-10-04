@@ -1281,3 +1281,39 @@ target and sequential tests, overrides restored. Includes format/check/Clippy,
 all workspace unit/doc tests, offline generated-project CLI check/native smoke,
 dependency boundaries and whitespace. Full log target/raster-spans-verify.log.
 All benchmark acquisition preceded checks. No staging/commits; examples unedited.
+
+## 2026-10-04 I/O and graph optimization checkpoint
+
+Engine baseline 545c6ad61a3a3d8ba5b9148674ada3fecbd7ae18, initially clean after
+maintainer committed raster changes. Added ignored probes to assets/reload/test,
+scene/persistence/test and app/scenario/saving/test. Existing save-file Directory
+fixture is shared only within its test subtree. Focused store/dependency_graph.rs
+owns borrowed reverse adjacency, propagation and Kahn ordering with an ordered
+ready set. Removed repeated propagation/pending scans from storage.rs. No
+crate/dependency edges, public signatures or serialization semantics changed.
+
+Two isolated before runs/domain passed, two after asset runs passed. Reverse-chain
+1024-file changed scan median ~198–204 ms -> ~60–61 ms; unchanged scans still ~55–57
+ms after, ready poll unchanged at sub-ms typical. Asset tests 25 passed/1 ignored,
+including new chain/diamond/dynamic lexical readiness tests and existing rollback.
+Separate fresh-process memory runs (50 ms PeakWorkingSet64 monitor, 500 ms hold
+with GRIDTHORN_IO_MEMORY=1, env restored) all passed: asset before39,731,200 bytes,
+after40,169,472; scenes95,457,280; saves29,720,576. Not heap/phase/allocator budgets;
+monitor runs excluded from latency data. Full protocol/tables/limits in review.
+
+Scene 10K TOML and 262K-value codec saves exceed frame-sized durations; attribution
+open, no unrelated format/async subsystem changes. Docs/README/roadmap/changelog
+updated together. Logs and CSVs under target/asset-io-*, scene-io-*, world-save-io-*,
+io-review-summary.csv, asset-io-before-after-summary.csv, *-memory.* and
+io-process-memory.csv. Public asset-reload --smoke and full verify follow below.
+Next domain: audio command/worker and platform lifecycle, retaining explicit
+cold/branching/phase-memory/codec and prior text/runtime follow-ups. No staging or
+commits; sibling examples are exercised but not edited.
+
+Final verification passed: full ./scripts/verify.ps1 with process-local shared
+engine target and sequential tests, overrides restored (target/io-review-verify.log).
+Includes formatting/workspace check/Clippy, all workspace unit/doc tests, generated
+project CLI/native smoke, dependency boundaries and whitespace. Public sibling
+asset-reload --smoke passed: publication, dependencies, intentional decode rollback,
+recovery and shutdown (target/io-review-asset-smoke.log). No native scene/save/frame
+budget or cross-platform claim inferred. Final documentation whitespace check passed.

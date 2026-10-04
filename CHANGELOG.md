@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Asset reload replaces repeated graph scans with reverse-edge propagation and
+  an ordered dependency-count queue, preserving deterministic dependency-first
+  publication and failed-batch rollback.
+
 - Large text raster requests reuse bounded glyph spans within one call, preserving
   font selection, ordered pixels, tint and DPI; short requests retain direct sampling.
 

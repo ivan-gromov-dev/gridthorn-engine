@@ -75,3 +75,4 @@ fn finish(reloader: &mut AssetReloader) -> Result<Vec<AssetId>, AssetReloadError
         std::thread::sleep(Duration::from_millis(1));
     }
 }
+mod scaling;

@@ -4,3 +4,4 @@ mod migration;
 mod roundtrip;
 
 use fixture::{Health, registry, scene};
+mod scaling;

@@ -360,6 +360,8 @@ record implemented and verified increments; measurements and limitations are in
 - [ ] Review assets/reload, scenes/saves, audio and platform lifecycle for I/O,
       memory peaks, worker/publication costs and frame stalls.
   - [ ] Measure asset reload, scene/world-save I/O, publication and memory peaks.
+    - [x] Measure warm Windows reload/scalar-scene/typed-save scaling and separate process-resident peaks; optimize reverse-chain invalidation/order and repeat affected samples.
+    - [ ] Complete cold/branching/error-path workloads, phase/heap peak attribution and codec/serializer attribution before declaring domain limits.
   - [ ] Measure audio command/worker costs and platform suspend/resume/shutdown.
   - [ ] Record each domain's disposition and remeasure any fixes.
 - [ ] Review fixed simulation, grids, pathfinding/placement, collision and
