@@ -141,3 +141,17 @@ initialization. Windows execution is validated; Linux/macOS and native rendering
 of localized messages have not been exercised by this increment.
 
 The provisional format/ownership decision is [ADR 0005](adr/0005-localization-catalogs.md).
+
+## Localization performance disposition
+
+The Milestone 4.5 [domain review](PERFORMANCE_REVIEW.md#runtime-world-input-localization-domain-review-2026-10-04)
+records repeated Windows release measurements for four locales, warm formatting
+and simple/complex catalogs through 4096 messages. Complex source validation and
+cyclic-candidate rejection can exceed a 16.67 ms frame; keep candidate validation
+away from latency-sensitive polling as required above. Preparing/replacing a
+validated bundle is cheaper but still consumes presentation time. The review
+preserves the implementation and its bounded explicit-publication policy. These
+measurements do not guarantee a frame budget for arbitrary message graphs,
+simultaneous multi-locale replacement or caller-retained catalogs/output. Wider
+reference fanout, heap peaks, worker handoff and cross-platform timings remain
+explicit follow-ups; no automatic localization worker is introduced.

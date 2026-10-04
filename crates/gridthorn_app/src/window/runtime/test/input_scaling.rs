@@ -97,3 +97,89 @@ fn event(kind: &str, index: usize) -> InputEvent {
         _ => unreachable!("probe kind is fixed by the test"),
     }
 }
+
+/// Phase attribution excludes fixture generation, assertions and CSV output.
+#[test]
+#[ignore = "manual input phase probe; run alone in release mode"]
+fn measure_input_burst_phases() {
+    assert!(!black_box(cfg!(debug_assertions)), "run with --release");
+    assert_eq!(std::env::var_os("GRIDTHORN_RUNTIME_PERFORMANCE"), None);
+    println!("input_phase,kind,events,operation,sample,elapsed_ns");
+    for kind in ["pointer", "keyboard", "commit", "composition", "mixed"] {
+        for count in [1024, 16_384, 65_536] {
+            let events = (0..count)
+                .map(|index| phase_event(kind, index))
+                .collect::<Vec<_>>();
+            let payload_bytes = events.iter().map(payload_bytes).sum::<usize>();
+            println!(
+                "input_storage,{kind},{count},{payload_bytes},{}",
+                std::mem::size_of::<InputEvent>()
+            );
+            let mut input = gridthorn_input::InputBuffer::new();
+            let mut runtime = ApplicationRuntime::new(ScheduleBuilder::new().build());
+            runtime.startup().unwrap();
+            for sample in 0..51 {
+                let start = Instant::now();
+                let owned = events.clone();
+                let clone = start.elapsed().as_nanos();
+                let start = Instant::now();
+                for event in owned {
+                    input.push(black_box(event));
+                }
+                let ingest = start.elapsed().as_nanos();
+                let start = Instant::now();
+                let state = input.snapshot();
+                let snapshot = start.elapsed().as_nanos();
+                assert_eq!(state.events(), events);
+                let start = Instant::now();
+                runtime.world().insert_resource(state);
+                let publish = start.elapsed().as_nanos();
+                let start = Instant::now();
+                runtime.run_timed_frame(Duration::ZERO).unwrap();
+                let dispatch = start.elapsed().as_nanos();
+                for (operation, elapsed) in [
+                    ("fixture_clone", clone),
+                    ("ingest", ingest),
+                    ("snapshot", snapshot),
+                    ("publish_drop_previous", publish),
+                    ("dispatch", dispatch),
+                ] {
+                    println!("input_phase,{kind},{count},{operation},{sample},{elapsed}");
+                }
+            }
+            assert_eq!(input.snapshot().events(), []);
+            runtime.shutdown();
+        }
+    }
+}
+
+fn phase_event(kind: &str, index: usize) -> InputEvent {
+    match kind {
+        "mixed" => phase_event(
+            ["pointer", "keyboard", "commit", "composition"][index % 4],
+            index,
+        ),
+        "composition" => {
+            let text = format!("preedit-{index} 日本語 e\u{301}");
+            let end = text.len();
+            InputEvent::Text(TextInputEvent::Composition {
+                text,
+                cursor: Some((0, end)),
+            })
+        }
+        _ => event(kind, index),
+    }
+}
+
+fn payload_bytes(event: &InputEvent) -> usize {
+    match event {
+        InputEvent::Text(
+            TextInputEvent::Commit(text) | TextInputEvent::Composition { text, .. },
+        )
+        | InputEvent::Key(KeyboardEvent {
+            logical_key: LogicalKey::Character(text),
+            ..
+        }) => text.len(),
+        _ => 0,
+    }
+}

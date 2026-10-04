@@ -2246,3 +2246,61 @@ updated documents. verify.ps1 -DocsOnly rejects the pre-existing CPU diagnostic
 code/manifest changes in this working tree; their fullverify2 already passed
 before this prose-only disposition update. No code or executable snippets were
 changed in the closure increment.
+
+## 2026-10-04 Runtime/world/input/localization closure increment
+
+Scope: complete only the runtime/world/input/localization domain gate. Starting
+engine revision e2d81302d44e8cfb18faa8dc169704cffac8e4ec; engine worktree clean.
+No sibling changes planned. Existing native acceptance remains accepted with its
+recorded limitations. Added structural mixed-component/scene-partition and input
+phase workloads; first baseline compile rejected two incorrect runtime method
+calls, corrected to run_timed_frame and shutdown. Baseline acquisition in progress.
+Next: repeat release baselines, assess snapshot/ingestion copies, apply only
+measured fixes, remeasure, record four domain dispositions and full verification.
+
+Domain closure result: structural mixed-component workload and regular stale-ID/
+continuation regression added under world/test; input phase workload extends the
+runtime input-domain probe through65536 events, including preedit/mixed streams.
+InputBuffer now borrows event state before queueing ownership and transfers the
+queue into snapshots, reserving only the preceding event count for the replacement.
+Required preedit/held-state clones and focus-cancellation event order remain.
+A4096-event snapshot lifetime/focus regression passes. No new dependency/API.
+
+Two before and two final release input-phase/full-publication runs pass; a
+queue-transfer-only trial increased pointer ingestion, so the final reserved
+replacement was selected and remeasured. Final16384-event whole-path mean ranges:
+pointer392.31–439.46us, keyboard1578.39–1751.90us, commits1373.64–1503.17us;
+before555.90–567.85/3168.39–3378.86/3352.08–3687.07us respectively.
+Two final structural-world, empty-runtime, warm-localization and complex-catalog
+runs also pass. Four domain dispositions and measured limits are in
+PERFORMANCE_REVIEW's Runtime world input localization domain review subsection.
+ROADMAP closes only this domain gate; all other milestone gates remain unchanged.
+
+Engine focused world/input tests and scoped Clippy pass. Fullverify attempt1
+caught duplicate payload match arms; fixed. Attempt2 passed formatting, check,
+Clippy, every workspace test, CLI end-to-end and dependency boundaries, but its
+final whitespace check rejected a trailing ROADMAP blank line introduced during
+prose editing. Removed that blank line; final fullverify pending. Complete failure
+diagnostics remain in target/runtime-domain-full-verify{,-2}.log.
+
+Sibling build against final input implementation passes. Executable --headless,
+--editing-smoke --locale=ja and --preedit-smoke --locale=ja all exit0. Native window
+reports1000x800 physical pixels, scale1,120frames; injected smoke does not replace
+accepted manual OSIME/clipboard testing or measure native event latency. No
+sibling source/manifest/lockfile changes were made; its initial Cargo.toml/lock,
+README/classic_2d changes and untracked multilingual-workbench remain preserved.
+Build/smoke logs: target/runtime-domain-workbench-build.log,
+target/runtime-domain-workbench-headless.log and runtime-domain-native-{editing,preedit}.log.
+Next: obtain final fullverify pass, then hand off this completed domain gate.
+
+Final verification complete: ./scripts/verify.ps1 exit0 with jobs2/testthreads1,
+including formatting, workspace check, all-target Clippy, all workspace tests,
+CLI generated-project end-to-end, dependency boundaries and whitespace
+(target/runtime-domain-full-verify-3.log). Affected sibling workbench tests:
+14passed,6manual probes ignored,0failed (target/runtime-domain-workbench-tests.log).
+The16required release workload logs were checked for successful test completion.
+Final scoped formatting/whitespace checks pass. Later changes are prose only:
+README/Immediate target now point at the remaining domain gates rather than the
+accepted native gate. No source staging/commits or sibling edits. This requested
+runtime/world/input/localization review is complete within its documented envelopes.
+The next roadmap domain is assets/reload, scenes/saves, audio/platform lifecycle.

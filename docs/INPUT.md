@@ -189,3 +189,17 @@ runs passed after the fix; native GPU capture smoke, textured-sprite smoke and
 window resize/minimize/restore smoke also passed. The backend's internal reason
 for raising the native exception is not established; the engine no longer creates
 the unused swapchains that triggered the reproduced failure.
+
+## Input burst performance envelope
+
+The Milestone 4.5 [domain review](PERFORMANCE_REVIEW.md#runtime-world-input-localization-domain-review-2026-10-04)
+measures ordered synthetic bursts through 65536 events and runtime publication
+through 16384 events on the recorded Windows release host. InputBuffer queues
+owned events without a full event clone and transfers the event queue into each
+snapshot; held/preedit state remains independent. A replacement queue reserves
+space for the preceding frame's event count. Empty frames do not retain a historical
+queue-capacity high-water mark. Snapshots and their clones remain caller-owned;
+retaining them can grow application memory. No event truncation or coalescing is
+introduced. Larger sustained queues, heap peaks, many distinct held keys and native
+OS/clipboard delivery latency remain unmeasured. The recorded synthetic bursts
+supersede earlier blanket burst-performance deferrals only within this envelope.

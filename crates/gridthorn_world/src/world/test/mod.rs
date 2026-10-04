@@ -61,3 +61,4 @@ fn removes_only_the_requested_resource_and_returns_ownership() {
     assert_eq!(world.read_resource(|number: &u64| *number), Some(7));
 }
 mod scaling;
+mod structural_scaling;

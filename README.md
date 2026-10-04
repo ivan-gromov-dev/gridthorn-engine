@@ -109,6 +109,10 @@ Renderer textures now reuse decoded asset identities across frames and batches;
 unchanged textured frames retain their GPU vertex buffers. Texture resources
 absent from the next rendered frame are evicted. Native resource/upload and
 PresentMon display measurements are recorded in the performance review.
+The runtime/world/input/localization domain review is complete within its recorded
+Windows workloads. Input snapshots transfer owned event queues instead of copying
+every event and payload; repeated mixed-component churn, large input bursts,
+runtime dispatch and localization measurements document costs and remaining limits.
 Plain-tree routing now reuses
 immutable input layout scopes. UI node reads/commands use indexed child paths,
 with measured construction and retention tradeoffs in the review.
@@ -140,9 +144,9 @@ warm reload, scene and world-save measurements are recorded in the same review.
   deterministic continuation limits in the same review.
   Release build timings, dependency closures and CLI/generated-game/example
   executable sizes are recorded with explicit cold-cache and packaging limits.
-Milestone 4 remains open until this performance gate and
-native language/IME acceptance finish, followed by Milestone 5 desktop
-platform/device controls. The debugging workflow and
+Milestone 4 remains open until the remaining Milestone 4.5 domain gates and
+completion review close; native workbench and language/IME acceptance are recorded.
+Milestone 5 follows with desktop platform/device controls. The debugging workflow and
 editor move to Milestones 6 and 7. Desktop input, Unicode/IME/clipboard and
 multilingual font rendering and [runtime localization](docs/LOCALIZATION.md) are
 implemented provisionally. [UI composition and controls](docs/UI.md) are implemented

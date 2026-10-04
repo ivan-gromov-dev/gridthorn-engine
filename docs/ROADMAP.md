@@ -357,7 +357,7 @@ record implemented and verified increments; measurements and limitations are in
         retain the existing presentation policy after an inconclusive queue-depth
         experiment. Native DPI 2 and complete interaction acceptance remain in
         the baseline, workload and final acceptance gates above/below.
-- [ ] Review runtime/world/input/localization overhead and scaling with increasing
+- [x] Review runtime/world/input/localization overhead and scaling with increasing
       entity/control/event counts; record measurements and each domain's disposition.
   - [x] Add bounded runtime schedule diagnostics and record repeated native Japanese
         idle/editing samples with explicit wall-clock and phase-index limits.
@@ -403,8 +403,8 @@ record implemented and verified increments; measurements and limitations are in
     - [x] Attribute long Japanese fallback shaping, raster output/span/image storage,
           long-field editing and expanded font layout/routing; fix duplicate work,
           verify output/lifetimes and record measured limits.
-    - [ ] Measure broader mixed ECS/component churn and attribute larger input bursts.
-  - [ ] Record runtime, world, input and localization dispositions and remeasure fixes.
+    - [x] Measure broader mixed ECS/component churn and attribute larger input bursts.
+  - [x] Record runtime, world, input and localization dispositions and remeasure fixes.
 - [ ] Review assets/reload, scenes/saves, audio and platform lifecycle for I/O,
       memory peaks, worker/publication costs and frame stalls.
   - [ ] Measure asset reload, scene/world-save I/O, publication and memory peaks.
@@ -627,10 +627,13 @@ implemented provisionally with ordered layers, modal scopes, focus restoration
 and configurable dismissal. Presentation transitions are implemented provisionally.
 The integrated sibling multilingual-workbench example combines localization, editing,
 controls and nested windows; native interactive IME behavior has maintainer manual acceptance.
-The immediate target is now Milestone 4.5: establish performance baselines and
-profile the native workbench, then review all implemented domains in the order
-documented above. Milestone 4 remains open until the performance gate and its
-native language/IME acceptance are satisfied; see [PERFORMANCE_REVIEW.md](PERFORMANCE_REVIEW.md).
+The immediate target remains Milestone 4.5. Native workbench acceptance, text/UI,
+rendering and runtime/world/input/localization reviews are complete within their
+recorded limits. Next are the remaining assets/reload, scenes/saves, audio and
+platform lifecycle workloads and dispositions, followed by the other domain gates
+in the order above. Milestone 4 remains open until the full performance review
+closes; native language/IME acceptance is already recorded. See
+[PERFORMANCE_REVIEW.md](PERFORMANCE_REVIEW.md).
 Milestone 5 adds desktop platform/device controls. Professional debugging and
 the editor are deferred to Milestones 6 and 7 respectively.
 Milestone 2 is complete for the supported subsets documented in the

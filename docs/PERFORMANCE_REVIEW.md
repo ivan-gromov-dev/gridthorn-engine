@@ -3527,3 +3527,191 @@ target/render-long-* and target/render-long-summary.csv. Quantile evidence also
 contains sample counts, medians and maxima; no run was discarded for a slow result.
 
 Final validation: full ./scripts/verify.ps1 passed (target/render-review-final-verify-4.log), including all tests and dependency boundaries. Affected example tests and all-target Clippy passed; three headless/native smokes and the final long animation smoke passed. Both GPU resource probes passed. See the checkpoint for scoped execution settings, retained failed diagnostics and compiler-cache disk recovery. Final formatting/whitespace checks passed; no dependency changes or commits.
+
+## Runtime world input localization domain review (2026-10-04)
+
+This disposition closes the Milestone 4.5 runtime/world/input/localization gate
+for the workloads below and supersedes earlier statements that these four domain
+reviews remain open. It does not close the milestone or its other domain gates.
+The existing UI/text review and native workbench acceptance remain separate.
+
+Engine starting revision: e2d81302d44e8cfb18faa8dc169704cffac8e4ec. Sibling
+revision: c89adb9a5317007b3469782c1c8da9d8b4b1b04a, with pre-existing example
+changes preserved. Rust 1.99.0 (b940084d7, 2026-09-28), x86_64-pc-windows-msvc,
+Windows reference host recorded above, release profile, runtime diagnostics unset.
+Balanced power scheme was read again; CPU metadata access was denied in the sandbox,
+so the earlier Ryzen 5 5600X inventory is retained, not presented as a new reading.
+Live clock/background load remain uncontrolled. Acquisitions were sequential with
+no concurrent agent-launched builds/tests. All slow samples remain in the evidence.
+These are warm-process CPU workloads, not native device latency or frame timings.
+
+### Broader mixed components and scene churn
+
+The new `measure_structural_world_churn` workload uses 1000/10000/100000 persistent
+entities and 1/16/64 scene-owner partitions. Each partition initially holds
+floor(count/10/partitions) entities. Domain components are Position(u64),
+Velocity(u64) and Inventory([u64;8]); initial entities have Position plus either
+Velocity or Inventory. Every cycle inserts/replaces Velocity on every persistent
+entity and Inventory on every even-indexed entity, then traverses all three types.
+Random access updates Position and reads Velocity in the permutation
+(index*7919)%count. Each cycle removes and repopulates one scene partition.
+Repopulation includes entity creation, scene-ID cloning, component insertion and
+archetype transitions through public WorldAccess methods.
+
+Two release runs record 51 individual cycles/configuration. Cycle 0 records the
+first structural additions and initial cache/backend work separately; the table
+uses the following 50 cycles. There is no timing threshold in CI. Population,
+scene enumeration and correctness checks/output are outside each interval;
+insertion/access success checks and spawn's returned-ID vector are included.
+The regular small-fixture regression checks exact Position/Velocity continuation,
+persistent survival, removed-ID rejection after slot reuse and final removal
+counts. There is no public component-removal or general despawn API: this review
+uses implemented scene deletion rather than backend-only access or a new API.
+
+| Persistent entities | Insert/replace p95 us | Three traversals p95 us | Random access p95 us | Partition removal p95 us | Partition spawn p95 us |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1000 | 46.9–74.4 | 8.6–14.5 | 18.1–28.4 | 4.1–30.6 | 1.1–14.3 |
+| 10000 | 456.0–734.0 | 41.8–72.9 | 286.3–397.4 | 10.1–201.6 | 3.0–182.7 |
+| 100000 | 4432.2–5498.1 | 527.3–840.5 | 4122.0–6849.0 | 114.1–2033.9 | 27.6–1483.7 |
+
+Ranges span partitions and runs, not pooled percentiles. At 100000 entities,
+removing the sole 10000-entity scene has p95 1981.8–2033.9 us; removing one of
+64 partitions (156 entities each) has p95 114.1–225.4 us. Removal queries all
+scene owners before collecting/despawning matching entities; it is not constant
+cost per removed entity. Largest warmed random-access call is 9858.9 us.
+Structural addition cycle 0 remains in the raw logs rather than being called a
+warm replacement. No backend/query caching or scene index is justified by these
+bounded results. Game code should use traversal for bulk work and budget structural
+changes and scene replacement explicitly; independent phase p95 values cannot be
+summed into a measured full-frame p95.
+
+### Large input bursts and removal of queue copies
+
+`measure_input_burst_phases` separates fixture cloning, InputBuffer ingestion,
+snapshot, runtime resource publication/destruction of the preceding snapshot,
+and empty timed-runtime dispatch. It uses 1024/16384/65536 events for pointer,
+keyboard, Unicode commit, changing preedit and a round-robin mixture. Templates
+are constructed before timing. Two runs/configuration contain one warmup plus
+50 individual samples; complete order/content equality is checked outside timing.
+Keyboard state alternates presses/releases of KeyD. Preedit cursor endpoints are
+valid UTF-8 boundaries. A separate regular regression retains old snapshots across
+4096 mixed events, an empty held-state frame and focus/preedit cancellation.
+
+At 65536 events, InputEvent occupies 64 bytes on this target (4194304 bytes for
+initialized queue elements). String payloads are 0/65536/3396762/1758362/1305166
+bytes for pointer/keyboard/commit/preedit/mixed respectively. These are measured
+fixture lengths and type sizes, not allocator totals, capacities or heap peaks.
+The prior push cloned every event, and snapshot cloned the complete event vector
+and payloads before clearing/dropping the original queue. Both copies are removed:
+push inspects the borrowed event and queues the owned value; snapshot transfers
+the queue, independently clones held/preedit state and clears edges. FocusLost is
+queued before its generated CompositionCancelled, preserving observable ordering.
+
+An intermediate queue-transfer version lost reusable capacity and increased
+pointer-ingestion work. The final version reserves one replacement queue sized to
+the preceding event count before transferring ownership. It retains no historical
+high-water mark after an empty frame. This still allocates a replacement vector;
+retained old snapshots still own their events and can consume caller-controlled
+memory. Preedit and held-state ownership still require independent cloning. No
+coalescing, truncation, event limit or public API change is introduced.
+
+| 65536 events, phase | Before p95 us | Final p95 us |
+| --- | ---: | ---: |
+| Pointer snapshot | 1229.0–1413.2 | 21.2–23.9 |
+| Keyboard snapshot | 5041.2–5564.9 | 28.4–32.4 |
+| Unicode commit snapshot | 9410.5–11940.8 | 20.3–23.7 |
+| Preedit snapshot | 7172.6–7208.9 | 27.5–34.0 |
+| Mixed snapshot | 5050.4–9180.3 | 18.6–23.1 |
+| Unicode commit ingestion | 5223.3–5228.1 | 1431.3–1435.1 |
+| Keyboard ingestion | 7296.3–7956.8 | 4017.9–4372.9 |
+| Preedit ingestion | 4734.0–4997.5 | 5093.1–5283.8 |
+
+Preedit ingestion alone did not improve; its required current-preedit cloning and
+replacement remain. Final publication/drop p95 for 65536 commit events is
+3096.9–3308.0 us, and fixture cloning remains substantial. The fix eliminates
+specific engine queue copies, not all input allocation or application work.
+
+The existing complete runtime-bridge workload was also run twice before and twice
+after. It includes per-event fixture cloning, lifecycle ingestion, snapshot,
+InputState replacement/destruction and zero-tick dispatch; 32 batches of eight
+frames follow eight warmup frames. Values below are mean us/frame across the
+256 measured frames per run, not individual-frame percentiles.
+
+| 16384 events/frame | Before mean us/frame | Final mean us/frame |
+| --- | ---: | ---: |
+| Pointer | 555.90–567.85 | 392.31–439.46 |
+| Keyboard | 3168.39–3378.86 | 1578.39–1751.90 |
+| Unicode commit | 3352.08–3687.07 | 1373.64–1503.17 |
+
+The 32-event final means are 3.19–3.79 us pointer, 5.84–7.92 us keyboard and
+3.96–7.14 us commit. Noise prevents a uniform small-burst speedup claim.
+Large synthetic bursts are attributed and remeasured; no native OS delivery,
+clipboard, per-device key-cardinality or UI-consumption latency is inferred.
+
+### Runtime and localization confirmation
+
+Repeated empty-runtime workloads retain 0/1/32 no-op systems per stage and
+0/1/8 fixed ticks. Each run uses 100 batches of 1000 frames after a warm batch.
+Zero-system zero-tick means are 2.38–2.60 us/frame; 32 systems/stage with eight
+ticks has means 6.92–7.74 us/frame and p95 batch means 7.43–10.06 us.
+Fixed-step counts are checked. No schedule/runtime optimization is justified;
+no-op dispatch does not predict real system execution time.
+
+Localization's existing warm four-locale workloads and fresh-service complex
+publication workloads were each repeated twice. At 4096 messages, p95 batch-mean
+formatting spans 0.13–0.25 us fallback, 0.49–0.63 us interpolation,
+1.06–1.67 us NUMBER messages and 0.88–1.81 us plural/number messages.
+Complex publication uses 20 individual fresh-service calls/configuration, with
+15-reference chains, nested selectors/numbers and cyclic-candidate rejection.
+Across four locales and both runs at 4096 messages, p95 source validation is
+23.27–37.47 ms, candidate validation 24.32–34.63 ms, rejection 23.64–36.78 ms,
+construction 0.56–1.16 ms, first format 57.1–102.7 us and replacement 1.61–2.35 ms.
+The existing atomic-publication/old-output/error checks pass. Large complex source
+validation exceeds a 16.67 ms frame and must remain off latency-sensitive polling;
+publication itself also consumes shared presentation time. Existing bounded source,
+message/expression/reference limits and explicit publication policy remain suitable.
+No new localization optimization or automatic worker is justified by these samples.
+
+### Four domain dispositions and limits
+
+| Domain | Disposition | Supported review envelope and follow-up |
+| --- | --- | --- |
+| Runtime | Measured; preserve implementation | Empty dispatch through 32 systems/stage and eight ticks, plus prior populated/native extraction evidence. Real game systems, parallel scheduling and cross-platform timings need their own workload. |
+| World/ECS | Measured; preserve implementation | Public mixed insertion/replacement, traversal, random access and scene create/delete through 100000 persistent entities plus about 10% scene entities and 64 partitions. Larger worlds, wide/heap-owning components, arbitrary component removal, allocator peaks and additional ownership/query patterns are unmeasured. |
+| Input | Fixed and remeasured | Ordered bursts through 65536 events and full runtime publication through 16384 events. Queue copies removed; preedit/held state and caller-retained snapshots still cost memory. Native OS/clipboard latency, many distinct held keys, allocator peaks and larger sustained queues remain follow-ups. |
+| Localization | Measured; preserve implementation and off-polling validation | Four locales, warm formatting and simple/complex 4096-message publication/rejection. Multi-locale simultaneous replacement, wider reference fanout, heap peaks and worker handoff need separate evidence. |
+
+The comparison to the existing 16.67 ms frame reference is contextual, not a new
+promise that every maximum workload fits together in one frame. These domain
+limits are explicit evidence-based follow-ups, not unfinished structural-churn or
+input-copy attribution work. No dependency edge, release profile, authoritative
+ordering or public compatibility contract changes. Timing probes stay opt-in;
+regular CI checks semantics rather than unstable performance thresholds.
+
+Reproduction (run sequentially, twice, in release with runtime diagnostics unset):
+
+```powershell
+cargo test -p gridthorn_world --release --locked measure_structural_world_churn -- --ignored --nocapture --test-threads=1
+cargo test -p gridthorn_app --release --locked measure_input_burst_phases -- --ignored --nocapture --test-threads=1
+cargo test -p gridthorn_app --release --locked measure_input_publication_scaling -- --ignored --nocapture --test-threads=1
+cargo test -p gridthorn_app --release --locked measure_empty_runtime_and_schedule_dispatch -- --ignored --nocapture --test-threads=1
+cargo test -p gridthorn_localization --release --locked measure_localization_catalog_and_formatting_scaling -- --ignored --nocapture --test-threads=1
+cargo test -p gridthorn_localization --release --locked measure_complex_localization_publication -- --ignored --nocapture --test-threads=1
+```
+
+Raw evidence: target/input-phase-{before,final}-{1,2}.log,
+target/input-total-{before,final}-{1,2}.log, target/structural-world-final-{1,2}.log,
+target/runtime-closure-{1,2}.log, target/localization-{warm,complex}-closure-{1,2}.log.
+Intermediate queue-transfer/reservation experiments remain in input-*-after-* and
+input-*-reserved-* logs. Summary CSVs retain per-run median/p95/max or batch-mean
+statistics; nearest-rank p99 of 50 or 20 individual samples equals the maximum.
+Correctness/verification and native smoke results are recorded in the checkpoint.
+
+Final validation for this domain closure: full ./scripts/verify.ps1 passed
+(target/runtime-domain-full-verify-3.log), including all workspace tests, CLI
+end-to-end, all-target Clippy and dependency boundaries. The affected sibling
+workbench passes 14 regular tests, release build, headless validation and native
+Japanese editing/preedit smokes. The latter use injected events at native DPI 1;
+no new manual OS IME/clipboard or native-latency claim is made. Earlier failed
+verification attempts and the corrected style/whitespace diagnostics remain in
+the checkpoint. Final formatting and diff whitespace checks pass.

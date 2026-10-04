@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Input buffers queue owned events and transfer their ordered queue into independent
+  frame snapshots, avoiding full queue/payload copies. Replacement queues reserve
+  the preceding frame's event count; held state, preedit and focus cancellation
+  retain their existing semantics. Release burst measurements and domain regressions
+  cover the change.
 - Opt-in native window diagnostics now retain whole-process CPU accounting and
   wall intervals between completed redraws, including work on background threads.
   OS clock failures break pairing rather than merging frames; retention is bounded.
