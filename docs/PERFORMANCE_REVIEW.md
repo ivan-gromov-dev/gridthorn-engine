@@ -1361,3 +1361,72 @@ Maze/corridor topology, repeated agent queries, real occupancy costs, budget swe
 heap peaks, error paths and cross-platform measurements remain follow-ups. Fixed
 simulation, placement, collision and snapshots are still unreviewed in this domain
 increment. Public sibling pathfinding example passes and emits its SVG diagnostics.
+
+## Placement occupancy and collision scaling — 2026-10-04
+
+Baseline ef240d8756e640f72091a8f600c639cdde81dd92, engine initially clean. Placement
+probe covers1024/16384/65536 objects, horizontal footprints1/16 cells. Anchors
+are(index*32,0), so large case occupies1,048,576 cells. Population construction
+is excluded. Each batch times1024 occupied-cell lookups using index*61 modulo
+population;1024 free-row validations; and1024 object moves to row1 and back,
+2048 relocations total. Validate includes resolved-cell allocation/destruction;
+relocate includes footprint clone, validation, remove/commit and object-table work.
+Assertions outside timing verify object count and moved/released anchor cells;
+existing domain tests cover all footprint cells, conflicts, overflow precedence,
+atomic rollback, overlapping moves, sorted objects and deterministic errors.
+
+Two isolated before and after runs per placement fixture passed,2 excluded
+iterations plus20 retained samples/config; quantiles as preceding sections.
+Lookup-only cell storage changed from BTreeMap to HashMap; objects remain BTreeMap
+and footprints retain ordered offsets. Cells are never iterated for public
+ordering/errors; first-conflict/overflow checks and authoritative placement
+semantics are preserved. Debug map order is not a stable format. No dependencies,
+public signatures, terrain policy or whole-grid allocation change.
+
+| 65536 objects,16-cell footprints | Before medians (two runs) | After medians (two runs) | After p95 (two runs) |
+| --- | --- | --- | --- |
+| 1024 occupied lookups | 0.537 /0.501 ms | 0.14 /0.14 ms | 0.24 /0.18 ms |
+| 1024 free validations | 1.004 /1.013 ms | 0.83 /0.95 ms | 1.40 /1.14 ms |
+| 2048 relocations | 6.931 /6.859 ms | 5.07 /5.49 ms | 7.39 /6.88 ms |
+
+Single-cell65536-object relocation median0.672/0.682ms ->0.55/0.55ms. This is a
+lookup improvement, not complete attribution of footprint cloning or object
+storage. Logs target/placement-before-{1,2}.log, placement-after-{1,2}.log and
+placement-collision-summary.csv. Allocator/heap/resident peaks and retained
+capacity tradeoffs were not measured in this increment. Hash capacity and
+footprint/object storage are explicit memory follow-ups; no memory saving claim.
+
+Collision production behavior is unchanged. Ready-pair batches cover AABB/AABB,
+circle/circle and circle/AABB,1024/16384/262144 pairs. Construction is excluded;
+separations repeat1/2/4 units with unit radii/extents, giving overlapping/touching/
+separated cases. Timed overlaps counts boolean hits; timed contact black-boxes
+complete contact values then counts hits. Exact expected hit counts are checked
+outside timing. No pair index, spatial query, world lookup, contact allocation or
+response simulation is included. Two release runs/config passed. At262144 pairs,
+overlaps median2.30–2.37ms for AABB,0.90–0.91ms circle,0.88–1.01ms mixed;
+contact medians2.44–2.54/1.02–1.03/1.13–1.25ms respectively. These simple aligned
+fixtures do not establish all geometry branch costs or a game frame budget.
+
+Separate caller-owned all-pairs fixture covers64/256/1024 circles, all centered
+at origin for dense or spaced4 units for sparse. It includes pair enumeration,
+uses each unordered pair exactly once and asserts all/zero hits.1024 objects
+produce523776 pairs: two-run median1.70–1.94ms dense,1.73–1.97ms sparse, with
+p95 roughly2.00–2.58ms. Candidate count grows quadratically independent of sparse
+geometry; narrow-phase API supplies no broad phase. A new spatial subsystem is
+not justified solely by these synthetic fixtures. Games should measure their
+candidate-generation policy. Collision memory here is caller-owned input vectors;
+no heap/process memory budget is inferred. Logs target/collision-before-{1,2}.log
+and collision-pairs-{1,2}.log. Fixed phase order/cache warmth and scheduling
+variance limit comparisons; no collision throughput improvement is claimed.
+
+```powershell
+cargo test -p gridthorn_grid --release --locked measure_placement_scaling -- --ignored --nocapture
+cargo test -p gridthorn_collision --release --locked measure_collision_scaling -- --ignored --nocapture
+cargo test -p gridthorn_collision --release --locked measure_collision_all_pairs -- --ignored --nocapture
+```
+
+Run commands separately without overlapping builds/checks. Follow-ups: rejection-
+heavy placement, negative/sparse shapes, large relocation churn, clone/allocation
+attribution, memory peaks, realistic mixed/corner/containment collision workloads,
+candidate pruning and cross-platform runs. Fixed simulation and snapshots/RNG
+remain next domain increments. Broad milestone checks remain open.

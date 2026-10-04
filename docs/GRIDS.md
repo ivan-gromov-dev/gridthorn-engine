@@ -128,13 +128,18 @@ shape using checked integer addition and returns ordered cells or a contextual
 overflow error. Games can construct rectangles or rotated shapes as offsets;
 there is no projection-specific authoritative geometry.
 
-`PlacementMap` stores exclusive sparse occupancy in ordered trees. Each instance
+`PlacementMap` stores exclusive sparse occupancy with ordered objects. Each instance
 is an independent occupancy space, unrelated to tilemap layer IDs. Caller-owned
 `GridObjectId(u64)` values identify objects without binding them to ECS entity
 lifetimes. Games own identity allocation, associated entity data, and cleanup.
 `objects` iterates by identity; `placement` reads an immutable anchor/footprint;
 `object_at` selects through any occupied footprint cell, including non-anchor
 cells. Holes are free for other objects.
+
+Cell occupancy uses hash lookups while object iteration remains ordered. Error
+selection follows ordered footprint offsets, independent of hash table layout.
+Measured lookup/relocation scaling and unmeasured memory tradeoffs are recorded
+in [Performance review](PERFORMANCE_REVIEW.md).
 
 `validate(id, anchor, footprint)` returns candidate cells without reserving them
 and ignores cells owned by that identity, enabling self-overlapping moves.

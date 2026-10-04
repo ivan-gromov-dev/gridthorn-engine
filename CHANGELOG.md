@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Placement cell occupancy uses hash lookups while preserving ordered object
+  iteration and deterministic conflict/transaction behavior; performance review
+  adds placement and narrow-phase/all-pairs collision scaling probes.
+
 - Pathfinding uses hash lookups for tentative costs and predecessors while retaining
   deterministic ordered frontier expansion, routes and diagnostics.
 

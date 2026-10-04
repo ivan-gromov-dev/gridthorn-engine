@@ -1446,3 +1446,32 @@ command passed and emitted expected diagnostic SVGs (target/navigation-example.l
 Docs/README/roadmap/changelog updated; final diff whitespace check passed. No commits.
 Next: fixed simulation/placement/collision scaling; retain maze/real-cost/budget-
 sweep/heap/pathfinding follow-ups and native/device audio deferrals.
+
+## 2026-10-04 Placement and collision scaling checkpoint
+
+Engine baselineef240d8756e640f72091a8f600c639cdde81dd92 initially clean after
+maintainer committed pathfinding. Added ignored probes in placement/test/scaling
+and collision/contact/test/scaling. Placement matrix1024/16384/65536 objects,
+1/16 horizontal footprint cells;1024 lookups/validations and2048 relocations per
+sample. Two before/after isolated release runs passed. Cell index is now HashMap;
+objects BTreeMap and footprint offset order unchanged. No dependency/public API
+changes. Existing deterministic errors/iteration, atomic rollback and coordinate
+limits tests pass. Grid23 passed/2 ignored; collision6 passed/2 ignored.
+
+Large16-cell footprint lookups0.50–0.54ms ->0.14ms; relocations6.86–6.93ms
+->5.07–5.49ms. Validation gains mixed; footprint/object attribution and memory
+remain open, no memory-reduction claim. Collision production unchanged. Two
+ready-pair runs and two caller all-pairs runs passed.1024 circles create523776
+pairs, sparse/dense median1.7–2.0ms; no broad phase introduced. Limits/protocol in
+PERFORMANCE_REVIEW.md. Logs target/placement-before-{1,2}.log, placement-after-
+{1,2}.log, collision-before-{1,2}.log, collision-pairs-{1,2}.log and derived
+placement-collision-summary.csv. Acquisition did not overlap builds/checks.
+
+Full verify passed (target/placement-collision-verify.log), process-local target/
+thread overrides restored: fmt/check/Clippy/workspace unit/doc tests, generated
+CLI/native smoke, dependency boundaries and whitespace. Public grid-placement
+example passed square/isometric picking, preview, rollback/move/removal checks
+(target/placement-example.log). Sibling unedited. Docs/README/roadmap/changelog
+updated; final GRIDS/checkpoint prose whitespace checked. No staging/commits.
+Next: fixed simulation and snapshots/RNG scaling; retain rejection/churn/heap/
+realistic collision candidate selection follow-ups. Broad milestone remains open.

@@ -379,6 +379,8 @@ record implemented and verified increments; measurements and limitations are in
   - [ ] Measure fixed ticks, grid/pathfinding/placement and collision scaling.
     - [x] Measure open/weighted/unreachable/budgeted pathfinding through 512x512;
           optimize cost/predecessor lookups and verify deterministic diagnostics.
+    - [x] Measure sparse placement through 65536 objects and narrow-phase/all-pairs
+          collision batches; optimize cell lookups while preserving transactions.
   - [ ] Measure snapshots/RNG and allocation costs; verify determinism after fixes.
   - [ ] Record each domain's disposition and supported workload limits.
 - [ ] Measure cold/warm build time, dependency footprint and binary size; address
