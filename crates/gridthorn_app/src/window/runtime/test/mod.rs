@@ -11,6 +11,7 @@ mod dpi;
 mod exit;
 mod input;
 mod input_scaling;
+mod lifecycle_scaling;
 mod presentation;
 mod viewport;
 

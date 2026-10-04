@@ -1317,3 +1317,103 @@ project CLI/native smoke, dependency boundaries and whitespace. Public sibling
 asset-reload --smoke passed: publication, dependencies, intentional decode rollback,
 recovery and shutdown (target/io-review-asset-smoke.log). No native scene/save/frame
 budget or cross-platform claim inferred. Final documentation whitespace check passed.
+
+## 2026-10-04 Audio control and lifecycle callback checkpoint
+
+Baseline cbf2a390c26b498c3b7f347ffb243ecf7b10f046; engine initially clean.
+Added ignored release probes under audio/output/test and app/window/runtime/test.
+No production, dependency or public API changes. Two isolated runs each passed;
+20 retained samples/config after two excluded samples. Audio covers fresh mock
+services, shared stereo clip clones, queue/play/control/suspend/resume/teardown.
+Platform covers synthetic callbacks and 0/32/1024 shutdown counter systems.
+An initial platform build used nonexistent ScheduleBuilder.world; corrected by
+inserting the fixture resource through ApplicationRuntime.world before startup.
+
+64 voices x80K frames Play median9.1–10.7ms, teardown2.6–3.3ms; controls and
+suspend/resume in microseconds. 1024 trivial shutdown systems median18–19us.
+Logs target/audio-control-{1,2}.log, platform-callbacks-{1,2}.log and derived
+summary.csv. Detailed workload/timer/mock limits in PERFORMANCE_REVIEW.md.
+No hardware/mixer/worker performance or OS suspension claim; native lifecycle,
+worker handoff, memory, completed-voice retention and PCM conversion attribution
+remain open. Next focused increment: audio conversion/retention attribution and
+bounded fix if evidence supports it. No staging/commits or sibling changes.
+Full verification follows with shared engine target and sequential tests.
+
+Full ./scripts/verify.ps1 passed with restored process-local target/thread overrides.
+Includes format/check/Clippy, workspace unit/doc tests, generated-project CLI/native
+smoke, dependency boundaries and whitespace. Log target/audio-platform-verify.log.
+Documentation-only final checkpoint addition passed git diff --check.
+
+## 2026-10-04 Audio conversion and retention fix checkpoint
+
+Same HEAD cbf2a390c26b498c3b7f347ffb243ecf7b10f046; preceding audio/platform
+probe changes were uncommitted and preserved. Added private output/prepared_batch
+with 16-entry/1MiB converted-frame cap and retained source identities, lifetime
+one process call. Output process prunes Stopped handles even on empty queues;
+active_voice_count filters Stopped immediately. No API signatures/deps changed.
+
+Audio tests12 passed/1 ignored before adding the separate PCM probe. Full verify
+covers final source (12 passed/2 ignored). Completion tests explicitly advance
+mock mixer, preserve loops, and check128 completion cycles. Frame reuse tests
+cover settings, identity, call lifetime, oversized/entry/combined-byte limits.
+Two unchanged release control after runs and two PCM attribution runs passed.
+64x80K Play9.1–10.7ms ->0.323–0.379ms; direct PCM9.4–9.5ms vs reused0.294–0.421ms.
+Single-voice results mixed; no universal improvement/hardware/memory-budget claim.
+Logs target/audio-reuse-after-{1,2}.log, audio-pcm-{1,2}.log,
+audio-reuse-summary.csv; protocol and limits in PERFORMANCE_REVIEW.md.
+
+Full ./scripts/verify.ps1 passed (target/audio-reuse-verify.log), shared target and
+sequential test overrides restored. Includes format/check/Clippy, workspace
+unit/doc tests, generated-project CLI/native smoke, boundaries and whitespace.
+Public classic_2d --smoke passed (target/audio-reuse-native-smoke.log): native
+window/audio worker lifecycle, not audible-quality/latency verification. Sibling
+pre-existing manifest/lock/README/workbench changes remain untouched. No commits.
+Next: example worker handoff/backpressure and long-lived/native audio memory or
+remaining simulation/grid/pathfinding/collision scaling; broad milestone stays open.
+
+## 2026-10-04 Example audio worker measurement checkpoint
+
+Engine HEAD cbf2a390c26b498c3b7f347ffb243ecf7b10f046 and preceding uncommitted
+audio/platform work preserved. Examples HEAD c89adb9a5317007b3469782c1c8da9d8b4b1b04a;
+pre-existing Cargo.toml/Cargo.lock/README and untracked workbench unchanged.
+Added classic_2d/src/audio/test/scaling.rs plus cfg-test declaration/test mod;
+updated only classic_2d README in sibling. No production behavior/dependencies
+changed in this increment. Two isolated release runs passed,20 retained samples
+per config after2 excluded. Actual headless Sound pickup+shutdown separately
+from gated32-slot transport fixture. Burst16384 gated accepts32/drops16352 and
+Pause(true) deterministically fails Full. Actual pickup acceptance unknown by API.
+Logs target/audio-worker-{1,2}.log and audio-worker-summary.csv. Actual16384
+enqueue median66–72us; shutdown38–45us with scheduling/startup limits. Protocol
+and disposition in PERFORMANCE_REVIEW.md; no device-latency/delivery guarantee.
+
+Sibling package fmt --check and Clippy --all-targets -D warnings passed; tests6
+passed/1 ignored; headless-smoke and native --smoke passed. Full engine verify
+passed using restored process-local shared target/sequential-test overrides;
+log target/audio-worker-verify.log. Native smoke is lifecycle only. Engine and
+sibling changed; no commits/staging. Next focused fix: reliably coalesce latest
+pause/resume state independently of bounded effect loss, then gated regression
+and repeated affected samples. Native output memory/worker stalls remain open.
+
+## 2026-10-04 Reliable example pause fix checkpoint
+
+Same engine/examples revisions as preceding worker checkpoint; all existing
+uncommitted work preserved. Classic_2d audio/pause_state.rs owns one AtomicU8
+mailbox. Sound.pause publishes latest state then tries Wake; worker consumes
+pending state before each request. Full queue contains an eventual consumption
+trigger, empty queue is woken, stale wakes carry no state. Intermediate states
+coalesce. Effect queue remains32 slots/lossy; no engine worker API/deps added.
+
+New audio/test/pause_delivery.rs verifies full-queue pause, latest resume,
+alternating state, idle wake and stale wakes through Sound.pause. Scaling fixture
+also checks final resume under saturation. Two release after runs passed;
+actual16384 pickup median66–71us, no throughput claim due scheduling variance.
+Logs target/audio-pause-after-{1,2}.log. Tests8 passed/1 ignored, fmt check and
+Clippy all-targets -D warnings passed. Initial Clippy collapsible_if was fixed
+with equivalent let-chain; Clippy and tests rerun successfully. Headless/native
+smokes passed before this equivalent syntax cleanup. Full engine verify passed
+(target/audio-pause-verify.log); process-local target/thread settings restored.
+Sibling README and engine roadmap/review/changelog updated, both diffs checked.
+No staging/commits; pre-existing sibling manifest/lock/rootREADME/workbench untouched.
+Native application latency and worker progress are not guaranteed; next remaining
+performance domains: long-lived audio/output memory, native/device latency, or
+simulation/grid/pathfinding/collision scaling. Milestone remains open.

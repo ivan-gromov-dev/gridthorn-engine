@@ -363,6 +363,16 @@ record implemented and verified increments; measurements and limitations are in
     - [x] Measure warm Windows reload/scalar-scene/typed-save scaling and separate process-resident peaks; optimize reverse-chain invalidation/order and repeat affected samples.
     - [ ] Complete cold/branching/error-path workloads, phase/heap peak attribution and codec/serializer attribution before declaring domain limits.
   - [ ] Measure audio command/worker costs and platform suspend/resume/shutdown.
+    - [x] Measure mock audio queue/output control and synthetic runtime lifecycle
+          callbacks across clip, voice and shutdown-system counts on Windows.
+    - [x] Attribute repeated PCM conversion; bound batch-local frame reuse, release
+          completed handles and remeasure the affected mock workloads.
+    - [ ] Measure example worker handoff, native device/mixer latency, long-lived
+          output memory and platform lifecycle costs.
+      - [x] Measure classic_2d headless worker submission/shutdown and bounded
+            transport overload; record lost pause requests as a reliability follow-up.
+      - [x] Preserve the latest pause/resume state under full example queues;
+            verify saturation, idle wake and stale notifications, and remeasure.
   - [ ] Record each domain's disposition and remeasure any fixes.
 - [ ] Review fixed simulation, grids, pathfinding/placement, collision and
       snapshots for scaling, allocation costs and preserved determinism.

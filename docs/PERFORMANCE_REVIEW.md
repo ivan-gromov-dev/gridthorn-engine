@@ -1111,3 +1111,188 @@ shared target/sequential tests; settings restored (target/io-review-verify.log).
 Public sibling asset-reload --smoke passed dependency publication, rollback after
 intentional malformed image, recovery and shutdown (target/io-review-asset-smoke.log).
 No displayed-frame or cross-platform performance acceptance is implied.
+
+## Audio control and platform callbacks — 2026-10-04
+
+Baseline: cbf2a390c26b498c3b7f347ffb243ecf7b10f046. This increment adds
+measurement fixtures without changing production behavior, dependencies or APIs.
+Run these separately, with no builds or other benchmark processes in parallel:
+
+```powershell
+cargo test -p gridthorn_audio --release --locked measure_audio_control_scaling -- --ignored --nocapture
+cargo test -p gridthorn_app --release --locked measure_platform_lifecycle_callbacks -- --ignored --nocapture
+```
+
+Two isolated runs per probe passed. Each configuration has two excluded warm-up
+iterations and 20 retained samples; each iteration constructs a fresh service
+outside the timed phases. The recorded median uses the upper middle sample and
+p95 uses nearest rank (19th of 20). Logs: `target/audio-control-{1,2}.log`,
+`target/platform-callbacks-{1,2}.log`; derived `target/audio-platform-summary.csv`.
+Sub-microsecond values approach timer resolution and are not stable budgets.
+
+Audio uses Kira's mock backend, stereo PCM16 WAV decoded before sampling, 8 kHz,
+256/8,000/80,000 frames and 1/16/64 voices playing clones of the same clip.
+Queue timing includes cloning, ID allocation and collecting IDs. Play processing
+includes queue drain, PCM-to-stereo-frame conversion, allocation and manager
+submission. Suspend/resume time command submission, not completion. Controls
+process one volume change and stop per voice. Teardown drops the manager and
+its pending sounds; mock processing does not advance the mixer. Assertions outside
+timing check queue emptiness, controlled voice counts and suspension flags.
+
+| Workload/phase | Run 1 median / p95 | Run 2 median / p95 |
+| --- | --- | --- |
+| 1 voice, 80K frames, play | 0.259 / 0.305 ms | 0.253 / 0.305 ms |
+| 64 voices, 256 frames, play | 0.299 / 0.528 ms | 0.294 / 0.444 ms |
+| 64 voices, 80K frames, enqueue | 12.3 / 25.9 us | 7.1 / 14.4 us |
+| 64 voices, 80K frames, play | 10.745 / 12.359 ms | 9.147 / 10.927 ms |
+| 64 voices, 80K frames, suspend | 4.5 / 6.8 us | 3.5 / 5.2 us |
+| 64 voices, 80K frames, resume | 3.8 / 6.7 us | 3.4 / 4.8 us |
+| 64 voices, 80K frames, volume+stop | 31.5 / 41.5 us | 23.5 / 29.6 us |
+| 64 voices, 80K frames, teardown | 3.263 / 4.552 ms | 2.621 / 3.638 ms |
+| 1024 shutdown systems, callback | 19.3 / 27.9 us | 17.9 / 21.4 us |
+
+Platform fixtures use 0/32/1024 shutdown systems, each incrementing a shared
+counter. Startup and schedule construction are excluded. Timed suspend/resume
+callbacks reset the frame timer and enqueue focus loss; shutdown runs the
+schedule. Assertions check timer state, the exact shutdown counter and idempotent
+second shutdown. Suspend/resume medians are 0–0.3 us at 1024 systems. This does
+not include native event-loop dispatch, GPU surface recreation, OS suspension,
+user resource destructors or audio integration. Automatic platform audio
+suspend/resume remains deferred by the existing audio contract.
+
+Disposition: control submission is small in these fixtures; larger repeated clips
+make Play and teardown materially more expensive. Source inspection shows a fresh
+frame allocation/conversion for every Play, but the combined phase does not isolate
+its share. Next, attribute conversion and completed-voice retention before choosing
+a bounded reuse policy. No unbounded decoded-sound cache is introduced. Worker
+handoff/queue backpressure, real mixer processing, output-device latency, long-lived
+playback cleanup, native shutdown and memory peaks remain open. Mock voice counts
+represent handles controlled by the service, not audibly active voices. No native
+frame budget, audible correctness or cross-platform acceptance is inferred.
+
+## Audio batch reuse and completed voices — 2026-10-04
+
+Continues the preceding probes on baseline cbf2a390c26b498c3b7f347ffb243ecf7b10f046;
+the preceding uncommitted probe/docs changes are preserved. Output now removes
+handles reporting Stopped at each process call, even for an empty queue. The count
+excludes completed voices immediately; paused/looping voices remain controlled.
+Cleanup requires continued process calls; no background cleaner is introduced.
+
+A private prepared_batch module shares converted frames for clones with identical
+sample storage, channel count and sample rate within one process call. Source
+clips are retained in the batch to prevent address reuse. Retention is capped at
+16 entries and 1 MiB of converted frames; saturated/oversized conversions bypass
+reuse. The cache drops on return, including errors. Per-voice volume and looping
+settings are reconstructed independently. Separate decoded clips and separate
+process calls do not share conversions. This cap bounds extra retained frame
+references, not all playback/mixer allocations or source sample bytes.
+
+Two isolated after runs of the unchanged control probe passed. Compared with both
+preceding before runs, 64 voices x80K frames Play median9.147–10.745ms becomes
+0.323–0.379ms, p950.447–0.455ms. Teardown median2.621–3.263ms becomes
+0.111–0.135ms. One voice x80K frames remains mixed: before0.253–0.259ms,
+after0.245–0.283ms; no universal single-play speedup is claimed. 64x256-frame Play
+median0.294–0.299ms becomes0.222–0.269ms. Logs target/audio-reuse-after-{1,2}.log;
+comparison target/audio-reuse-summary.csv. Workload and quantile conventions are
+unchanged from the preceding section; no builds ran alongside acquisition.
+
+The separate conversion probe retains 64 constructed sounds from one stereo
+80K-frame clip; it alternates direct conversion and batch reuse, two excluded
+iterations and20 retained samples per mode. Timing excludes dropping sounds and
+frame-equivalence assertions; it includes sound-data allocation/construction and
+collecting outputs. This isolates conversion from manager submission, although
+fixed mode order and allocator history remain limitations. Two runs give direct
+median9.398/9.495ms (p9511.820/10.274ms) and reused median0.294/0.421ms
+(p950.479/0.563ms), supporting conversion as the measured repeated-Play cost.
+
+```powershell
+cargo test -p gridthorn_audio --release --locked measure_pcm_conversion_reuse -- --ignored --nocapture
+```
+
+Logs target/audio-pcm-{1,2}.log. Tests cover sample/frame equivalence, independent
+settings, distinct decode identity, per-call lifetime, oversized bypass, entry and
+combined-byte saturation, natural completion with surviving looping voices, and
+128 mixer-advanced playback cycles without handle accumulation. The mock backend
+is explicitly advanced for completion tests; control performance runs retain the
+preceding submission-only protocol. No output-device latency, audible correctness,
+allocator peak reduction or worker handoff claim is inferred. No dependency or
+public signature changes. Worker/native/memory follow-ups remain open.
+
+## Example audio worker handoff — 2026-10-04
+
+The sibling classic_2d example owns its audio worker; no engine worker subsystem
+is added. The worker uses sync_channel(32), nonblocking try_send for Pickup and
+Pause, blocking Shutdown delivery followed by join. Two isolated release runs of
+its ignored audio/test/scaling probe passed. Each 1/32/1024/16384-request workload
+has two excluded iterations and20 retained samples; quantiles use the preceding
+upper-middle median/nearest-rank p95 convention. Logs target/audio-worker-{1,2}.log
+and derived target/audio-worker-summary.csv in the engine workspace.
+
+```powershell
+cargo test --manifest-path ../gridthorn-examples/Cargo.toml -p classic_2d --release --locked measure_audio_worker_handoff -- --ignored --nocapture
+```
+
+The actual Sound::new(false) path loads/decodes the assets and spawns a fresh
+worker before timing. Initialization may still execute asynchronously during
+submission/shutdown. It exercises queue draining and voice-command construction,
+without opening an audio device or invoking the mixer. Timed burst submission
+calls public-in-example pickup; its API hides success, so accepted/dropped counts
+are explicitly unknown. A joined worker is asserted outside timing.
+
+The second fixture uses the same Request type and32-slot channel, but gates the
+consumer until the burst completes. It deterministically accepts min(requests,32)
+and drops the rest; it checks that Pause(true) is rejected when full. After release,
+Shutdown is sent and joined; accepted pickup counts match exactly. This fixture
+measures transport only, not the game's worker/output service. Thread creation,
+ready handshake, gate release and assertions are excluded. Shutdown timing includes
+blocking send, OS scheduling, processing accepted messages and join; it is not an
+isolated worker service duration or a delivery-latency percentile.
+
+| Workload/phase | Run1 median / p95 | Run2 median / p95 |
+| --- | --- | --- |
+| 32 requests, actual headless enqueue | 0.4 / 0.4 us | 0.4 / 0.4 us |
+| 32 requests, actual headless shutdown | 118.6 / 127.5 us | 115.0 / 157.1 us |
+| 16384 requests, actual headless enqueue | 72.1 / 81.5 us | 65.8 / 75.8 us |
+| 16384 requests, actual headless shutdown | 37.7 / 151.8 us | 45.2 / 64.1 us |
+| 16384 requests, gated transport enqueue | 50.5 / 120.1 us | 50.2 / 52.7 us |
+| 16384 requests, transport shutdown | 46.2 / 58.9 us | 51.8 / 58.7 us |
+
+Disposition: queue capacity prevents unbounded pending-request growth and try_send
+keeps pickup submission nonblocking, but full-queue Pause drops are a concrete
+reliability gap. The gated16384 burst accepts32 and drops16352; a shorter measured
+enqueue duration does not imply successful audio delivery. No production behavior
+is changed in this measurement increment. Next fix should preserve bounded effect
+submission while reliably communicating the latest pause/resume state, with a
+saturated-queue regression test. Native-device backlog, worker stalls, long-lived
+output memory, device latency and hardware/platform shutdown remain open. Native
+smoke proves a runnable lifecycle only, not overload behavior or audible quality.
+
+## Reliable example pause state — 2026-10-04
+
+Fixes the classic_2d pause-loss disposition above without adding an engine worker
+API. Pause/resume now stores the latest desired state in a single atomic byte
+before trying to enqueue a Wake. The consumer takes pending state before handling
+each request. If the channel is full, an existing queued request triggers that
+check; if it is empty, Wake unblocks recv. Wake carries no historical state, so
+stale notifications cannot overwrite a newer pause/resume. Intermediate states
+coalesce. Effects remain nonblocking/lossy with32 pending slots; shutdown still
+uses blocking delivery and join. Worker progress is required: this is state
+preservation, not bounded audible application latency or device recovery.
+
+Regression tests call Sound.pause against a gated full queue and verify lone
+pause, pause+resume, and alternating final pause. Idle/stale-wake tests verify
+latest state and a later new transition. The performance transport fixture now
+also publishes pause+resume through Sound.pause under saturation, then asserts
+that the resumed state is consumed while all32 accepted effects are counted.
+No source/device API signatures or engine dependencies change.
+
+Two after runs passed with the preceding20-sample protocol. At16384 requests,
+actual headless enqueue medians70.8/66.1us (p95201.7/91.6us), shutdown39.7/58.4us
+(p9568.8/96.9us). Gated enqueue medians58.1/55.1us; transport shutdown59.8/56.8us.
+Added two-call saturated pause+resume publication median0–0.1us, near timer
+resolution; no precise sub-microsecond cost/budget is inferred. Gated shutdown
+now consumes the additional mailbox state, so it is not an identical before
+fixture. Actual pickup accepted counts remain unknown; retained scheduling
+variance prevents claiming a throughput speedup. Logs target/audio-pause-after-
+{1,2}.log. The reproducible command is unchanged from the preceding worker section.
+Native device latency, long-lived memory and OS lifecycle remain open.

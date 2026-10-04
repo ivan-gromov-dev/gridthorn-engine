@@ -1,10 +1,12 @@
 mod errors;
+mod prepared_batch;
 
 use std::{collections::HashMap, sync::Arc};
 
 use kira::{
     AudioManager, Decibels, Frame, Tween,
     backend::Backend,
+    sound::PlaybackState,
     sound::static_sound::{StaticSoundData, StaticSoundHandle, StaticSoundSettings},
 };
 #[cfg(feature = "native-output")]
@@ -39,7 +41,7 @@ impl AudioOutput {
         })
     }
 
-    /// Consume queued playback commands in FIFO order.
+    /// Consume queued playback commands in FIFO order and release completed voices.
     ///
     /// # Errors
     ///
@@ -59,7 +61,7 @@ impl AudioOutput {
         self.backend.resume();
     }
 
-    /// Number of voices currently controlled by the output service.
+    /// Number of controlled voices that have not finished, including paused voices.
     #[must_use]
     pub fn active_voice_count(&self) -> usize {
         self.backend.active_voice_count()
@@ -82,20 +84,27 @@ impl<B: Backend> OutputBackend<B> {
     }
 
     fn process(&mut self, commands: &mut AudioCommandQueue) -> Result<(), AudioOutputError> {
+        self.voices
+            .retain(|_, handle| handle.state() != PlaybackState::Stopped);
+        let mut prepared = prepared_batch::PreparedBatch::default();
         for command in commands.drain() {
-            self.apply(command)?;
+            self.apply(command, &mut prepared)?;
         }
         Ok(())
     }
 
-    fn apply(&mut self, command: AudioCommand) -> Result<(), AudioOutputError> {
+    fn apply(
+        &mut self,
+        command: AudioCommand,
+        prepared: &mut prepared_batch::PreparedBatch,
+    ) -> Result<(), AudioOutputError> {
         match command {
             AudioCommand::Play {
                 voice,
                 clip,
                 settings,
             } => {
-                let sound = sound_data(&clip, settings.volume(), settings.looping())?;
+                let sound = prepared.sound(&clip, settings.volume(), settings.looping())?;
                 let mut handle =
                     self.manager
                         .play(sound)
@@ -143,7 +152,10 @@ impl<B: Backend> OutputBackend<B> {
     }
 
     fn active_voice_count(&self) -> usize {
-        self.voices.len()
+        self.voices
+            .values()
+            .filter(|handle| handle.state() != PlaybackState::Stopped)
+            .count()
     }
 }
 

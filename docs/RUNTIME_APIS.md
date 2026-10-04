@@ -89,3 +89,11 @@ ECS state or profiles. File I/O is synchronous, parent directories must exist,
 and file documents are limited to 16 MiB; compatibility and deferrals remain in
 [WORLD_SAVES.md](WORLD_SAVES.md). These milestones do not implicitly add cloud
 saves, asynchronous saves, arbitrary ECS capture or cross-release migrations.
+
+Audio output processing releases completed voice handles even when the command
+queue is empty. Active voice counts exclude completed voices and include paused
+voices. Shared clip clones reuse converted frames within a single command batch,
+with retention capped at 16 entries and 1 MiB of converted frames; per-voice
+volume and looping settings remain independent. Cleanup requires continued
+output processing. Native device latency and automatic platform audio
+suspend/resume remain deferred.

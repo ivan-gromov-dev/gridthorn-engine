@@ -121,6 +121,10 @@ retain direct sampling. Before/after evidence and workload limits are recorded
 in the performance review.
 Dependency-aware reload traverses reverse edges and an ordered ready queue;
 warm reload, scene and world-save measurements are recorded in the same review.
+  Audio control-side mock and platform lifecycle callback probes also record
+  scaling evidence; native device and operating-system latency remain unmeasured.
+  Audio output shares converted frames within bounded command batches and releases
+  completed voice handles on processing, including empty queues.
 Milestone 4 remains open until this performance gate and
 native language/IME acceptance finish, followed by Milestone 5 desktop
 platform/device controls. The debugging workflow and

@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The sibling classic_2d audio worker preserves the latest pause/resume state
+  under effect-queue saturation through a coalescing atomic mailbox.
+- Performance review records example-owned audio worker handoff and shutdown
+  measurements, including bounded-queue loss under overload.
+- Audio output reuses shared clip conversions within bounded command batches and
+  removes completed voice handles when processing queues, including empty queues.
+
+- Performance review adds isolated release audio control-side and runtime lifecycle
+  callback scaling probes, with explicit mock backend and native-device limits.
+
 - Asset reload replaces repeated graph scans with reverse-edge propagation and
   an ordered dependency-count queue, preserving deterministic dependency-first
   publication and failed-batch rollback.
