@@ -31,6 +31,15 @@ with at most 1 MiB of copied UTF-8 keys (excluding map metadata).
 Further measurements still execute normally after the limit. Bitmap measurement,
 paint and editing geometry retain their existing behavior.
 
+One font service and immutable theme additionally share prepared text across the
+whole arrangement/field-geometry/paint pass, including preedit. This temporary
+cache caps retention at 1024 entries, 256 KiB of UTF-8 text/family keys, 16384 diagnostic glyphs
+and 4096 lines; complete styles and wrapping widths must match. It stops retaining
+when any budget is exhausted and continues through the normal text service.
+It is released before returning `UiLayout`, including error paths; snapshots and
+input-scope clones do not retain these backend buffers. The permanent service LRU
+limits remain unchanged.
+
 Router layout prepares field geometry once for hit testing, native text anchors
 and focused caret/selection decoration. It looks up glyph cluster endpoints in
 sorted grapheme boundaries without a
@@ -366,8 +375,18 @@ Full editor extensions (undo/redo, word/double-click navigation, bidi visual-arr
 affinity, exact font-provided ligature carets, automatic caret/list reveal and caret
 blinking) remain deferred. Ordered modal layers and focus restoration are
 implemented provisionally, along with explicit presentation-property transitions.
-Routing clones bounded presentation state for atomic failure handling; allocation,
-large-field latency and repeated shaping costs have not been measured.
+Routing clones bounded presentation state for atomic failure handling. CPU review
+now covers short/long asset-font editing, expanded overlapping layers, closed-layer
+sizing, prepared-text reuse and raster storage; evidence is in PERFORMANCE_REVIEW.md.
+The 1024-field Japanese fixture remains above a 16.67 ms per-frame budget, even
+without paint when managed layers are closed: closed layers still participate in
+layout by contract. No automatic occlusion culling or virtualization is implied.
+Reuse an unchanged caller-owned layout rather than rebuilding this entire fixture
+every frame. The follow-up is a lifecycle-aware incremental/subtree layout design
+that preserves intrinsic sizing, scroll extents, focus and text-session anchors.
+The largest long-field DPI-2 fixtures still reject at the raster work limit; failure
+retains previous snapshots. Native long-field/IME acceptance and whole-frame
+CPU/GPU/display timing remain separate outstanding gates.
 
 ```console
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_composed_controls --locked -- --headless

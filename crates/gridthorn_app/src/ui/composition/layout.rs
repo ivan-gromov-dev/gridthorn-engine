@@ -101,8 +101,9 @@ impl UiTree {
         &self,
         viewport: [f32; 2],
         scale: f32,
-        mut text: Option<&mut TextSystem>,
+        text: Option<&mut TextSystem>,
     ) -> Result<UiLayout, UiCompositionError> {
+        let mut text = super::prepared_text::PreparedText::new(text);
         let mut layout = self.arrange_layout(viewport, scale, &mut text)?;
         layout.primitives =
             super::paint::paint(self, &layout.placements, scale, &mut text, None, None, None)?;
@@ -115,7 +116,7 @@ impl UiTree {
         &self,
         viewport: [f32; 2],
         scale: f32,
-        text: &mut Option<&mut TextSystem>,
+        text: &mut super::prepared_text::PreparedText<'_>,
     ) -> Result<UiLayout, UiCompositionError> {
         if !viewport.into_iter().all(super::tree::metric)
             || !scale.is_finite()
@@ -169,17 +170,12 @@ pub(super) fn text_size(
     value: &str,
     width: f32,
     theme: &UiTheme,
-    text: &mut Option<&mut TextSystem>,
+    text: &mut super::prepared_text::PreparedText<'_>,
 ) -> Result<[f32; 2], UiCompositionError> {
     if let Some(style) = &theme.text {
-        let service = text
-            .as_deref_mut()
-            .ok_or(UiCompositionError::InvalidMetrics(
-                "asset font theme requires TextSystem",
-            ))?;
         let mut style = style.clone();
         style.width = Some(width.max(1.0));
-        let measurement = service.layout(value, &style)?.measurement();
+        let measurement = text.layout(value, &style)?.measurement();
         Ok([measurement.width, measurement.height])
     } else {
         let lines: Vec<_> = value.split('\n').collect();

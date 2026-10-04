@@ -10,8 +10,8 @@ struct Sample {
 /// Bounded successful text-service operation timings, collected only when requested.
 #[derive(Default)]
 pub(super) struct TextPerformance {
-    samples: [Vec<Sample>; 2],
-    totals: [usize; 2],
+    samples: [Vec<Sample>; 6],
+    totals: [usize; 6],
 }
 
 impl TextPerformance {
@@ -24,14 +24,20 @@ impl TextPerformance {
     }
 
     pub(super) fn record(&mut self, operation: usize, start: Option<Instant>, units: usize) {
+        self.record_elapsed(operation, start.map(|start| start.elapsed()), units);
+    }
+
+    pub(super) fn record_elapsed(
+        &mut self,
+        operation: usize,
+        elapsed: Option<Duration>,
+        units: usize,
+    ) {
         self.totals[operation] = self.totals[operation].saturating_add(1);
         if self.samples[operation].len() < LIMIT
-            && let Some(start) = start
+            && let Some(elapsed) = elapsed
         {
-            self.samples[operation].push(Sample {
-                elapsed: start.elapsed(),
-                units,
-            });
+            self.samples[operation].push(Sample { elapsed, units });
         }
     }
 }
@@ -39,7 +45,17 @@ impl TextPerformance {
 impl Drop for TextPerformance {
     fn drop(&mut self) {
         eprintln!("text_cpu,operation,sample,elapsed_us,units");
-        for (operation, name) in ["layout", "rasterize"].iter().enumerate() {
+        for (operation, name) in [
+            "layout",
+            "rasterize",
+            "shape",
+            "extract",
+            "raster_loop",
+            "snapshot",
+        ]
+        .iter()
+        .enumerate()
+        {
             for (index, sample) in self.samples[operation].iter().enumerate() {
                 eprintln!(
                     "text_cpu,{name},{index},{},{}",

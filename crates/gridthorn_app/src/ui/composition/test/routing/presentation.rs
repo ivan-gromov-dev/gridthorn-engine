@@ -22,13 +22,27 @@ fn focused_decoration_consumes_prepared_geometry_without_a_font_service() {
     let geometry = &layout.text_geometry[&UiNodeId(1)];
     let mut expected = Vec::new();
     router
-        .paint_field(&tree, placement, geometry, 2.0, &mut None, &mut expected)
+        .paint_field(
+            &tree,
+            placement,
+            geometry,
+            2.0,
+            &mut crate::ui::composition::prepared_text::PreparedText::new(None),
+            &mut expected,
+        )
         .unwrap();
     assert_ne!(expected, []);
     tree.theme.text = Some(gridthorn_render::TextStyle::new("missing font", 24.0));
     let mut actual = Vec::new();
     router
-        .paint_field(&tree, placement, geometry, 2.0, &mut None, &mut actual)
+        .paint_field(
+            &tree,
+            placement,
+            geometry,
+            2.0,
+            &mut crate::ui::composition::prepared_text::PreparedText::new(None),
+            &mut actual,
+        )
         .unwrap();
     assert_eq!(actual, expected);
     assert!(router.layout(&tree, [200.0; 2], 2.0, None).is_err());

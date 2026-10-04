@@ -1,5 +1,5 @@
 use super::{UiBounds, UiCompositionError, UiControl, UiNodeId, UiPlacement, UiTree};
-use gridthorn_render::{TextLine, TextSystem};
+use gridthorn_render::TextLine;
 use std::{collections::BTreeMap, ops::Range};
 
 #[derive(Clone, Debug)]
@@ -172,7 +172,7 @@ fn paragraph_offsets(value: &str) -> Vec<usize> {
 pub(super) fn prepare(
     tree: &UiTree,
     placements: &[UiPlacement],
-    text: &mut Option<&mut TextSystem>,
+    text: &mut super::prepared_text::PreparedText<'_>,
 ) -> Result<BTreeMap<UiNodeId, TextGeometry>, UiCompositionError> {
     let mut result = BTreeMap::new();
     for placement in placements {
@@ -192,7 +192,7 @@ pub(super) fn prepare_field(
     tree: &UiTree,
     value: &str,
     placement: &UiPlacement,
-    text: &mut Option<&mut TextSystem>,
+    text: &mut super::prepared_text::PreparedText<'_>,
 ) -> Result<TextGeometry, UiCompositionError> {
     let origin = std::array::from_fn(|axis| {
         placement.content.position[axis] - placement.scroll_offset[axis]
@@ -207,12 +207,7 @@ pub(super) fn prepare_field(
         let mut style = style.clone();
         style.width = Some(placement.content.size[0].max(1.0));
         geometry.height = style.line_height;
-        let service = text
-            .as_deref_mut()
-            .ok_or(UiCompositionError::InvalidMetrics(
-                "asset font theme requires TextSystem",
-            ))?;
-        let shaped = service.layout(value, &style)?;
+        let shaped = text.layout(value, &style)?;
         geometry.shaped(shaped.lines(), origin);
         geometry.complete_boundaries(origin);
     } else {

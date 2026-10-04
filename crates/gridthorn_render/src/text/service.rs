@@ -15,6 +15,7 @@ pub struct TextSystem {
     pub(super) performance: Option<super::performance::TextPerformance>,
     pub(super) fonts: FontSystem,
     pub(super) cache: SwashCache,
+    pub(super) spans: Option<super::raster_spans::GlyphSpans>,
     pub(super) owner: Arc<()>,
     families: Vec<String>,
 }
@@ -43,6 +44,7 @@ impl TextSystem {
             performance,
             fonts: FontSystem::new_with_locale_and_db(locale.into(), database),
             cache: SwashCache::new(),
+            spans: None,
             owner: Arc::new(()),
             families,
         })
@@ -70,6 +72,10 @@ impl TextSystem {
             }
             return Ok(layout);
         }
+        let shape_start = self
+            .performance
+            .as_ref()
+            .and_then(|performance| performance.start(2));
         let mut buffer = Buffer::new(
             &mut self.fonts,
             Metrics::new(style.font_size, style.line_height),
@@ -94,6 +100,11 @@ impl TextSystem {
             alignment,
         );
         buffer.shape_until_scroll(&mut self.fonts, false);
+        let shape_elapsed = shape_start.map(|start| start.elapsed());
+        let extract_start = self
+            .performance
+            .as_ref()
+            .and_then(|performance| performance.start(3));
         let mut lines = Vec::new();
         let mut measurement = TextMeasurement::default();
         for run in buffer.layout_runs() {
@@ -138,6 +149,8 @@ impl TextSystem {
         };
         self.layouts.insert(text, style, &layout);
         if let Some(performance) = &mut self.performance {
+            performance.record_elapsed(2, shape_elapsed, text.len());
+            performance.record(3, extract_start, text.len());
             performance.record(0, start, text.len());
         }
         Ok(layout)
@@ -146,5 +159,6 @@ impl TextSystem {
     /// Drop raster cache allocations. Existing immutable snapshots remain usable.
     pub fn clear_raster_cache(&mut self) {
         self.cache = SwashCache::new();
+        self.spans = None;
     }
 }

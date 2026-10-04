@@ -7,17 +7,29 @@ use super::raster::TextPixel;
 const ENTRY_LIMIT: usize = 128;
 const SPAN_LIMIT: usize = 65_536;
 
-/// Tint-specific glyph spans reused only during one raster request.
+/// Service-local tinted spans with bounded glyph entries and retained span counts.
 #[derive(Default)]
 pub(super) struct GlyphSpans {
     entries: HashMap<CacheKey, Vec<GlyphSpan>>,
     spans: usize,
     scratch: Vec<GlyphSpan>,
     tint: [f32; 4],
-    reuse: bool,
 }
 
 impl GlyphSpans {
+    #[expect(
+        clippy::float_cmp,
+        reason = "reuse requires exactly matching validated tint"
+    )]
+    pub(super) fn begin(&mut self, tint: [f32; 4]) {
+        if self.tint != tint {
+            *self = Self::new(tint);
+        }
+    }
+
+    pub(super) fn finish(&mut self) {
+        self.scratch = Vec::new();
+    }
     #[cfg(test)]
     pub(super) fn diagnostic_storage_bytes(&self) -> usize {
         self.scratch.capacity() * std::mem::size_of::<GlyphSpan>()
@@ -28,10 +40,9 @@ impl GlyphSpans {
                 .sum::<usize>()
     }
 
-    pub(super) fn new(tint: [f32; 4], reuse: bool) -> Self {
+    pub(super) fn new(tint: [f32; 4]) -> Self {
         Self {
             tint,
-            reuse,
             ..Self::default()
         }
     }
@@ -43,12 +54,12 @@ impl GlyphSpans {
         key: CacheKey,
         position: [i32; 2],
     ) {
-        if !self.reuse {
-            append_direct(output, cache, fonts, key, position, self.tint);
-            return;
-        }
         if let Some(pixels) = self.entries.get(&key) {
             append_translated(output, pixels, position);
+            return;
+        }
+        if self.entries.len() >= ENTRY_LIMIT {
+            append_direct(output, cache, fonts, key, position, self.tint);
             return;
         }
         self.scratch.clear();
@@ -84,7 +95,7 @@ impl GlyphSpans {
     }
 }
 
-/// Small requests avoid allocating a glyph-span working set.
+/// Uncached glyphs at entry saturation avoid additional span working sets.
 #[expect(
     clippy::cast_precision_loss,
     reason = "bounded raster pixel coordinates become GPU f32 positions"

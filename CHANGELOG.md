@@ -9,8 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Text rasterization releases request-local glyph-span storage before constructing
-  the immutable raster snapshot, shortening temporary buffer lifetime.
+- UI layout reuses bounded shaped text across arrangement, editing geometry and
+  paint within one pass, avoiding repeated shaping under large field workloads.
+- Text raster snapshots share their construction vector without copying it;
+  spare vector capacity remains owned by the immutable snapshot.
+- Text services reuse bounded tinted glyph spans across raster calls, including
+  short labels. Tint changes and `clear_raster_cache` release this cache; scratch
+  storage is released before publishing each immutable raster snapshot.
 
 - Text layout-cache line retention rises from 1024 to 4096 to admit measured
   narrow Japanese composition working sets, removing repeated warm shaping while

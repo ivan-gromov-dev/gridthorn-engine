@@ -55,4 +55,5 @@ fn facade_composes_controls_into_render_frame() {
     assert_ne!(frame.ui(), []);
 }
 mod animation;
+mod prepared_text;
 mod routing;

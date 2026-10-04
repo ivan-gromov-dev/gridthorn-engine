@@ -1,11 +1,11 @@
 use super::{UiBounds, UiCompositionError, UiControl, UiNode, UiPlacement, UiTree, UiVisualState};
-use gridthorn_render::{Color, TextLabel, TextSystem, UiPrimitive, UiRect};
+use gridthorn_render::{Color, TextLabel, UiPrimitive, UiRect};
 
 pub(super) fn paint(
     tree: &UiTree,
     placements: &[UiPlacement],
     scale: f32,
-    text: &mut Option<&mut TextSystem>,
+    text: &mut super::prepared_text::PreparedText<'_>,
     router: Option<&super::UiRouter>,
     mut performance: Option<&mut super::layout_performance::LayoutSample>,
     geometry: Option<
@@ -110,7 +110,7 @@ pub(super) fn label(
     placement: LabelBounds,
     color: Color,
     scale: f32,
-    text: &mut Option<&mut TextSystem>,
+    text: &mut super::prepared_text::PreparedText<'_>,
     output: &mut Vec<UiPrimitive>,
 ) -> Result<(), UiCompositionError> {
     let LabelBounds { bounds, clip } = placement;
@@ -118,14 +118,15 @@ pub(super) fn label(
         return Ok(());
     }
     if let Some(style) = &tree.theme.text {
+        let mut style = style.clone();
+        style.width = Some(bounds.size[0].max(1.0));
+        let layout = text.layout(value, &style)?;
         let service = text
+            .service
             .as_deref_mut()
             .ok_or(UiCompositionError::InvalidMetrics(
                 "asset font theme requires TextSystem",
             ))?;
-        let mut style = style.clone();
-        style.width = Some(bounds.size[0].max(1.0));
-        let layout = service.layout(value, &style)?;
         let raster = if clip.size.into_iter().all(|value| value > 0.0) {
             let position =
                 std::array::from_fn(|axis| (clip.position[axis] - bounds.position[axis]) * scale);
@@ -163,7 +164,7 @@ fn control(
     placement: &UiPlacement,
     clip: UiBounds,
     scale: f32,
-    text: &mut Option<&mut TextSystem>,
+    text: &mut super::prepared_text::PreparedText<'_>,
     output: &mut Vec<UiPrimitive>,
 ) -> Result<(), UiCompositionError> {
     let color = node.style.foreground.unwrap_or(tree.theme.foreground);
@@ -271,7 +272,7 @@ fn paint_list(
     placement: &UiPlacement,
     label_bounds: LabelBounds,
     scale: f32,
-    text: &mut Option<&mut TextSystem>,
+    text: &mut super::prepared_text::PreparedText<'_>,
     output: &mut Vec<UiPrimitive>,
 ) -> Result<(), UiCompositionError> {
     let LabelBounds { bounds, clip } = label_bounds;

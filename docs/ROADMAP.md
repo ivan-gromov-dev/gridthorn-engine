@@ -314,7 +314,7 @@ record implemented and verified increments; measurements and limitations are in
         scrolling, locale-switch, nested-window and animation workloads at DPI 1/2.
   - [ ] Measure whole-engine frame CPU work, GPU execution and actual presented
         intervals; host present-call cadence alone does not satisfy this step.
-- [ ] Resolve measured text/UI bottlenecks: shaping/rasterization, invalidation,
+- [x] Review and resolve measured CPU text/UI bottlenecks within recorded workload limits: shaping/rasterization, invalidation,
       layout/paint duplication, hidden-layer work, routing and allocations.
   - [x] Remove discarded router paint and closed-layer editing geometry;
         preserve sizing/arrangement and verify clipping, DPI and text-session recovery.
@@ -332,8 +332,13 @@ record implemented and verified increments; measurements and limitations are in
     - [x] Add cache hit/miss/eviction and peak-retention diagnostics; verify that
           unowned backend buffers are released on eviction.
     - [x] Reuse bounded request-local glyph raster spans for large layouts; preserve exact pixel output/tint/fractional DPI and record repeated before/after samples.
-  - [ ] Profile remaining shaping/rasterization, invalidation, hidden-node sizing,
-        focused editing/preedit, routing and allocation costs; resolve measured issues.
+  - [x] Attribute expanded font preparation to repeated shaping, field geometry
+        and paint; share bounded prepared text across a UI pass and tinted glyph
+        spans across raster calls, and remove raster snapshot construction copies.
+  - [x] Remeasure long-field preedit/commit, overlapping routing, closed-layer sizing,
+        Japanese primary/fallback shaping and raster storage/release; record supported
+        limits and concrete backend/incremental-layout follow-ups in the review.
+        Native whole-frame/DPI/OS-IME acceptance remains in the gates below.
 - [ ] Review and optimize measured rendering/presentation bottlenecks: text/sprite
       geometry, clipping, batching, GPU uploads, resource lifetime and frame pacing.
   - [x] Remove intermediate nested-clip geometry copies; verify sibling isolation
@@ -388,8 +393,10 @@ record implemented and verified increments; measurements and limitations are in
           reference chains, nested selectors/numbers and rejected cyclic candidates.
     - [x] Measure expanded asset-font layout/paint through64 overlapping layers
           and1024 unique fields, four scripts and synthetic DPI1/2.
-    - [ ] Attribute long Japanese fallback misses/raster allocations and long-field editing costs; measure broader mixed ECS/component churn;
-        attribute larger input burst and remaining layout/routing costs.
+    - [x] Attribute long Japanese fallback shaping, raster output/span/image storage,
+          long-field editing and expanded font layout/routing; fix duplicate work,
+          verify output/lifetimes and record measured limits.
+    - [ ] Measure broader mixed ECS/component churn and attribute larger input bursts.
   - [ ] Record runtime, world, input and localization dispositions and remeasure fixes.
 - [ ] Review assets/reload, scenes/saves, audio and platform lifecycle for I/O,
       memory peaks, worker/publication costs and frame stalls.

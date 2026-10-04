@@ -129,9 +129,29 @@ Whole-frame GPU execution and actual presented intervals remain unmeasured. The 
 is a correctness foundation for modest UI text, not a measured high-throughput
 text renderer. [ADR 0004](adr/0004-multilingual-text.md) records the provisional backend.
 
-Large raster requests (256 glyphs or more) reuse glyph-relative tinted spans within
-one call, capped at 128 entries/65536 retained spans. Small requests use direct
-sampling. This temporary reuse does not survive a call or change snapshot ownership,
-font choice, tint, DPI or the one-million sample rejection limit. Scratch/output
-capacity and opaque backend caches are outside the span count cap. Measured gains,
-tradeoffs and unmeasured memory/unique-glyph limits are in PERFORMANCE_REVIEW.md.
+Each service reuses glyph-relative tinted spans across raster calls, including
+short labels, capped at 128 entries/65536 retained spans. Cache keys include the
+backend font/glyph identity, physical size and fractional positioning. Changing
+tint discards the previous set; `clear_raster_cache` clears both backend images
+and these spans. Entry saturation uses direct sampling; span saturation does not
+retain the new glyph. Scratch capacity is released before snapshot construction.
+Font choice, DPI, output order and the one-million image-sample limit are unchanged.
+Retained vector capacity, map metadata and opaque font/backend caches are outside
+the span count cap. Failed raster requests discard the active span set while
+preserving previous snapshots.
+
+Raster snapshots share their construction vector through an immutable internal
+owner, avoiding the previous vector-to-shared-slice allocation/copy. Spare vector
+capacity remains retained until the last snapshot clone releases it. Snapshot
+clones share output storage; clearing the service caches does not release live
+snapshots. Phase timings and output/span/backend-image capacities, separate-process
+memory observations and their exclusions are in PERFORMANCE_REVIEW.md.
+
+Fresh unique long Japanese fallback requests remain expensive in backend shaping:
+the measured 256-repeat fixture takes roughly 12–13 ms, while engine diagnostic
+extraction is around 0.1 ms. Warm matching layouts avoid shaping. This is a measured
+workload limit, not a realtime guarantee for arbitrary user text. The follow-up is
+backend fallback-run attribution/optimization with unchanged shaping, coverage and
+bidi output; replacing the primary family or splitting authored paragraphs changes
+semantics and is not applied automatically. Exact allocator events and total opaque
+backend heap peaks remain unmeasured.

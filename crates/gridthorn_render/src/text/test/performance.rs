@@ -10,9 +10,26 @@ fn operation_limits_are_independent_and_totals_survive_truncation() {
     assert_eq!(performance.samples[0].len(), LIMIT);
     assert_eq!(performance.totals[0], LIMIT + 1);
     assert!(performance.start(0).is_none());
-    let start = performance.start(1);
-    assert!(start.is_some());
-    performance.record(1, start, 31);
-    assert_eq!(performance.samples[1].len(), 1);
-    assert_eq!(performance.samples[1][0].units, 31);
+    for operation in 1..6 {
+        let start = performance.start(operation);
+        assert!(start.is_some());
+        performance.record(operation, start, 31);
+        assert_eq!(performance.samples[operation].len(), 1);
+        assert_eq!(performance.samples[operation][0].units, 31);
+    }
+}
+
+#[test]
+fn oversized_layout_does_not_publish_partial_shape_timings() {
+    let mut service = crate::text::test::system();
+    service.performance = Some(TextPerformance::default());
+    let mut style = crate::TextStyle::new("Noto Sans", 20.0);
+    style.line_height = 1000.0;
+    assert!(matches!(
+        service.layout(&"\n".repeat(100), &style),
+        Err(crate::TextError::TooLarge)
+    ));
+    let performance = service.performance.as_ref().unwrap();
+    assert_eq!(performance.totals, [0; 6]);
+    assert!(performance.samples.iter().all(Vec::is_empty));
 }

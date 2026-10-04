@@ -116,8 +116,10 @@ with measured construction and retention tradeoffs in the review.
   A public example probe measures warm asset-font editing and three overlapping
   layers across four scripts at DPI 1/2; its bounded workload and limits are recorded
   in the performance review.
-Large text raster requests reuse bounded glyph spans within a call; short requests
-retain direct sampling. Before/after evidence and workload limits are recorded
+UI preparation reuses bounded shaped layouts across one arrangement/geometry/paint
+pass. Text services reuse bounded tinted glyph spans across calls, and immutable
+raster snapshots retain their construction vector without copying it. Before/after
+evidence, retained-memory tradeoffs and workload limits are recorded
 in the performance review.
 Dependency-aware reload traverses reverse edges and an ordered ready queue;
 warm reload, scene and world-save measurements are recorded in the same review.

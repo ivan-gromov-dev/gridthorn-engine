@@ -7,6 +7,7 @@ mod layout;
 mod layout_performance;
 mod node_index;
 mod paint;
+mod prepared_text;
 mod routing;
 mod style;
 mod text_geometry;

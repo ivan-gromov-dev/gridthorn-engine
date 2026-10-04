@@ -1,7 +1,6 @@
 use std::collections::BTreeMap;
 
 use super::{UiCompositionError, UiTheme};
-use gridthorn_render::TextSystem;
 
 const LIMIT: usize = 1024;
 const TEXT_BYTES_LIMIT: usize = 1024 * 1024;
@@ -9,7 +8,7 @@ const TEXT_BYTES_LIMIT: usize = 1024 * 1024;
 /// Per-arrangement measurements share one immutable theme and font service.
 pub(super) struct TextMeasurements<'a, 'b> {
     pub theme: &'a UiTheme,
-    text: &'a mut Option<&'b mut TextSystem>,
+    text: &'a mut super::prepared_text::PreparedText<'b>,
     cache: MeasurementCache,
 }
 
@@ -21,7 +20,10 @@ struct MeasurementCache {
 }
 
 impl<'a, 'b> TextMeasurements<'a, 'b> {
-    pub(super) fn new(theme: &'a UiTheme, text: &'a mut Option<&'b mut TextSystem>) -> Self {
+    pub(super) fn new(
+        theme: &'a UiTheme,
+        text: &'a mut super::prepared_text::PreparedText<'b>,
+    ) -> Self {
         Self {
             theme,
             text,

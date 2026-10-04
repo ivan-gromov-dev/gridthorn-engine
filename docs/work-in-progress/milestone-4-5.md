@@ -2039,3 +2039,53 @@ No staging/commits.
 Expanded-font fullverify passed target/expanded-fonts-full-verify.log with process
 sharedtarget/sequentialtests. Sibling14passed/4ignored, all-targetClippy passed;
 final manualprobe passes all48configs. Finalbothrepo formatting/whitespace passed.
+
+## 2026-10-04 Remaining Text/UI CPU review
+
+Starting engine0339437c5d6dc16ce0ecc5e7ed849dc7ddc909e9, siblingc89adb9a5317007b3469782c1c8da9d8b4b1b04a;
+engine initially clean, sibling's existing edits/untracked workbench preserved.
+Scope: Japanese fallback, raster allocations/ownership, long-field editing and
+expanded/hidden asset-font UI; no mixedECS/input/native frame gate expansion.
+Phase acquisition identifies95232 misses/0hits across three stages; bounded
+PreparedText shares layouts within one UI pass, leaving31744 misses. Cache drops
+before UiLayout publication; permanent LRU/font/hidden sizing contracts unchanged.
+RasterText shares its outputVec without copying; capacity survives with snapshots.
+GlyphSpans reuses128keys/65536spans across calls, clears on tint/raster-cache reset,
+uses direct sampling at entry saturation and releases scratch before publication.
+
+Two final48-config expanded-font runs pass. Japanese1024field p95DPI1
+92.18–145.49ms,DPI2 119.16–135.89ms vs previous188.00–233.69/294.62–307.17.
+Two long-field and two overlapping editing/routing matrices pass;Japanese256/DPI1
+preeditcommit p955.264–6.571ms. All256/DPI2 largest fields still reject at safety
+limit, not silently timed. Separate closed-layer runs attribute retained sizing
+cost; cold Japanese diagnostics attribute long unique misses to backend shaping.
+Detailed means, workloads/host variation and concrete follow-ups in PERFORMANCE_REVIEW.
+Two raster-storage process runs pass clone/cache/output-owner lifetime assertions;
+output/spans/backendimage capacities and externally sampled private/resident ranges
+recorded with transition exclusions. No exact allocator/backendheappeak claim.
+
+Focused renderer29passed/6ignored and facade10passed, including128-field independent
+raster equivalence across edits/width/DPI. Budget tests validate each retention
+limit/atomic bypass; existing clipped/RTL/cluster/error/lifetime coverage retained.
+Headless, --performance, mixed --smoke, --selection-smoke and --preedit-smoke pass
+(actual nativeDPI1, Japanese injection; no real OSIME/user visual acceptance).
+Evidence target/text-ui-* logs/summaryCSVs; no staging or commits.
+Next: final full engine and sibling verification; remaining milestone scope is
+mixedECS/input plus native whole-frame/GPU/display/platform acceptance and other
+open domains. Opaque backendheap/events and large-tree incremental layout have
+explicit measured follow-ups; CPU review closure does not close native gates.
+
+Final ./scripts/verify.ps1 passed with process-scoped CARGO_TARGET_DIR=engine/target,
+CARGO_BUILD_JOBS=1 and RUST_TEST_THREADS=1 (target/text-ui-final-verify.log): formatting,
+workspace check, Clippy, all workspace tests and dependency boundaries. An earlier
+unconstrained rerun failed while compiling a fresh temporary CLI project with
+rustc STATUS_STACK_BUFFER_OVERRUN; diagnostics remain in text-ui-full-verify.log.
+Shared targets/sequential work resolve that run without changing repository build
+policy. Added regression ensures failed oversized layouts do not publish partial
+shape timings; all six diagnostic caps remain independent.
+Sibling package14passed/6ignored and all-target Clippy passed (text-ui-example-*
+logs). Final release rebuild/headless/mixed native smoke/injected Japanese preedit
+also passed (text-ui-final-*-smoke.log, native actualDPI1); selection smoke passed
+in the preceding acquisition. Both repositories' final formatting/whitespace pass.
+No dependency edge, source staging or commit introduced. CPU Text/UI review is
+recorded complete with explicit workload limits, not native frame/OSIME acceptance.

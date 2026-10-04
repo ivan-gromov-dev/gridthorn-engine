@@ -2,16 +2,13 @@ use super::{TextError, TextLayout, TextMeasurement, TextSystem};
 use crate::presentation::{Color, UiRect};
 use std::sync::Arc;
 
-/// Amortize request-local span preparation only across sufficiently large layouts.
-const MIN_GLYPHS_FOR_SPAN_REUSE: usize = 256;
-
 /// Keep boundary ink when callers convert bounded logical origins and clips separately.
 const CLIP_ROUNDING_MARGIN: f64 = 2.0;
 
 /// DPI-specific immutable text draw data, independent of the font service and GPU.
 #[derive(Clone, Debug, PartialEq)]
 pub struct RasterText {
-    pub(crate) pixels: Arc<[TextPixel]>,
+    pub(crate) pixels: Arc<Vec<TextPixel>>,
     position: [f32; 2],
     scale: f32,
     measurement: TextMeasurement,
@@ -127,14 +124,18 @@ impl TextSystem {
         if !Arc::ptr_eq(&layout.owner, &self.owner) {
             return Err(TextError::ForeignLayout);
         }
+        let loop_start = self
+            .performance
+            .as_ref()
+            .and_then(|performance| performance.start(4));
         let mut pixels: Vec<TextPixel> = Vec::new();
         let mut samples = 0_usize;
 
-        let glyphs: usize = layout.lines().iter().map(|line| line.glyphs.len()).sum();
-        let mut spans = super::raster_spans::GlyphSpans::new(
-            color.components(),
-            glyphs >= MIN_GLYPHS_FOR_SPAN_REUSE,
-        );
+        let mut spans = self
+            .spans
+            .take()
+            .unwrap_or_else(|| super::raster_spans::GlyphSpans::new(color.components()));
+        spans.begin(color.components());
         for run in layout.buffer.layout_runs() {
             for glyph in run.glyphs {
                 let physical = glyph.physical((0.0, run.line_y * scale), scale);
@@ -166,13 +167,7 @@ impl TextSystem {
                         f64::from(physical.y) - f64::from(image.placement.top),
                     ];
                     let extent = [image.placement.width, image.placement.height];
-                    if (0..2).any(|axis| {
-                        let minimum = f64::from(clip.position()[axis]) - CLIP_ROUNDING_MARGIN;
-                        let maximum = f64::from(clip.position()[axis])
-                            + f64::from(clip.size()[axis])
-                            + CLIP_ROUNDING_MARGIN;
-                        origin[axis] >= maximum || origin[axis] + f64::from(extent[axis]) <= minimum
-                    }) {
+                    if !ink_intersects_clip(origin, extent, clip) {
                         continue;
                     }
                 }
@@ -186,6 +181,9 @@ impl TextSystem {
             }
         }
         let units = pixels.len();
+        if let Some(performance) = &mut self.performance {
+            performance.record(4, loop_start, units);
+        }
         #[cfg(test)]
         if std::env::var_os("GRIDTHORN_RASTER_STORAGE_PROBE").is_some() {
             let output_capacity_bytes = pixels.capacity() * std::mem::size_of::<TextPixel>();
@@ -196,16 +194,32 @@ impl TextSystem {
                 clip.is_some()
             );
         }
-        drop(spans);
+        spans.finish();
+        self.spans = Some(spans);
+        let snapshot_start = self
+            .performance
+            .as_ref()
+            .and_then(|performance| performance.start(5));
         let raster = RasterText {
-            pixels: pixels.into(),
+            pixels: Arc::new(pixels),
             position: [0.0, 0.0],
             scale,
             measurement: layout.measurement,
         };
         if let Some(performance) = &mut self.performance {
+            performance.record(5, snapshot_start, units);
             performance.record(1, start, units);
         }
         Ok(raster)
     }
+}
+
+/// Retain boundary ink across independent logical-origin and physical-clip rounding.
+fn ink_intersects_clip(origin: [f64; 2], extent: [u32; 2], clip: UiRect) -> bool {
+    (0..2).all(|axis| {
+        let minimum = f64::from(clip.position()[axis]) - CLIP_ROUNDING_MARGIN;
+        let maximum =
+            f64::from(clip.position()[axis]) + f64::from(clip.size()[axis]) + CLIP_ROUNDING_MARGIN;
+        origin[axis] < maximum && origin[axis] + f64::from(extent[axis]) > minimum
+    })
 }

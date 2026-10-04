@@ -15,8 +15,9 @@ impl UiRouter {
         tree: &UiTree,
         viewport: [f32; 2],
         scale: f32,
-        mut text: Option<&mut TextSystem>,
+        text: Option<&mut TextSystem>,
     ) -> Result<UiLayout, UiCompositionError> {
+        let mut text = super::super::prepared_text::PreparedText::new(text);
         let mut sample =
             super::super::layout_performance::LayoutSample::new(self.performance.is_some());
         let start = sample.start();
@@ -90,7 +91,7 @@ impl UiRouter {
         placement: &UiPlacement,
         geometry: &super::super::text_geometry::TextGeometry,
         scale: f32,
-        text: &mut Option<&mut TextSystem>,
+        text: &mut super::super::prepared_text::PreparedText<'_>,
         output: &mut Vec<UiPrimitive>,
     ) -> Result<(), UiCompositionError> {
         if self.focus != Some(placement.id) {
@@ -139,7 +140,7 @@ impl UiRouter {
         placement: &UiPlacement,
         caret: UiBounds,
         scale: f32,
-        text: &mut Option<&mut TextSystem>,
+        text: &mut super::super::prepared_text::PreparedText<'_>,
         paint: &mut Vec<UiPrimitive>,
     ) -> Result<(), UiCompositionError> {
         if !self.editor.preedit.is_empty() {

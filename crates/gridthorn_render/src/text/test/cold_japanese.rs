@@ -9,6 +9,19 @@ use crate::{Color, TextStyle, TextSystem, UiRect};
 fn measure_cold_japanese_phases() {
     assert!(!black_box(cfg!(debug_assertions)), "run with --release");
     assert_eq!(std::env::var_os("GRIDTHORN_TEXT_PERFORMANCE"), None);
+    cases();
+}
+
+/// Attribute backend shaping, diagnostic extraction and raster snapshot construction.
+#[test]
+#[ignore = "manual Japanese phase probe; enable text diagnostics and run alone in release"]
+fn attribute_japanese_phases() {
+    assert!(!black_box(cfg!(debug_assertions)), "run with --release");
+    assert!(std::env::var_os("GRIDTHORN_TEXT_PERFORMANCE").is_some());
+    cases();
+}
+
+fn cases() {
     let assets = assets();
     println!("cold_japanese,family,repeats,width,sample,operation,elapsed_ns,output_bytes");
     for family in ["Noto Sans", "Noto Sans JP"] {
@@ -50,7 +63,7 @@ fn measure_cold_japanese_phases() {
                         }
                         .unwrap();
                         let elapsed = start.elapsed().as_nanos();
-                        let bytes = std::mem::size_of_val(raster.pixels.as_ref());
+                        let bytes = std::mem::size_of_val(raster.pixels.as_slice());
                         println!(
                             "cold_japanese,{family},{repeats},{width},{sample},{operation},{elapsed},{bytes}"
                         );
@@ -62,7 +75,7 @@ fn measure_cold_japanese_phases() {
                             assert!(
                                 bytes
                                     < std::mem::size_of_val(
-                                        expected.as_ref().unwrap().pixels.as_ref()
+                                        expected.as_ref().unwrap().pixels.as_slice()
                                     )
                             );
                         }

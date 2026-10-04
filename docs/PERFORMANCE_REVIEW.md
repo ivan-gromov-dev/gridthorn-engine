@@ -49,7 +49,8 @@ sampling gaps are unavailable data, not zero GPU work.
 ## Evidence and limits
 
 `GRIDTHORN_TEXT_PERFORMANCE` enables per-service text diagnostics. At most 8192
-successful layout calls and 8192 successful rasterize calls are stored separately.
+successful calls for each of layout, rasterize, backend shape, diagnostic extract,
+raster loop and snapshot construction are stored separately.
 `text_cpu` rows print at service destruction; `text_cpu_summary` reports stored
 and total successful counts, making truncation explicit. Layout units are input
 UTF-8 bytes; rasterize units are output horizontal pixel spans, not glyph/pixel
@@ -60,6 +61,14 @@ operation counters, not host/present frames; the probe covers all callers, not
 only paint. Default services create no collector or timers; timers stop for an
 operation once its storage limit is reached. Glyph raster-cache hits can still
 require reconstruction of the immutable span snapshot.
+
+`shape` covers buffer construction/settings/text and backend shaping/layout;
+`extract` covers engine line/glyph diagnostics and layout-cache insertion, on misses
+only. `raster_loop` covers image lookup, work/clip checks and span construction;
+`snapshot` covers the shared output owner after scratch release. These are nested
+subphases of layout/rasterize, with independent counters and truncation. They do
+not isolate backend fallback internals or allocator events; do not add their
+percentiles or assume their sample indices describe the same request.
 
 The same flag also prints `text_layout_cache` at service destruction: hit/miss,
 eviction/oversized-bypass counts, final retained entries/key bytes/glyphs/lines,
@@ -3114,3 +3123,169 @@ measure_expanded_font_layers -- --ignored --nocapture --test-threads=1`, diagnos
 unset. Evidence target/expanded-fonts-{1,2}.log and summaryCSVs in engine target;
 final count-asserting acquisition target/expanded-fonts-final.log. This adds only
 sibling domain test/documentation and preserves its existing working tree.
+
+## Text/UI CPU review disposition — 2026-10-04
+
+The requested remaining CPU text/UI review is complete for the recorded Windows
+workloads. Engine starting revision is 0339437c5d6dc16ce0ecc5e7ed849dc7ddc909e9;
+sibling revision is c89adb9a5317007b3469782c1c8da9d8b4b1b04a with its existing local
+changes preserved. This closes the CPU review item, not the native whole-frame,
+actual display, DPI-2 or real OS-IME acceptance gates. No default primary family,
+paragraph segmentation, hidden-layer participation or raster safety limit changed.
+
+### Attribution and focused changes
+
+A fresh pre-change expanded phase acquisition ran English/Japanese, DPI1/2,
+64 overlapping layers x16 unique fields, ten warm layouts and20 timed layouts.
+All four services reported95232 layout misses and zero hits: initial tree layout
+and30 router layouts each request the1024 values in three separate stages.
+The64-entry persistent LRU churns between arrangement, field geometry and paint.
+Backend shaping dominates Japanese layout misses; engine diagnostic extraction
+is much smaller. The new per-UI-pass prepared-text cache shares shaped storage
+across all three stages and preedit, then drops before returning UiLayout. Limits:
+1024 entries,256KiB copied UTF-8 text/family keys,16384 diagnostic glyphs,4096 lines.
+Exhaustion bypasses retention without changing successful output or errors.
+The permanent text-service LRU is unchanged. Final services report31744 misses;
+English also has1178 service hits at pass-budget saturation, Japanese zero hits.
+The expensive repeated stage requests are now served by the temporary pass cache.
+
+Representative warm phase means, from20 diagnostic layouts per case, in ms:
+
+| Japanese /1024 fields | Arrange before → after | Geometry before → after | Paint before → after |
+| --- | ---: | ---: | ---: |
+| DPI1 |55.14 →58.77 |56.67 →2.45 |82.98 →17.06 |
+| DPI2 |59.64 →59.25 |56.54 →2.33 |118.09 →35.04 |
+
+Arrangement includes layer ordering; paint includes focused decoration. These
+means locate the remaining cost rather than adding independent percentiles.
+The pass cache adds map/key/style bookkeeping during arrangement. Diagnostic
+text samples truncate independently at8192 calls per phase; counts remain complete.
+No whole-frame or exact backend fallback-call attribution is inferred.
+Evidence: target/text-ui-expanded-before-phases.log and
+text-ui-measure_expanded_font_phases-final.log, with summaryCSVs.
+
+Text services now reuse glyph-relative tinted spans between short and long raster
+calls, bounded to128 glyph keys/65536 retained spans. Tint changes release the
+previous set; clear_raster_cache clears spans and backend images. Entry saturation
+uses direct sampling; span saturation does not retain the new glyph. Scratch is
+released before publication. Retained vector/map capacity is outside the span-count
+limit. Backend image lookup, actual ink clipping and the one-million image-sample
+limit still apply to every request, including wholly offscreen glyphs.
+
+The output Vec formerly copied into a newly allocated Arc slice. Snapshots now
+share that Vec through an immutable internal owner. This removes the second
+output allocation/copy but retains spare capacity until the last clone releases it.
+In the fresh-service64-repeat Japanese fixture at20px/DPI1, snapshot construction
+median was about0.3ms before; after sharing the vector it is below the diagnostic
+one-microsecond resolution. Raster-loop work remains separately measurable.
+This is an allocation/copy removal, not a total heap-peak or universal speedup claim.
+Evidence: target/text-ui-japanese-{before,after}-phases.log and summaryCSVs.
+
+### Diagnostic-free repeated outcomes
+
+Two complete final release acquisitions cover48 expanded configurations:
+3/16/64 layers x1/16 fields xfour scripts xDPI1/2,10 warm+20 timed layouts.
+Each checks modal focus, top-layer hit testing and exact primitive counts.
+
+| Script /1024 fields | Previous p95 DPI1 /DPI2 ms | Final p95 DPI1 /DPI2 ms |
+| --- | ---: | ---: |
+| English |55.75–59.98 /75.75–81.31 |38.13–46.69 /52.47–67.18 |
+| Russian |63.88–65.47 /95.82–120.10 |48.35–58.15 /78.49–82.07 |
+| Arabic |81.68–93.42 /102.01–117.23 |49.71–66.11 /63.48–81.61 |
+| Japanese |188.00–233.69 /294.62–307.17 |92.18–145.49 /119.16–135.89 |
+
+Previous ranges are the two retained expanded-fonts acquisitions above; final
+ranges span the two new acquisitions. Host scheduling variation is visible,
+especially Japanese/DPI1; do not claim a uniform multiplier. All cases still
+perform the authored overlapping paint, without virtualization or occlusion culling.
+These intentionally heavy1024-field layouts remain above16.67ms. Evidence:
+target/text-ui-measure_expanded_font_layers-final-{1,2}.log and summaryCSVs.
+
+Two complete long-field acquisitions cover four scripts,8/64/256 phrase repeats
+and synthetic DPI1/2,10 warm+100 individually timed preedit/commit cycles. Japanese
+256/DPI1 p95 is5.264–6.571ms;64/DPI1 is3.264–4.803ms and64/DPI2 is8.882–9.706ms.
+An intermediate acquisition after pass reuse/output sharing but before persistent
+span reuse had256/DPI1 p95 9.568ms in run1. The largest256-repeat DPI2 fixture
+rejects for every script at the existing raster work limit; no timing samples are
+assigned to rejected configurations. Tests preserve old snapshots on raster errors.
+Two overlapping-font acquisitions also repeat the32-pointer-event and short
+preedit/commit workloads with modal and nonmodal scopes, four scripts and DPI1/2.
+Evidence: target/text-ui-measure_{long_field_editing,overlapping_font_editing}-final-{1,2}.log;
+long phase evidence: text-ui-measure_long_field_phases-final.log.
+
+### Japanese unique misses and hidden sizing limits
+
+The fresh-service phase probe separates backend shape from extraction. For the
+256-repeat,600px-wide Japanese string, Sans fallback shaping p95 is13.370ms and
+JP-primary shaping2.333ms, across40 cold/unique misses per family; extraction
+p95 is0.150/0.163ms respectively. This family comparison changes font semantics,
+so it diagnoses a workload rather than prescribing a primary-font substitution.
+The locked backend's advanced fallback path shapes the primary and fallback runs,
+then scans/removes missing cluster positions and searches replacement glyphs;
+these repeated scans provide a concrete backend follow-up. Timings attribute the
+cost to the backend stage, not to individual scans or allocator events. Unique
+requests still pay it; exact matching layouts hit the existing service LRU.
+Follow-up: profile/optimize backend fallback-run replacement with exact coverage,
+clusters, bidi and glyph/raster equivalence, without silently splitting authored
+paragraphs or forcing another primary family.
+
+Two visibility acquisitions register64x16 fields, close all layers, then open
+one16-field layer. Each configuration has10 warm+20 timed calls; primitives must
+be0/16. Japanese all-closed p95 is62.33–76.45ms atDPI1 and64.02–87.61ms atDPI2.
+Closed managed layers still participate in sizing by contract; geometry/paint
+removal does not eliminate their unique shaping. Opening one layer is similar.
+This confirms the remaining large-tree cost independently of paint. Follow-up:
+design explicit incremental/subtree measurement invalidation, preserving hidden
+intrinsic size, content extents, focus, scroll and native text-anchor lifetimes.
+Do not rebuild this whole fixture every frame; unchanged caller-owned layouts
+can already be reused. Evidence: target/text-ui-visibility-{1,2}.log and summaryCSVs.
+
+### Raster storage ownership and process observations
+
+A new separate-process lifecycle probe uses64 Japanese repeats,24px font,600px
+width andDPI1. It holds seven phases for one second, checks clone sharing, cache
+release and final output-owner release. Both acquisitions report identical capacities:
+
+| Phase | Unique output Vec capacity bytes | Retained span Vec capacity bytes | Backend image data capacity bytes |
+| --- | ---: | ---: | ---: |
+| Before raster |0 |0 |0 |
+| Full raster |3670016 |186368 |14016 |
+|32 additional clones |3670016 |186368 |14016 |
+| Plus clipped raster |4128768 |186368 |14016 |
+| Raster cache cleared |4128768 |0 |0 |
+| Snapshots dropped |0 |0 |0 |
+
+Counts exclude Arc/Vec/map metadata, allocator rounding, layouts/fonts, backend
+font/shape scratch and GPU data. Clones share output; there is no second full
+output buffer at snapshot construction. The full+clipped vectors retain about
+3.94MiB capacity; this is actual retained capacity, not logical span bytes.
+
+Each executable is launched hidden and sampled externally through GetProcess at
+nominal25ms intervals. Per-phase summaries exclude the first/last three samples
+because marker/read/process polling can straddle a phase transition. Settled
+private bytes are7.082–7.086MB before raster,10.707–12.493MB full/cloned,
+11.485–11.489MB full+clipped,6.803–6.898MB after snapshots drop and1.466–1.511MB
+after service drop. Full/cloned resident bytes are19.497–21.328MB. These are
+process accounting observations, not allocator events, exact allocation/heap
+peaks or an idle-subtracted universal budget. The cache-clear private-byte plateau
+illustrates allocator retention; the ownership assertions establish actual release.
+Evidence: target/text-ui-raster-memory-{1,2}.{log,samples.csv,settled.csv}.
+
+Reproduce with renderer filters attribute_japanese_phases (text diagnostics on)
+and measure_raster_storage_lifecycle (diagnostics off), in release/locked mode
+with --ignored --nocapture --test-threads=1. Workbench filters
+measure_expanded_font_phases and measure_long_field_phases require UI/text diagnostics;
+measure_font_layer_visibility and the diagnostic-free matrices require them unset.
+
+Disposition: duplicate UI shaping and output copying are fixed and remeasured;
+short/repeated raster spans have bounded service reuse with release/tint tests.
+Long/unique Japanese shaping, large hidden/overlapping trees and largest DPI2
+raster requests have concrete measured limits and the follow-ups above. Opaque
+backend heap peaks/allocator events and native long-field/real OSIME/display
+acceptance remain unmeasured; they are not silently declared complete.
+
+The normal workbench --performance acquisition reports Japanese router-layout
+p95 0.388/0.914ms and edit-prepare0.497/0.946ms at syntheticDPI1/2. This is a small
+warm CPU workload, not whole-engine frame or GPU/display acceptance. Headless,
+mixed native smoke, native selection and injected preedit at actualDPI1 pass.
+The final verification results are recorded in the accompanying checkpoint.
