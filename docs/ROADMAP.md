@@ -374,6 +374,10 @@ record implemented and verified increments; measurements and limitations are in
           at synthetic DPI 1/2; record repeated costs and rejected largest layouts.
     - [x] Attribute long-field UI/text phases and replace per-glyph full-boundary
           scans with indexed ranges; verify cluster/RTL offsets and remeasure.
+    - [x] Cull offscreen asset-font glyph draw spans using actual ink bounds and
+          effective clips; preserve raster limits/visible output and remeasure.
+    - [x] Attribute narrow Japanese composition misses to line-budget bypass;
+          calibrate bounded line retention, verify eviction/release and remeasure.
     - [ ] Attribute long Japanese fallback misses/raster allocations and long-field editing costs; measure asset-font expanded layers, broader mixed ECS/component churn and complex cold localization
         publication; attribute larger input burst and remaining layout/routing costs.
   - [ ] Record runtime, world, input and localization dispositions and remeasure fixes.

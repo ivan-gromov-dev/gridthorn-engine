@@ -120,7 +120,7 @@ fn aggregate_geometry_and_key_budgets_evict_without_retaining_oversized_entries(
     heavy.lines = vec![blank.clone(); LINE_LIMIT + 1].into();
     cache.insert("oversized", &style(), &heavy);
     assert!(cache.get("oversized", &style()).is_none());
-    heavy.lines = vec![blank; 128].into();
+    heavy.lines = vec![blank; LINE_LIMIT / 8].into();
     let mut cache = LayoutCache::default();
     for index in 0..20 {
         cache.insert(&format!("lines {index}"), &style(), &heavy);
@@ -137,4 +137,59 @@ fn aggregate_geometry_and_key_budgets_evict_without_retaining_oversized_entries(
     }
     assert!(cache.key_bytes <= KEY_BYTES_LIMIT);
     assert!(cache.entries.len() < 20);
+}
+
+#[test]
+fn narrow_japanese_field_styles_reuse_within_aggregate_line_budget() {
+    let mut text = system();
+    text.layouts = LayoutCache::new(true);
+    let value = "文章を確認する ".repeat(256);
+    let mut settings = crate::TextStyle::new("Noto Sans", 20.0);
+    let layouts: Vec<_> = [600.0, 1.0, 12.0]
+        .into_iter()
+        .map(|width| {
+            settings.width = Some(width);
+            let layout = text.layout(&value, &settings).unwrap();
+            assert_eq!(layout.missing_glyphs(), 0);
+            (settings.clone(), layout)
+        })
+        .collect();
+    for (settings, original) in &layouts {
+        let repeated = text.layout(&value, settings).unwrap();
+        assert!(Arc::ptr_eq(&original.buffer, &repeated.buffer));
+        assert_eq!(original.lines(), repeated.lines());
+        assert_eq!(original.measurement(), repeated.measurement());
+    }
+    assert!(text.layouts.lines <= LINE_LIMIT);
+    assert!(text.layouts.glyphs <= GLYPH_LIMIT);
+    let diagnostics = text.layouts.diagnostics.as_ref().unwrap();
+    assert_eq!(diagnostics.hits, 3);
+    assert_eq!(diagnostics.bypassed, 0);
+    assert_eq!(diagnostics.evictions, 0);
+}
+
+#[test]
+fn line_budget_eviction_releases_unowned_narrow_buffers() {
+    let mut text = system();
+    text.layouts = LayoutCache::new(true);
+    let value = "文章を確認する ".repeat(256);
+    let mut settings = crate::TextStyle::new("Noto Sans", 20.0);
+    let buffers: Vec<_> = [1.0, 12.0]
+        .into_iter()
+        .map(|width| {
+            settings.width = Some(width);
+            let layout = text.layout(&value, &settings).unwrap();
+            Arc::downgrade(&layout.buffer)
+        })
+        .collect();
+    assert!(buffers.iter().all(|buffer| buffer.upgrade().is_some()));
+    for index in 0..20 {
+        text.layout(&format!("{}{index}", "\n".repeat(255)), &settings)
+            .unwrap();
+    }
+    assert!(buffers.iter().all(|buffer| buffer.upgrade().is_none()));
+    assert!(text.layouts.lines <= LINE_LIMIT);
+    let diagnostics = text.layouts.diagnostics.as_ref().unwrap();
+    assert!(diagnostics.evictions >= 2);
+    assert!(diagnostics.peak[3] <= LINE_LIMIT);
 }

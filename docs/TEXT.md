@@ -43,10 +43,23 @@ pixels. It is not an ink bounding box; overhangs are retained when drawing.
 Submit `snapshot.at([x, y])?.into()` in `RenderFrame::with_ui`; placement is logical,
 then converted to physical pixels using the snapshot's DPI. Text follows ordered
 UI primitives above world sprites. Pixels outside the surface are culled; custom
-UI clipping/scissors belong to the later layout milestone. Adjacent identical
+UI clipping is supplied by composition or ordered `UiPrimitive::Clipped` groups.
+Adjacent identical
 raster samples merge into horizontal spans through the existing colored pipeline.
 Alpha coverage multiplies the caller's color alpha. Logical layout is independent
 of raster scale: do not multiply the layout width or font size by DPI.
+
+`rasterize_clipped(layout, scale_factor, color, clip)` avoids constructing draw
+spans for glyph images wholly outside a physical-pixel `UiRect` relative to the
+layout origin. Its rectangle color is ignored. Measurement remains unchanged;
+partially intersecting glyphs and a conservative two-pixel edge margin remain
+intact. Submit the result within the same clip for exact edges; this operation
+does not crop the snapshot to the rectangle. UI labels and focused preedit use
+their effective ancestor/content clip through this path. All glyph images still
+count toward the same one-million-sample guard, including invisible glyphs.
+Foreign layouts, invalid DPI, glyph failures and oversized requests retain the
+normal errors and last-good snapshot behavior. Glyph image lookup/raster cache
+population, full shaping and editing geometry are still performed.
 
 `WindowScaleFactor` is published before `Startup` and on native DPI changes,
 separately from physical `WindowViewport`. Re-rasterize when it changes. If logical
@@ -103,7 +116,10 @@ returned layouts share immutable shaping/diagnostic storage; eviction does not
 invalidate returned layouts. The cache is isolated to that service's fonts/locale
 and disappears with it; replacing the service after font reload starts fresh.
 Limits additionally cap copied keys at 256 KiB, diagnostic glyphs at 16384 and
-lines at 1024. Oversized entries are not retained. These are retention limits,
+lines at 4096. The line budget admits the measured pair of narrow Japanese
+composition layouts plus normal field layouts; it increased from 1024 during
+Milestone 4.5. This trades additional bounded line/backend retention for warm
+reuse. Oversized entries are not retained. These are retention limits,
 not a byte budget for opaque backend buffers, font caches or caller-held layouts.
 `clear_raster_cache` continues to clear glyph raster data, leaving shaped layouts.
 `GRIDTHORN_TEXT_PERFORMANCE` collects bounded successful shaping/layout and

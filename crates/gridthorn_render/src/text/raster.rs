@@ -1,9 +1,12 @@
 use super::{TextError, TextLayout, TextMeasurement, TextSystem};
-use crate::presentation::Color;
+use crate::presentation::{Color, UiRect};
 use std::sync::Arc;
 
 /// Amortize request-local span preparation only across sufficiently large layouts.
 const MIN_GLYPHS_FOR_SPAN_REUSE: usize = 256;
+
+/// Keep boundary ink when callers convert bounded logical origins and clips separately.
+const CLIP_ROUNDING_MARGIN: f64 = 2.0;
 
 /// DPI-specific immutable text draw data, independent of the font service and GPU.
 #[derive(Clone, Debug, PartialEq)]
@@ -86,6 +89,34 @@ impl TextSystem {
         scale: f32,
         color: Color,
     ) -> Result<RasterText, TextError> {
+        self.rasterize_region(layout, scale, color, None)
+    }
+
+    /// Omit glyph ink wholly outside a physical-pixel clip relative to layout origin.
+    ///
+    /// The rectangle color is ignored. Partially intersecting glyphs remain intact;
+    /// submit with the same clip for exact edge clipping. Measurement is unchanged.
+    /// All glyph images still count toward the normal raster work safety limit.
+    ///
+    /// # Errors
+    /// Returns the same layout, DPI, rasterization and work-limit errors as `rasterize`.
+    pub fn rasterize_clipped(
+        &mut self,
+        layout: &TextLayout,
+        scale: f32,
+        color: Color,
+        clip: UiRect,
+    ) -> Result<RasterText, TextError> {
+        self.rasterize_region(layout, scale, color, Some(clip))
+    }
+
+    fn rasterize_region(
+        &mut self,
+        layout: &TextLayout,
+        scale: f32,
+        color: Color,
+        clip: Option<UiRect>,
+    ) -> Result<RasterText, TextError> {
         let start = self
             .performance
             .as_ref()
@@ -128,6 +159,22 @@ impl TextSystem {
                 );
                 if samples > 1_000_000 {
                     return Err(TextError::TooLarge);
+                }
+                if let Some(clip) = clip {
+                    let origin = [
+                        f64::from(physical.x) + f64::from(image.placement.left),
+                        f64::from(physical.y) - f64::from(image.placement.top),
+                    ];
+                    let extent = [image.placement.width, image.placement.height];
+                    if (0..2).any(|axis| {
+                        let minimum = f64::from(clip.position()[axis]) - CLIP_ROUNDING_MARGIN;
+                        let maximum = f64::from(clip.position()[axis])
+                            + f64::from(clip.size()[axis])
+                            + CLIP_ROUNDING_MARGIN;
+                        origin[axis] >= maximum || origin[axis] + f64::from(extent[axis]) <= minimum
+                    }) {
+                        continue;
+                    }
                 }
                 spans.append(
                     &mut pixels,

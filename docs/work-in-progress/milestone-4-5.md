@@ -1901,3 +1901,48 @@ No staging/commits.
 
 Fullverify passed target/long-field-geometry-full-verify.log (process-local shared
 target/sequentialtests). Finalbothrepo whitespacepassed; env scopedtoolprocesses.
+
+## 2026-10-04 Clipped raster span checkpoint
+
+Engine starting87d220719e09a7a63499e0f402a9b788f23cbd2a clean; sibling pre-existing
+changes at c89adb9a5317007b3469782c1c8da9d8b4b1b04a preserved. Renderer public
+rasterize_clipped uses actual ink boxes/conservative2px edge margin and skips draw
+spans outside layout-local physical clip. All glyph images still count before
+culling, preserving TooLarge/raster failures. UI label/control/preedit connects
+effective clips; extracted list paint routine, no new dependency/public backend type.
+2renderer equivalence/error tests pass; sibling ancestorclip regression passes.
+2normal long-field repeats pass20timed/4rejected cases;1phase run passes. x256DPI1
+cyclep95 ru44.313-45.885->7.622-8.167ms,ja53.660-61.457->20.351-21.630ms.
+Japanese decoration/layout cost remains. Full detailed limits/results in review.
+Native24smokes editing/preedit/scroll x4locales x2 pass;119render/pairs each,
+GPU23runs119collected/1run118+1skipped,errors0/pendingfalse. Sibling14passed/3ignored,
+Clippy/format/releasebuild pass. Evidence target/raster-clip-* logs/comparisonCSVs.
+Next Japanese composition/layout attribution, wider nativeDPI2/OSIME/clipboard/
+actualdisplay/fullGPU/heap acceptance. No staging/commits.
+
+Fullverify passed target/raster-clip-full-verify.log with process-local sharedtarget/
+sequentialtests. Finalformat/engine+sibling whitespace pass; no commits.
+
+## 2026-10-04 Narrow composition cache checkpoint
+
+Existing clipped-raster working tree preserved at engine87d220719e09a7a63499e0f402a9b788f23cbd2a;
+sibling baseline unchanged c89adb9a5317007b3469782c1c8da9d8b4b1b04a. New ignored
+renderer narrowJapanese probe widths1/12/600, primarySans/JP,10warm+100calls,
+2before/2after passes. Width1/12 layouts2048/1792lines bypassold1024linecap;
+fallback missp95 12.5-15.6ms,JP2.1-2.5ms. Cachelinebudget calibrated4096;
+entry/key/glyphlimits unchanged, warm100hits each after,p95<=0.4us (timerlimit).
+2newcache regressions reuse/geometry + forcedlineeviction/unownedrelease pass;
+6cache tests total pass. MainUIJapanese cache192->4032lines,3->5entries,
+16927->28209keybytes,5959->9799glyphs,110bypass->0. Explicit memoryretentiontradeoff,
+opaqueheap/processpeaks unknown.2normalpubliclong probes20configs+4sameTooLarge
+rejections pass;Japanesecyclep95 20.351-21.630->6.314-7.746ms.1phase afterpass:
+geometry942us/paint3386us/decoration258us p95,1878hits/5misses. Evidence
+narrow-layout-* and narrow-cache-* logs/comparisonCSVs undertarget; docs/review
+record fullconditions/limits. No source edits in sibling thisincrement.
+Next broaderworking-set/coldfallback/rasterallocation/memorypeaks and acceptance.
+No staging/commits.
+
+Fullverify passed target/narrow-cache-full-verify.log with process-local shared
+engine target/sequentialtests. Sibling14passed/3ignored,Clippy/build pass; native8
+editing/preedit ru/ja repeats pass,119render each,GPU4x119/4x118+1skip,errors0/pendingfalse.
+Finalformat/bothwhitespace pass; env scopedtoolprocesses,no staging/commits.

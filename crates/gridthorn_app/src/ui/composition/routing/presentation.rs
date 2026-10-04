@@ -155,7 +155,10 @@ impl UiRouter {
             super::super::paint::label(
                 tree,
                 &self.editor.preedit,
-                bounds,
+                super::super::paint::LabelBounds {
+                    bounds,
+                    clip: placement.clip.intersection(placement.content),
+                },
                 tree.theme.foreground,
                 scale,
                 text,

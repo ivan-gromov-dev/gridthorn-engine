@@ -2677,3 +2677,172 @@ Full ./scripts/verify.ps1 passed with process-local shared target/sequential tes
 Clippy, formatting, two normal/manual phase acquisitions and eight native smokes
 passed. Final engine/sibling diff whitespace passed. Env overrides scoped to tool
 processes. No commits.
+
+## Ink-aware clipped raster draw spans — 2026-10-04
+
+Engine starting HEAD87d220719e09a7a63499e0f402a9b788f23cbd2a had a clean working
+tree; sibling HEADc89adb9a5317007b3469782c1c8da9d8b4b1b04a retained the existing
+uncommitted changes. Baseline is the preceding indexed-geometry implementation.
+No dependency edge changed. The renderer adds public TextSystem::rasterize_clipped
+with a physical UiRect relative to the layout origin (rectangle color ignored).
+It inspects actual glyph-image placement/extent, including ink overhang, and omits
+span reconstruction only when the whole ink box lies outside the clip. Two pixels
+of conservative edge padding retain ink across separately rounded bounded logical
+origins/clips. Partially visible glyphs keep all spans for the existing exact
+ordered primitive clipping. Measurement and full shaping/field geometry remain.
+
+All glyph images are still looked up and counted before culling; missing-glyph
+raster errors and the one-million-glyph-image-sample guard retain their behavior,
+even for invisible text. Normal rasterize remains the unculled path. Clipped
+snapshots may still contain pixels outside the requested rectangle and must be
+submitted with that same clip. This is draw-data culling, not a crop API or removal
+of the work budget. Glyph backend cache population/cold glyph rasterization and
+full-layout costs remain. UI label/control/preedit paint passes its effective
+ancestor/content clip in layout-local physical coordinates; bitmap paint is
+unchanged. List painting is extracted into its focused routine to keep control
+composition bounded. No automatic field truncation or caret scrolling is added.
+
+Two renderer regressions compare final nondegenerate ordered vertex positions
+and tint against an unculled raster under the same clip, with mixed-script text,
+combining marks/ligatures, positive/negative fractional origins and DPI1/1.25/2.
+Downstream clipping retains collapsed zero-area quads; these are omitted from the
+visible-output comparison, not treated as a pixel difference. Error coverage checks
+fully invisible requests, unchanged TooLarge/foreign-layout/invalid-DPI results
+and retained last-good snapshots. A sibling public-API integration test verifies
+ancestor-clipped labels at fractional/negative placement and DPI1/1.25/2 retain
+complete value/measurement while reducing raster draw data. No test-only SDK
+dependency or privileged sibling access is introduced.
+
+Repeated normal long-field probes use the same public workload,20supported cases
+with100warm samples each, plus four largestDPI2 initial-layout rejections. Before
+is target/long-field-after-{1,2}.log; after is target/raster-clip-long-{1,2}.log.
+UI/text flags are unset for normal acquisition; one separate diagnostic acquisition
+uses both flags. No concurrent builds/tests during acquisition. Viewports/font
+fixtures/synthetic DPI and environmental limits match the preceding probe; clocks,
+thermal/background load remain uncontrolled. Nearest-rank cycle p95 ranges across
+the two runs on each side (milliseconds), for256phrase repetitions/DPI1:
+
+| Content | Before clipped spans | After clipped spans |
+| --- | --- | --- |
+| English | 33.408–37.389 | 7.568–12.092 |
+| Russian | 44.313–45.885 | 7.622–8.167 |
+| Arabic | 27.406–33.001 | 6.710–7.869 |
+| Japanese | 53.660–61.457 | 20.351–21.630 |
+
+64-repeat/DPI2 after p95 ranges are English11.688–12.281ms,
+Russian12.468–12.477ms, Arabic11.293–11.362ms and Japanese12.776–15.684ms.
+Small cases are variable: Arabic8/DPI2 is1.079–2.295ms after versus1.399–1.790ms
+before, so no uniform speedup or native frame-budget acceptance is claimed.
+Complete percentiles/maxima: target/raster-clip-cycle-comparison.csv.
+
+One UI diagnostic run per side, excluding initial layout/ten warm cycles, retains
+200individual layouts per supported case. Paint p95 for256/DPI1 falls from
+15134/20288/13679/36224us (English/Russian/Arabic/Japanese) to
+2494/3162/2483/15394us. Geometry p95 remains1176/2012/1374/872us after. Japanese
+focused-decoration p95 remains13102us, nested within paint: composition text still
+requires separate layout and this warm workload does not isolate cold fallback
+misses/allocations. Do not add separate phase percentiles into a cycle distribution.
+Evidence target/raster-clip-phases.log and raster-clip-phase-summary.csv; baseline
+phase evidence remains target/long-field-phases-after.log. Existing probe commands
+in the previous section reproduce both acquisitions with the appropriate flags.
+
+24native release smokes passed: editing/preedit/scroll, four locales, two repeats.
+Each has119renderer and119paired callback rows; GPU23runs collected119 and one
+collected118/skipped1, all errors0/pendingfalse. Native scale1 on the same
+RTX3070/Vulkan616.56/Fifo/reference display; scrolling uses1000x400, other modes
+1000x800. Raw logs target/raster-clip-native-<mode>-<locale>-<repeat>.log. These
+bounded short-field/injected native workloads do not prove native long-field,
+DPI2, OSIME/clipboard or actual displayed intervals. Snapshot memory peaks and
+full-GPU execution remain unmeasured. The next text focus is remaining Japanese
+composition/layout misses, followed by the wider milestone acceptance matrix.
+
+Full ./scripts/verify.ps1 passed with process-local shared engine target and
+sequential tests (target/raster-clip-full-verify.log), including dependency
+boundaries and new renderer tests. Sibling package14passed/3ignored, all-target
+Clippy, release build and24native smokes passed; final formatting/engine+sibling
+whitespace passed. Env overrides scoped to tool processes. No commits.
+
+## Narrow Japanese composition cache-budget attribution — 2026-10-04
+
+Continued from the clipped-raster increment at engine
+HEAD87d220719e09a7a63499e0f402a9b788f23cbd2a with its existing uncommitted changes;
+sibling HEADc89adb9a5317007b3469782c1c8da9d8b4b1b04a and unrelated changes preserved.
+The previous main Japanese256/DPI1 service reports1770hits/113misses/110bypasses,
+retaining3entries/16927key bytes/5959glyphs/192lines. Other content scripts largely
+hit the cache. The narrow remaining preedit width yields many visual lines, beyond
+the old1024line retention cap; the layouts are valid but repeatedly not retained.
+
+A focused ignored renderer probe `measure_narrow_japanese_layout` measures one
+256-repeat Japanese phrase at width1/12/600, primary Noto Sans or Noto Sans JP,
+font size20, localeen-US, supplied Noto fixtures, WordOrGlyph wrapping. Each fresh
+service runs10warmups+100individual calls/configuration. Backend-buffer weak
+references prove actual retained identity rather than assuming cache reuse.
+Font loading/source construction/missing-glyph checks/output are outside timing;
+service validation, cache lookup, misses/shaping and returned layout construction
+are inside. Two sequential release acquisitions before and after, diagnostics unset,
+no concurrent agent builds/checks. Reference Windows/compiler and uncontrolled
+clocks/thermal/background conditions match previous measurements.
+
+```console
+cargo test -p gridthorn_render --release --locked measure_narrow_japanese_layout -- --ignored --nocapture --test-threads=1
+```
+
+| Primary family / width | Layout lines | Warm hits before → after (each run) | Before p95 range (us) | After p95 range (us) |
+| --- | --- | --- | --- | --- |
+| Noto Sans / 1 | 2048 | 0 → 100 | 13747.5–15563.9 | 0.4–0.4 |
+| Noto Sans / 12 | 1792 | 0 → 100 | 12509.6–12574.9 | 0.3–0.4 |
+| Noto Sans / 600 | 64 | 100 → 100 | 0.2–0.3 | 0.2–0.4 |
+| Noto Sans JP / 1 | 2048 | 0 → 100 | 2509.1–2531.0 | 0.2–0.4 |
+| Noto Sans JP / 12 | 1792 | 0 → 100 | 2101.9–2274.0 | 0.3–0.3 |
+| Noto Sans JP / 600 | 62 | 100 → 100 | 0.2–0.3 | 0.2–0.4 |
+
+The comparison attributes repeated work to line-budget bypass and shows that
+fallback adds miss cost on this workload. It does not remove cold shaping/fallback
+cost, change chosen fonts or prove general unique-string behavior. Cache-hit
+submicrosecond timing is near host timer granularity; reported nearest-rank values
+are individual-call samples, not a precise hardware lower bound.
+
+The bounded service-local LRU line limit is now4096, admitting the measured pair
+of narrow layouts plus ordinary field layouts. Entry64/key256KiB/glyph16384limits
+and oversized bypass/eviction policy remain. This calibration explicitly quadruples
+maximum retained diagnostic line count; the main Japanese UI working set grows
+from192to4032lines,3to5entries,16927to28209key bytes and5959to9799glyphs.
+Opaque backend allocation size and process/heap peaks are not measured by these
+counts. Additional bounded storage is the tradeoff; do not describe this as a
+memory saving or claim unchanged memory. Existing live caller layouts are outside
+these cache retention limits. No dependency edge/public API/font or raster-budget
+change. The cache budget remains provisional.
+
+Regression coverage adds real narrow primary/fallback layouts at three widths,
+checks full diagnostic lines/measurement/shared-buffer identity, and forces
+line-budget eviction with multiline layouts to verify release of unowned buffers.
+Existing aggregate budget/oversized/key/glyph/LRU/lifetime tests also pass; the
+aggregate-line fixture scales to the new cap rather than fixing old eviction counts.
+
+Two complete normal public UI long-field probes still pass20supported configs,
+100warm cycles each, plus the same four largestDPI2 initial-layout rejections.
+Japanese256/DPI1 cycle p95 falls20.351–21.630ms →6.314–7.746ms; medians
+18.991–19.313ms →5.950–6.233ms. One separate phase acquisition after the fix
+uses the same200warm individual UI layouts: geometry p95942us, paint3386us,
+focused decoration258us (nested in paint), compared with preceding872/15394/
+13102us. Main cache now reports1878hits/5misses/0evictions/0bypasses with4032
+peak/final lines. Normal repeats remain diagnostic-free; do not combine phase
+percentiles into a native frame distribution or infer cold/heap/display acceptance.
+
+Evidence target/narrow-layout-{before,after}-{1,2}.log and comparisonCSV;
+target/narrow-cache-long-{1,2}.log, narrow-cache-cycle-comparison.csv,
+narrow-cache-phases.log. Previous normal baseline is raster-clip-long-{1,2}.log;
+phase baseline is raster-clip-phases.log. Normal/manual commands from the preceding
+sections reproduce the UI probe and its diagnostic acquisition. Wider working-set
+pressure may still evict or bypass; remaining fallback/raster allocations, cold
+publication/memory peaks and nativeDPI2/OSIME/clipboard/fullGPU/actualdisplay and
+maintainer acceptance remain open.
+
+Eight native release editing/preedit smokes (ru/ja twice each) passed,119renderer
+samples each; GPU four runs119collected and four118collected/one skipped, all
+errors0/pendingfalse. Evidence target/narrow-cache-native-<mode>-<locale>-<repeat>.log.
+Full ./scripts/verify.ps1 passed with process-local shared target/sequential tests
+(target/narrow-cache-full-verify.log), including all retention/lifetime regressions.
+Sibling package14passed/3ignored, all-target Clippy/release build passed. Final
+formatting/engine+sibling whitespace passed. No sibling source change this increment,
+staging or commits; environment overrides scoped to tool processes.

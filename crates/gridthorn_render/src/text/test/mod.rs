@@ -1,6 +1,8 @@
 mod geometry;
 mod layout;
+mod narrow_layout;
 mod raster;
+mod raster_clip;
 
 use super::{TextStyle, TextSystem};
 use gridthorn_assets::FontAsset;

@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Text layout-cache line retention rises from 1024 to 4096 to admit measured
+  narrow Japanese composition working sets, removing repeated warm shaping while
+  preserving the existing entry/key/glyph limits and bounded LRU eviction.
+
+- UI asset-font labels and preedit omit offscreen glyph draw spans using the new
+  `TextSystem::rasterize_clipped` path, reducing measured long-field paint costs
+  while preserving visible clipping and the full raster work safety limit.
+
 - Asset-font UI field geometry now locates glyph cluster boundaries by binary
   search instead of scanning and copying all grapheme boundaries per glyph,
   preserving caret/selection positions while reducing measured long-field costs.

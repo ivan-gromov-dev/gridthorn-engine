@@ -41,6 +41,12 @@ the complete field geometry, including offscreen text.
 Active preedit still prepares its separate
 composition text; changed field content, placement or theme requires fresh layout.
 
+Asset-font paint passes the effective ancestor/content clip to
+`TextSystem::rasterize_clipped`, omitting draw spans for glyph ink wholly outside
+that region. Partially intersecting ink retains exact downstream clipping and
+painter order. Values, full layout/field geometry and raster work safety limits
+are preserved; this does not introduce automatic text truncation or caret scrolling.
+
 `UiLength` supports intrinsic `Auto`, fixed `Pixels`, parent-relative `Fraction`
 (0–1) and `Fill`. Minimum/maximum sizes include padding. Fractions resolve
 against available parent content, even in auto parents; this is not a cyclic

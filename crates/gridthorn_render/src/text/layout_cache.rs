@@ -5,7 +5,7 @@ use super::{TextLayout, TextStyle};
 const ENTRY_LIMIT: usize = 64;
 const KEY_BYTES_LIMIT: usize = 256 * 1024;
 const GLYPH_LIMIT: usize = 16 * 1024;
-const LINE_LIMIT: usize = 1024;
+const LINE_LIMIT: usize = 4096;
 
 struct Entry {
     text: String,
