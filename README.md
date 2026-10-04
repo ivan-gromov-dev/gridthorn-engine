@@ -131,7 +131,11 @@ raster snapshots retain their construction vector without copying it. Before/aft
 evidence, retained-memory tradeoffs and workload limits are recorded
 in the performance review.
 Dependency-aware reload traverses reverse edges and an ordered ready queue;
-warm reload, scene and world-save measurements are recorded in the same review.
+reload, scene and world-save reviews now include first-service/process loads,
+branching dependencies, rollback paths, I/O/codec/serialization attribution and
+heap peaks. Reload shares unchanged source allocations; save loading moves its
+decoded root into the reset boundary. Measured envelopes and limits are recorded
+in the same review.
   Audio control-side mock and platform lifecycle callback probes also record
   scaling evidence; native device and operating-system latency remain unmeasured.
   Audio output shares converted frames within bounded command batches and releases

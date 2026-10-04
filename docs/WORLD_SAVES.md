@@ -67,9 +67,15 @@ enforces the same limit. In-memory document APIs have no size limit.
 Directory synchronization and power-loss durability, filesystem permissions
 preservation, backups, multi-process locking, async I/O, hostile-input sandboxing,
 checksums/authentication, compression, arbitrary ECS adapters, interactive-clock
-restoration, and cross-release migrations remain deferred. Save/load is synchronous
-and clones the root; large-world latency/memory and binary-size measurements,
-network filesystems, and non-Windows replacement behavior need future validation.
+restoration, and cross-release migrations remain deferred. Save/load is synchronous.
+Saving clones the root for a coherent capture; loading validates metadata without
+cloning live data and moves the validated decoded root into the reset boundary.
+Windows release measurements cover roots through 262144 u64 values, 4096 pending
+commands and 257 RNG streams, separating game codec, envelope, file I/O, rollback
+and phase/workflow heap peaks; see [PERFORMANCE_REVIEW.md](PERFORMANCE_REVIEW.md).
+The 16 MiB read limit bounds consumed bytes, not allocator capacity or parsed
+document memory. Physical cold/network storage, complex game roots, binary size
+and non-Windows replacement behavior need future validation.
 
 ## Evidence
 

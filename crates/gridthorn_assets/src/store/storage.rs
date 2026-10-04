@@ -120,10 +120,12 @@ impl AssetStore {
         let mut affected = BTreeSet::new();
         for (id, entry) in &self.entries {
             let bytes = self.read(id)?;
-            if bytes.as_slice() != entry.bytes.as_ref() {
+            if bytes.as_slice() == entry.bytes.as_ref() {
+                snapshots.insert(id.clone(), Arc::clone(&entry.bytes));
+            } else {
                 affected.insert(id.clone());
+                snapshots.insert(id.clone(), Arc::<[u8]>::from(bytes));
             }
-            snapshots.insert(id.clone(), bytes);
         }
         if affected.is_empty() {
             return Ok(Vec::new());
@@ -142,7 +144,7 @@ impl AssetStore {
             } else {
                 None
             };
-            prepared.insert(id.clone(), (Arc::from(bytes.as_slice()), texture));
+            prepared.insert(id.clone(), (Arc::clone(bytes), texture));
         }
         for (id, (bytes, texture)) in prepared {
             if let Some(entry) = self.entries.get_mut(&id) {

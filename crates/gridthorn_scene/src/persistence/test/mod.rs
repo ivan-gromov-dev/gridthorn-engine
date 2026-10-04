@@ -5,3 +5,6 @@ mod roundtrip;
 
 use fixture::{Health, registry, scene};
 mod scaling;
+
+mod attribution;
+mod heap;

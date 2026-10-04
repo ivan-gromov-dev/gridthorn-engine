@@ -18,7 +18,7 @@ fn io_error(operation: &'static str, path: &Path, source: std::io::Error) -> Wor
 }
 
 /// Create a unique sibling without truncating existing files; rename stays on one filesystem.
-fn replace(path: &Path, contents: &[u8]) -> Result<(), WorldSaveError> {
+pub(super) fn replace(path: &Path, contents: &[u8]) -> Result<(), WorldSaveError> {
     let name = path
         .file_name()
         .ok_or_else(|| WorldSaveError::Document("save path requires a filename".to_owned()))?;

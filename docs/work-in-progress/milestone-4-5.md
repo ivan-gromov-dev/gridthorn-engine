@@ -2304,3 +2304,55 @@ README/Immediate target now point at the remaining domain gates rather than the
 accepted native gate. No source staging/commits or sibling edits. This requested
 runtime/world/input/localization review is complete within its documented envelopes.
 The next roadmap domain is assets/reload, scenes/saves, audio/platform lifecycle.
+
+## 2026-10-04 Assets/scenes/saves closure increment
+
+Scope: cold-service/process, branching/error-path and I/O/codec/serializer/heap
+attribution for the assets/scalar-scene/typed-save domain gate only. Starting
+engine43991ad7647f95468c6bff7c0496c8f805cd35aa, clean worktree. No sibling edits.
+DHAT0.3.3 added as test-only workspace/dev dependency to assets/scene/app; no
+production unsafe code or game dependency. Heap phases track newly allocated
+bytes with pre-existing inputs excluded; whole-workflow peaks include fixture
+setup, retained inputs, outputs and cleanup. Heap acquisition is separate from
+unprofiled timing. OS file cache is uncontrolled; fresh process/service is not
+called physical cold disk. No registry/WPR/cache/power-plan changes.
+
+Asset workloads cover diamond/fanout/disconnected graphs, raw/PPM/PNG, missing-file
+rollback, decode rejection and recovery. Publication factored into a private
+method so the same real publication can be measured after a test receives the
+worker reply, without including worker waiting. Scalar-scene probes add mixed
+integer/text fields, serializer-only/caller-I/O, preparation/commit and early/late
+failure costs. Save probes split snapshot, codec, envelope and actual durable
+replacement; include large queued-command/RNG metadata and read/rename/codec/
+UTF8/file-limit errors. First asset compilation caught test visibility/slice
+coercion errors, corrected; retained diagnostics in target/io-asset-compile-failed.log.
+CPU baseline acquisition in progress. Next: repeat baseline and heap windows,
+attribute retained copies, fix measured costs if justified, remeasure, document
+three domain dispositions and run full verification/public workflows.
+
+This increment is now complete. Two before/after CPU runs for assets/saves,
+two unchanged scene CPU runs, one baseline heap/workflow acquisition for the
+affected raw/save configurations and two final phase/workflow acquisitions for
+raw512fanout,PNG16diamond,scene10000 and save262144 pass. Eight fresh-process
+monitored runs exit0. Raw scan peak new allocations67259136→209564 bytes;
+whole-workflow135296385→67537738–67537742 bytes. Save load total allocations
+21404784→17158475 bytes without a lower peak. TOML dominates scenes; no format
+or registry rewrite. Results, protocols and domain dispositions are durable in
+PERFORMANCE_REVIEW.md; contracts,README,CHANGELOG and ROADMAP reflect them.
+Physical cold disk,network storage and cross-platform device budgets are explicit
+deployment limits, not measured by fresh service/process. CPU runs retain the
+inactive test allocator wrapper equally before/after; normal facade dependency
+closure excludes DHAT and its new transitive dependencies. New source/root
+ownership regressions pass; existing UI assertions gain explicit usize empty-array
+types solely because the dev-only serde_json dependency affects inference.
+
+Full ./scripts/verify.ps1 exit0 with process-local jobs2,testthreads1,shared target
+(target/io-closure-full-verify.log): formatting,workspace check,all-target Clippy,
+all workspace tests,CLI end-to-end,dependency boundaries and whitespace. Intentional
+CLI bad-code/exit/missing-bin fixtures print diagnostics but all suites pass.
+Public asset-reload --smoke,scene-serialization and world-saving examples exit0
+(target/io-closure-{asset-smoke,scene-example,save-example}.log). No sibling edits;
+initial dirty files and untracked workbench remain preserved. Exact acquisition
+logs and summary CSV paths are in the durable review. The milestone checkpoint
+remains because Milestone4.5 is still active. Next domain: remaining audio/native
+device and platform lifecycle costs/disposition, then other open roadmap gates.

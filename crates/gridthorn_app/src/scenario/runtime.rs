@@ -101,6 +101,18 @@ where
     /// Rejects mismatched identity, revision, exact engine version, configuration, or shutdown.
     /// Recoverable failures leave the live state and clock unchanged.
     pub fn restore(&mut self, snapshot: &SimulationSnapshot<S, C>) -> Result<(), ScenarioError> {
+        self.validate_snapshot(snapshot)?;
+        self.restore_owned(snapshot.clone())
+    }
+
+    pub(super) fn save_identity(&mut self) -> Result<(&str, u32, FixedStepConfig), ScenarioError> {
+        self.world()
+            .read_resource(|_: &ScenarioState<S, C>| ())
+            .ok_or(ScenarioError::MissingState)?;
+        Ok((&self.scenario.name, self.scenario.revision, self.config))
+    }
+
+    fn validate_snapshot(&self, snapshot: &SimulationSnapshot<S, C>) -> Result<(), ScenarioError> {
         if snapshot.scenario != self.scenario.name || snapshot.revision != self.scenario.revision {
             return Err(ScenarioError::Incompatible("scenario identity or revision"));
         }
@@ -110,10 +122,17 @@ where
         if snapshot.config != self.config {
             return Err(ScenarioError::Incompatible("fixed-step configuration"));
         }
-        let state = snapshot.state.clone();
+        Ok(())
+    }
+
+    pub(super) fn restore_owned(
+        &mut self,
+        snapshot: SimulationSnapshot<S, C>,
+    ) -> Result<(), ScenarioError> {
+        self.validate_snapshot(&snapshot)?;
         self.simulation
             .reset_tick(self.config, snapshot.completed_ticks)?;
-        self.world().insert_resource(state);
+        self.world().insert_resource(snapshot.state);
         self.world().insert_resource(snapshot.control);
         self.world().insert_resource(snapshot.exit);
         Ok(())

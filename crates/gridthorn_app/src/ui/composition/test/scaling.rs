@@ -113,7 +113,7 @@ fn measure(count: u16, operation: &str) {
                 Some(UiNodeId(u64::from(target)))
             );
         } else {
-            assert_eq!(route.consumed, []);
+            assert_eq!(route.consumed, [] as [usize; 0]);
             assert_eq!(route.world_events, events);
         }
     }

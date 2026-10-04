@@ -91,9 +91,14 @@ PNG/PNM textures. Content polling still reads all registered files per scan;
 preparation holds old and new data plus graph snapshots. Registration validates
 acyclic dependencies. Reload propagation uses reverse edges and a
 dependency-count ready queue, preserving dependency-first lexical order. Warm
-scan/publication and process-memory fixtures are recorded in PERFORMANCE_REVIEW.md.
-Broader large-project latency, memory, and cross-platform performance
-measurements are explicitly deferred. Native file watching, debounce, dynamic
+scan/publication, first-service loading, branching/error paths, codec attribution
+and phase/workflow heap peaks are recorded in [PERFORMANCE_REVIEW.md](PERFORMANCE_REVIEW.md).
+Unchanged source bytes share their committed allocation even when invalidated;
+affected textures still re-decode before atomic publication. The measured Windows
+envelope is up to 512 x 64 KiB raw sources and sixteen 256x256 PNG/PNM textures.
+All-file polling remains unsuitable for large live-frame scans. Physical cold
+storage, larger projects and cross-platform performance need game-specific validation.
+Native file watching, debounce, dynamic
 registration, unloading, custom derived-asset loaders, and audio reload remain
 future extensions. No stable API or authoritative data-reload guarantee is made.
 

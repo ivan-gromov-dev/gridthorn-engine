@@ -407,9 +407,11 @@ record implemented and verified increments; measurements and limitations are in
   - [x] Record runtime, world, input and localization dispositions and remeasure fixes.
 - [ ] Review assets/reload, scenes/saves, audio and platform lifecycle for I/O,
       memory peaks, worker/publication costs and frame stalls.
-  - [ ] Measure asset reload, scene/world-save I/O, publication and memory peaks.
+  - [x] Measure asset reload, scene/world-save I/O, publication and memory peaks.
     - [x] Measure warm Windows reload/scalar-scene/typed-save scaling and separate process-resident peaks; optimize reverse-chain invalidation/order and repeat affected samples.
-    - [ ] Complete cold/branching/error-path workloads, phase/heap peak attribution and codec/serializer attribution before declaring domain limits.
+    - [x] Complete first-service/fresh-process, branching/error-path workloads,
+          phase/workflow heap peaks and codec/serializer attribution; fix source/root
+          copies, remeasure and record Windows envelopes and physical-cold-storage limits.
   - [ ] Measure audio command/worker costs and platform suspend/resume/shutdown.
     - [x] Measure mock audio queue/output control and synthetic runtime lifecycle
           callbacks across clip, voice and shutdown-system counts on Windows.
@@ -422,6 +424,8 @@ record implemented and verified increments; measurements and limitations are in
       - [x] Preserve the latest pause/resume state under full example queues;
             verify saturation, idle wake and stale notifications, and remeasure.
   - [ ] Record each domain's disposition and remeasure any fixes.
+    - [x] Record assets/scenes/saves dispositions and repeat affected CPU/heap
+          measurements; preserve rollback, publication and durable replacement.
 - [ ] Review fixed simulation, grids, pathfinding/placement, collision and
       snapshots for scaling, allocation costs and preserved determinism.
   - [ ] Measure fixed ticks, grid/pathfinding/placement and collision scaling.
@@ -628,9 +632,9 @@ and configurable dismissal. Presentation transitions are implemented provisional
 The integrated sibling multilingual-workbench example combines localization, editing,
 controls and nested windows; native interactive IME behavior has maintainer manual acceptance.
 The immediate target remains Milestone 4.5. Native workbench acceptance, text/UI,
-rendering and runtime/world/input/localization reviews are complete within their
-recorded limits. Next are the remaining assets/reload, scenes/saves, audio and
-platform lifecycle workloads and dispositions, followed by the other domain gates
+rendering, runtime/world/input/localization and assets/scenes/saves reviews are
+complete within their recorded limits. Next are the remaining audio and platform
+lifecycle workloads and dispositions, followed by the other domain gates
 in the order above. Milestone 4 remains open until the full performance review
 closes; native language/IME acceptance is already recorded. See
 [PERFORMANCE_REVIEW.md](PERFORMANCE_REVIEW.md).

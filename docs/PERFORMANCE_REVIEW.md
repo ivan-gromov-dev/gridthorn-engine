@@ -3715,3 +3715,247 @@ Japanese editing/preedit smokes. The latter use injected events at native DPI 1;
 no new manual OS IME/clipboard or native-latency claim is made. Earlier failed
 verification attempts and the corrected style/whitespace diagnostics remain in
 the checkpoint. Final formatting and diff whitespace checks pass.
+
+## Assets/scenes/saves attribution and disposition — 2026-10-04
+
+This closes the asset/scene/save performance gate within the envelopes below,
+superseding the attribution follow-ups in the earlier warm-I/O section. Baseline
+43991ad7647f95468c6bff7c0496c8f805cd35aa, clean engine tree at start; same Windows
+Ryzen 5 5600X host and Rust 1.99.0. Audio/platform and other milestone gates remain
+separate. No public signatures, formats, durability promises or dependencies in
+the normal facade closure change. DHAT 0.3.3 is a dev dependency of the three
+domain test executables. CPU runs retain the inactive test allocator wrapper;
+absolute production costs may differ, while before/after comparisons use the
+same wrapper. Its transitive serde_json dependency requires explicit
+usize types in five existing empty UI assertions; their behavior is unchanged.
+
+### Acquisition and reproducibility
+
+Two sequential release CPU runs before/after each affected domain; scenes have
+two runs with unchanged production behavior. Each configuration runs 21 cycles:
+sample 0 is reported separately, samples 1–20 give median and nearest-rank p95;
+p99 equals max at this sample count. Each asset cycle registers a new service;
+each save cycle initializes a target root; scenes prepare a new load boundary.
+No concurrent builds/checks during timing. OS cache, storage activity, antivirus,
+CPU clocks and power conditions are uncontrolled. Fixtures are written before
+loading: **cold means first service/call or fresh process, not verified physical
+cold disk**. No cache flush, WPR/registry modification or power override was used.
+Device-cold/network-storage measurements require a deployment workload; this
+review does not claim them or hard frame/memory budgets.
+
+```console
+cargo test -p gridthorn_assets --release --locked measure_asset_cold_branching_errors -- --ignored --nocapture --test-threads=1
+cargo test -p gridthorn_scene --release --locked measure_scene_cold_errors_and_phases -- --ignored --nocapture --test-threads=1
+cargo test -p gridthorn_app --release --locked measure_save_cold_errors_and_phases -- --ignored --nocapture --test-threads=1
+```
+
+Heap runs are separate from CPU runs. Set GRIDTHORN_IO_HEAP=phase or workflow;
+the probe then performs one cycle. GRIDTHORN_IO_SIZE selects one size; assets
+also accept GRIDTHORN_IO_KIND=raw|ppm|png and GRIDTHORN_IO_GRAPH=diamond|fanout|disconnected.
+Two final heap runs per selected configuration reproduce allocation counts/peaks;
+the before-fix raw/save heap runs have one acquisition each. DHAT wraps the system
+allocator only in cfg(test); profiling elapsed time is excluded from CPU tables.
+[HeapStats](https://docs.rs/dhat/0.3.3/dhat/struct.HeapStats.html) reports requested
+allocation bytes, total blocks/bytes, maximum live bytes and live bytes at return.
+Phase windows exclude pre-existing inputs, while retained output is included.
+Workflow windows include setup, existing snapshots held by the harness, isolated
+codec/serialization outputs, error fixtures and cleanup. They are larger than a
+minimal application workflow; allocator overhead, stacks, GPU/file cache and
+allocator-internal profiler storage are not Rust requested bytes. Phase peaks
+cannot be added or subtracted from independently timed end-to-end calls.
+
+Eight additional fresh-process runs launch the compiled test executable directly,
+one selected configuration and GRIDTHORN_IO_SAMPLES=1 each. GRIDTHORN_IO_HOLD_MS=500
+holds before setup and after cleanup. A hidden Start-Process monitor refreshes
+every 10 ms, records the pre-work baseline, sampled maximum PrivateMemorySize64
+and OS cumulative PeakWorkingSet64, then checks exit 0. These unprofiled runs are
+excluded from CPU percentiles. Short private-memory peaks may be missed; process
+pages/allocator retention are distinct from requested heap. The executable names,
+baselines, peaks and reproduction monitor are retained in target/io-process-after.csv
+and target/io-process-monitor.ps1. The following first-call spans include monitoring
+perturbation and two observations only:
+
+| Selected fresh process | First-call duration ms |
+| --- | --- |
+| Register 512 x 64 KiB raw, fanout | 62.640–119.602 |
+| Register sixteen 256x256 PNG, diamond | 5.991–7.644 |
+| Capture / serialize / parse 10000 mixed entities | 13.896–17.174 / 77.606–90.113 / 116.022–123.400 |
+| Save / load document, 262144 values | 22.895–23.869 / 7.273–8.848 |
+| Save / load file, same root | 26.672–28.972 / 7.923–8.724 |
+
+These are first calls within the complete configured workflow. Save file load
+follows document load and validation; isolated operations can warm code/data.
+They are not independent process-startup-to-load or untouched-storage benchmarks.
+
+### Assets: share unchanged source snapshots; keep all-file polling explicit
+
+Raw fixtures have 64/512 files of 65536 bytes; PPM/PNG fixtures have sixteen
+256x256 uniform-color images (compressible PNG, not a realistic art corpus).
+Diamond edges target the next two IDs, fanout targets the final
+leaf, disconnected fixtures group 32 IDs around separate leaves. Editing the last
+leaf invalidates the full connected graph or only its disconnected group. The
+expected dependency-first/lexical order is asserted exactly. Missing final files
+after another edit reject both synchronous and worker batches without publishing;
+invalid images reject decoding; restoration retries successfully. Held source
+snapshots remain immutable, duplicate requests are rejected and workers shut down.
+
+Isolated read_all retains file buffers; decode_all uses the actual texture decoder
+on those buffers. Registration includes read/decode/storage; graph validation is
+separate. sync_scan includes real reads/comparison/invalidation/decode/commit.
+worker_prepare includes worker scheduling, scan, transport and up to 1 ms polling
+sleep. Publication uses the same private method as poll with an already-ready
+reply, including release of the prior store; it excludes waiting/read/decode.
+Measurements of isolated phases are attribution examples, not additive accounting.
+
+Previously a scan retained every read Vec and copied all affected source bytes,
+including unchanged dependents. It now releases equal read buffers immediately,
+shares committed Arc bytes, and prepares only genuinely changed source allocations.
+Affected textures still re-decode; commit/rollback and ordering remain atomic.
+The new regression checks allocation identity for raw dependents and immutability
+of changed old bytes; existing late-decode/read rollback and worker tests remain.
+
+| 512 x 64 KiB raw, changed fanout | Before median ms | After median ms | Before p95 ms | After p95 ms |
+| --- | --- | --- | --- | --- |
+| Synchronous scan | 54.205–55.351 | 36.268–40.800 | 58.936–60.499 | 39.761–55.779 |
+| Ready publication | 0.483–0.525 | 0.124–0.152 | 4.209–4.376 | 0.149–0.287 |
+
+Final diamond scan p95 is 41.863–51.219 ms; disconnected scan 42.060–52.859 ms
+despite only 32 affected IDs: all files are still read. Fanout worker preparation
+p95 is 37.903–55.576 ms, with 65.208 ms maximum. Final sixteen-image fanout PNG
+scan p95 is 2.393–2.508 ms; PPM 17.109–29.019 ms, maximum 39.472 ms. Publication
+p95 is 0.034–0.039 ms for PNG and 0.552–0.593 ms for PPM. No uniform codec or
+publication speedup is claimed. At 512 raw sources the isolated read_all median
+is tens of milliseconds; moving work to the worker does not reduce storage work.
+
+| New requested bytes in selected phase | Before peak / retained | After peak / retained |
+| --- | --- | --- |
+| Raw changed synchronous scan | 67259136 / 33582080 | 209564 / 85008 |
+| Raw worker preparation | 67259392 / 33823532 | 326460 / 326460 |
+| Raw missing-file rejection | 33543456 / 178 | 178046 / 178 |
+| PNG diamond decode_all | — | 4477676 / 4194944 |
+| PNG diamond changed scan | — | 4483982 / 4197096 |
+| Ready publication | 0 / 0 | 0 / 0 |
+
+Raw scan total allocated bytes fall 67610472 → 34106008; every file is still read.
+Publication allocates nothing in these windows but can free pre-existing data.
+The raw whole-workflow peak falls 135296385 → 67537738–67537742 bytes (129.03 →
+64.41 MiB); PNG workflow peak is 12941469 bytes (12.34 MiB). Registration still
+retains the full source set. Disposition: measured snapshot duplication is fixed;
+keep background scanning for larger sets and frame-boundary publication. Native
+watching, custom derived loaders, larger textures/graphs and concurrent external
+writes remain outside this supported performance envelope, not assumed cheap.
+
+### Scenes: TOML dominates; use an explicit load boundary
+
+1000/10000 scene-owned entities have registered positive-u64 Health and a
+multilingual String Label; a persistent entity and global resource survive.
+The 10000-entity document is 2907967 UTF-8 bytes. capture, serializer-only
+toml::to_string_pretty, validated encoding, parsing, prepare and commit are separate.
+Caller std::fs write/read is buffered, not engine durable scene I/O; the scene
+service has no file operations. Invalid engine metadata, last-entity constructor,
+unknown final type and malformed tail TOML reject without altering captured live
+state. Commit includes removal/insertion, not presentation-resource reconstruction.
+
+| 10000 mixed entities | Median ms | p95 ms | New phase peak bytes |
+| --- | --- | --- | --- |
+| Capture | 12.016–12.678 | 15.356–15.643 | 15892167 |
+| Serializer only | 67.978–70.216 | 78.752–80.940 | 25839975 |
+| Validated encode | 70.588–74.153 | 88.077–99.847 | 25839975 |
+| Caller buffered write / read | 1.187–1.307 / 7.776–7.994 | 1.518–1.554 / 8.403–9.279 | 138 / 2908105 |
+| Parse | 90.364–94.355 | 95.279–103.851 | 133019208 |
+| Prepare | 10.741–10.900 | 11.905–12.654 | 1339101 |
+| Commit | 4.553–5.005 | 5.101–5.767 | 1089076 |
+
+Early engine rejection p95 is 0.003–0.004 ms. Late constructor/type rejection
+p95 is 11.834–13.259 ms. Malformed-tail parse rejection p95 is 84.653–88.961 ms
+and its new heap peak is 135927176 bytes, slightly larger than successful parse;
+returned error retains only 200 newly allocated bytes. Successful parse allocates
+173939289 total bytes and retains 15761873 bytes. Workflow peak is 215822079 bytes
+(205.82 MiB), including multiple captured/parsed/error documents deliberately held
+by the harness. Disposition: no registry/ECS rewrite is justified by this split;
+TOML parsing/serialization is the main cost and cannot fit a 16.67 ms frame here.
+Keep scalar format and explicit prepare/commit boundaries; richer schemas, huge
+registries and game loading screens need their own workloads. No async loader,
+format migration or hostile-input memory budget is introduced by this review.
+
+### Saves: remove root copies; retain durable replacement and game-owned codec
+
+Roots have 1024/262144 u64 values, 4096 pending commands and 257 named RNG streams.
+The large canonical document is 1759736 bytes. The representative game codec
+creates per-number Strings and joins comma-separated values; this is explicitly
+game-owned work. Snapshot cloning, isolated codec encode/decode, TOML envelope,
+actual create-new/write/sync/rename and file reads are attributed separately.
+TimedCodec also observes codec work inside file save/load. Exact canonical state,
+commands/RNG metadata and file bytes are checked. Errors cover incompatible
+metadata before decode, decoder/encoder rejection, missing path, replacement
+onto a directory with temporary cleanup, invalid UTF-8 and 16 MiB+1 rejection.
+
+Load previously cloned live state for metadata and cloned decoded state during
+borrowed restoration. It now checks required-state presence/identity without a
+clone and consumes the validated snapshot internally. Public borrowed restore
+still clones independently. A clone-count regression covers success and metadata
+failure; regular continuation, compatibility, shutdown and rollback tests pass.
+
+| Large root operation after fix | Median ms | p95 ms |
+| --- | --- | --- |
+| Game codec encode / decode | 17.274–17.349 / 4.030–4.037 | 18.268–19.557 / 4.399–4.587 |
+| Envelope encode / parse | 4.387–4.455 / 2.729–2.759 | 4.968–5.412 / 3.210–3.240 |
+| Durable replacement / isolated file read | 3.572–3.594 / 5.706–6.030 | 3.910–4.013 / 6.453–6.968 |
+| Save document / file | 22.224–22.526 / 25.726–26.030 | 23.339–24.054 / 28.061–55.366 |
+| Load document / file | 7.051–7.226 / 8.060–8.309 | 7.999–8.504 / 8.771–10.073 |
+
+Before load-document median is 7.585–7.978 ms and file-load 8.432–8.930 ms:
+the improvement is modest; no save-side speedup is claimed. File-save maximum
+137.875 ms and replacement maximum 24.954 ms show synchronous I/O tails; durability
+is preserved. Isolated phases run at different points/cache states and do not sum
+to total save/load time. Game codec encode dominates the representative save.
+
+Load-document total allocated bytes fall 21404784 → 17158475; file-load
+25649561 → 21352002. New peak bytes remain 10985280 / 13082432 respectively:
+envelope parsing/read storage sets the peak, not the removed root copies.
+Snapshot clone requests 2147678 bytes; codec encode peak 9509875, envelope encode
+7051523, save-document peak 12666818. Durable replacement itself peaks at 438 new
+bytes. Incompatible-metadata rejection peaks at 10985304 bytes because parsing
+precedes compatibility checks. Oversized file rejection p95 is 18.596–19.921 ms,
+reads no more than 16 MiB+1 but Vec growth peaks at 33554462 new requested bytes.
+The limit is a consumed-byte bound, not a heap-capacity bound. Whole-workflow
+peak remains 61583811 bytes after versus 61583817 before (58.73 MiB): the retained
+fixtures/oversized-file exercise dominates. No peak-memory reduction is claimed.
+Disposition: unnecessary root copies are fixed; coherent save capture still clones,
+codec ownership remains with the game, and synchronous loads/replacement remain
+explicit between-tick boundaries. More complex roots, physical cold/network
+storage and non-Windows replacement/durability need deployment validation.
+
+### Whole-process observations and gate result
+
+| Final selected workflow, two fresh processes | Sampled private peak MiB | Peak working set MiB |
+| --- | --- | --- |
+| Raw 512 fanout | 47.34–58.43 | 69.13–69.18 |
+| PNG 16 diamond | 9.29–13.60 | 17.49–17.51 |
+| Scene mixed 10000 | 169.64–179.22 | 199.79–199.86 |
+| Save 262144 | 38.54–43.90 | 61.02–61.02 |
+
+Pre-work private baselines are 0.73–1.25 MiB, resident 4.39–6.68 MiB; full baseline
+bytes are in the CSV. No idle-subtracted memory savings or before/after process
+comparison is inferred. All eight monitored processes and all release probes exit
+0. Logs: target/io-{asset,save}-before-{1,2}.log and -after-{1,2}.log,
+io-scene-{1,2}.log, io-{asset,save}-heap-before-1.log,
+io-{asset,save}-workflow-before.log, io-{asset,save}-{phase,workflow}-after-{1,2}.log,
+io-{texture,scene}-{phase,workflow}-{1,2}.log, io-process-*.stdout/stderr.log;
+CPU summaries in io-closure-summary.csv. Acquisition/analysis helpers stay in
+ignored target output; domain-owned ignored probes remain reproducible source.
+
+The three dispositions close this requested review: measured costs have explicit
+ownership, error/rollback behavior is exercised, justified fixes have repeated
+before/after evidence, and remaining deployment limits are documented above.
+There are no timing assertions in CI and no claim of full Milestone 4.5 completion.
+
+Validation: full ./scripts/verify.ps1 exit 0, including formatting, workspace
+check/Clippy/tests, CLI generated-project end-to-end and dependency boundaries
+(target/io-closure-full-verify.log). All three public sibling examples exit 0:
+asset-reload --smoke verifies publication/rollback/recovery/shutdown,
+scene-serialization verifies reconstruction/rollback/migration, world-saving
+verifies file replacement and exact continuation to tick 100. Logs are
+target/io-closure-{asset-smoke,scene-example,save-example}.log. Normal facade
+cargo tree --edges normal excludes DHAT/backtrace/serde_json. Sibling changes
+present at start are preserved; no example sources or locks are modified here.

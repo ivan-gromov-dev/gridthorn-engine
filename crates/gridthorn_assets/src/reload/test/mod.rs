@@ -11,10 +11,10 @@ use crate::{AssetId, AssetStore};
 
 static NEXT_FIXTURE: AtomicU64 = AtomicU64::new(0);
 
-struct Fixture(PathBuf);
+pub(super) struct Fixture(pub(super) PathBuf);
 
 impl Fixture {
-    fn new() -> Self {
+    pub(super) fn new() -> Self {
         let unique = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
@@ -40,7 +40,7 @@ impl Fixture {
         fixture
     }
 
-    fn write(&self, name: &str, bytes: &[u8]) {
+    pub(super) fn write(&self, name: &str, bytes: &[u8]) {
         std::fs::write(self.0.join(name), bytes).unwrap();
     }
 
@@ -61,7 +61,7 @@ impl Drop for Fixture {
     }
 }
 
-fn id(path: &str) -> AssetId {
+pub(super) fn id(path: &str) -> AssetId {
     AssetId::new(path).unwrap()
 }
 
@@ -76,3 +76,5 @@ fn finish(reloader: &mut AssetReloader) -> Result<Vec<AssetId>, AssetReloadError
     }
 }
 mod scaling;
+
+pub(super) mod heap;

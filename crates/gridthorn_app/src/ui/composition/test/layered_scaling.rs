@@ -74,7 +74,7 @@ fn measure(count: u16, state: &str, event_count: u16) {
     let route = router.route_events(&mut tree, &layout, &events).unwrap();
     assert_eq!(route.effects, []);
     if state == "closed" {
-        assert_eq!(route.consumed, []);
+        assert_eq!(route.consumed, [] as [usize; 0]);
         assert_eq!(route.world_events, events);
     } else {
         assert_eq!(route.consumed, (0..events.len()).collect::<Vec<_>>());

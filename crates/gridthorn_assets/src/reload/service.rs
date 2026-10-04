@@ -89,20 +89,22 @@ impl AssetReloader {
             .map_err(|_| AssetReloadError::Stopped)?
             .try_recv();
         match result {
-            Ok(reply) => {
-                self.pending = false;
-                let prepared = reply.map_err(|source| AssetReloadError::Prepare { source })?;
-                if let Some(snapshot) = prepared.snapshot {
-                    self.assets = snapshot;
-                }
-                Ok(Some(prepared.changed))
-            }
+            Ok(reply) => self.publish(reply),
             Err(mpsc::TryRecvError::Empty) => Ok(None),
             Err(mpsc::TryRecvError::Disconnected) => {
                 self.pending = false;
                 Err(AssetReloadError::Stopped)
             }
         }
+    }
+
+    fn publish(&mut self, reply: worker::Reply) -> Result<Option<Vec<AssetId>>, AssetReloadError> {
+        self.pending = false;
+        let prepared = reply.map_err(|source| AssetReloadError::Prepare { source })?;
+        if let Some(snapshot) = prepared.snapshot {
+            self.assets = snapshot;
+        }
+        Ok(Some(prepared.changed))
     }
 
     /// Stop accepting requests, join the worker, and discard any unapplied batch.
@@ -150,3 +152,7 @@ impl Drop for AssetReloader {
         let _ = self.shutdown();
     }
 }
+
+#[cfg(test)]
+#[path = "test/attribution.rs"]
+mod attribution;

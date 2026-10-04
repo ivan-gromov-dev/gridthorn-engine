@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Asset reload reuses committed source allocations for unchanged dependents,
+  retaining dependency-first invalidation and atomic decode/publication rollback.
+- World-save loading checks compatibility without cloning the live root and moves
+  the decoded root into restoration. Public borrowed snapshot restoration retains
+  its independent clone semantics.
+- Asset/scene/save performance probes separate first-service loads, branching and
+  error paths, file I/O, texture/game codecs, TOML and phase/workflow heap peaks;
+  DHAT is a test-only dependency.
 - Input buffers queue owned events and transfer their ordered queue into independent
   frame snapshots, avoiding full queue/payload copies. Replacement queues reserve
   the preceding frame's event count; held state, preedit and focus cancellation

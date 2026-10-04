@@ -44,7 +44,7 @@ fn clusters_retain_ligature_endpoints_and_combining_graphemes() {
     assert_eq!(cluster_boundaries(&boundaries, 3..6), [3, 6]);
     assert_eq!(cluster_boundaries(&boundaries, 7..11), [7, 9, 11]);
     assert_eq!(cluster_boundaries(&boundaries, 12..18), [12, 15, 18]);
-    assert_eq!(cluster_boundaries(&boundaries, 4..5), []);
+    assert_eq!(cluster_boundaries(&boundaries, 4..5), &[] as &[usize]);
     assert_eq!(cluster_boundaries(&boundaries, 18..18), [18]);
 }
 
@@ -57,5 +57,5 @@ fn distant_clusters_do_not_include_neighboring_paragraph_boundaries() {
         cluster_boundaries(&boundaries, paragraph..paragraph + 3),
         [paragraph, paragraph + 3]
     );
-    assert_eq!(cluster_boundaries(&[], 0..0), []);
+    assert_eq!(cluster_boundaries(&[], 0..0), &[] as &[usize]);
 }

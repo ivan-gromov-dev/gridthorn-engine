@@ -74,7 +74,7 @@ fn registering_after_plain_routing_hides_then_reopens_detached_layer_geometry() 
     router.register_layer(&tree, UiNodeId(10)).unwrap();
     let closed = router.route_events(&mut tree, &layout, &events).unwrap();
     assert_eq!(closed.effects, []);
-    assert_eq!(closed.consumed, []);
+    assert_eq!(closed.consumed, [] as [usize; 0]);
     assert_eq!(closed.world_events, events);
     router
         .open_layer(&mut tree, &layout, UiNodeId(10), UiLayer::default())
