@@ -1417,3 +1417,32 @@ No staging/commits; pre-existing sibling manifest/lock/rootREADME/workbench unto
 Native application latency and worker progress are not guaranteed; next remaining
 performance domains: long-lived audio/output memory, native/device latency, or
 simulation/grid/pathfinding/collision scaling. Milestone remains open.
+
+## 2026-10-04 Pathfinding scaling checkpoint
+
+Engine baseline834df86eaeb99a2ba951a8fe7a9093d6d369c37c, initially clean. Sibling
+existing manifest/lock/rootREADME/workbench and classic_2d audio changes preserved;
+only pathfinding example exercised, no sibling edits. Added navigation/test/scaling
+ignored probe for32/128/512 open/weighted/wall/budget workloads. Two before and
+two after isolated release runs passed; full result fingerprints match all12 cases.
+Costs/parents now HashMap lookups, ordered BTreeSet frontier unchanged. No deps/API
+signatures/dense bounds allocation. Added exact canonical route/expansion/frontier
+regular regression at budgets0/1/3/8/16. Grid tests23 passed/1 ignored.
+
+512-square open median191–193ms ->91–95ms; weighted217–234 ->111–113ms;
+wall92–99 ->45–50ms; budget1024 ->0.20–0.26ms. Full searches still not frame-sized.
+After fresh-process resident peak32,194,560bytes via50ms PeakWorkingSet64 sampling;
+500ms final hold, env restored, monitored samples excluded from latency tables.
+This includes harness/validation/fingerprint; no baseline/heap/phase-memory claim.
+Logs target/navigation-1.log, navigation-before-2.log, navigation-after-{1,2}.log,
+navigation-summary.csv, navigation-memory.log and navigation-memory-summary.txt.
+Protocol and exact workload limits in PERFORMANCE_REVIEW.md.
+
+Full verify passed (target/navigation-verify.log), shared target/sequential-test
+process overrides restored. Initial Clippy assertion-style failure corrected,
+then full verification rerun. Includes fmt/check/Clippy/unit/doc tests, generated
+CLI/native smoke, dependency boundaries and whitespace. Public sibling pathfinding
+command passed and emitted expected diagnostic SVGs (target/navigation-example.log).
+Docs/README/roadmap/changelog updated; final diff whitespace check passed. No commits.
+Next: fixed simulation/placement/collision scaling; retain maze/real-cost/budget-
+sweep/heap/pathfinding follow-ups and native/device audio deferrals.

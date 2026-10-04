@@ -377,6 +377,8 @@ record implemented and verified increments; measurements and limitations are in
 - [ ] Review fixed simulation, grids, pathfinding/placement, collision and
       snapshots for scaling, allocation costs and preserved determinism.
   - [ ] Measure fixed ticks, grid/pathfinding/placement and collision scaling.
+    - [x] Measure open/weighted/unreachable/budgeted pathfinding through 512x512;
+          optimize cost/predecessor lookups and verify deterministic diagnostics.
   - [ ] Measure snapshots/RNG and allocation costs; verify determinism after fixes.
   - [ ] Record each domain's disposition and supported workload limits.
 - [ ] Measure cold/warm build time, dependency footprint and binary size; address

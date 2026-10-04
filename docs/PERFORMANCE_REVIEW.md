@@ -1296,3 +1296,68 @@ fixture. Actual pickup accepted counts remain unknown; retained scheduling
 variance prevents claiming a throughput speedup. Logs target/audio-pause-after-
 {1,2}.log. The reproducible command is unchanged from the preceding worker section.
 Native device latency, long-lived memory and OS lifecycle remain open.
+
+## Pathfinding scaling and hash lookups — 2026-10-04
+
+Baseline834df86eaeb99a2ba951a8fe7a9093d6d369c37c, engine initially clean after
+preceding audio work was committed. Ignored navigation/test/scaling probe covers
+32/128/512-square rectangles, start(0,0), goal(side-1,side-1). Open terrain costs1;
+weighted costs1+((column*17+row*31)%9); wall blocks column side/2, leaving valid
+endpoints on disconnected sides. Budgeted open terrain settles at most
+min(1024,side*side/4); other workloads allow side*side expansions. Fixtures are
+analytical cost callbacks, not tilemap/occupancy lookups or game-agent workloads.
+
+```powershell
+cargo test -p gridthorn_grid --release --locked measure_navigation_scaling -- --ignored --nocapture
+```
+
+Two isolated before and two after runs passed, two excluded warmup iterations
+and20 retained samples/config. Upper-middle median and nearest-rank p95 as above.
+Timing includes endpoint validation, full synchronous search, all internal
+allocation and result construction; assertions, fingerprinting, output printing
+and result destruction are excluded. Before logs target/navigation-1.log and
+navigation-before-2.log; after navigation-after-{1,2}.log; derived
+navigation-summary.csv. First baseline predates the outside-timing fingerprint
+addition. No benchmark acquisition overlapped builds or checks.
+
+| 512x512 workload | Before median (two runs) | After median (two runs) | After p95 (two runs) |
+| --- | --- | --- | --- |
+| Open,262144 settled | 190.99 /193.41 ms | 91.41 /94.78 ms | 127.60 /105.38 ms |
+| Weighted | 216.78 /234.34 ms | 111.26 /113.25 ms | 123.47 /129.53 ms |
+| Unreachable wall,131072 settled | 91.85 /99.21 ms | 45.21 /49.91 ms | 58.31 /58.41 ms |
+| Open,budget1024 | 0.373 /0.512 ms | 0.262 /0.203 ms | 0.406 /0.268 ms |
+
+The focused fix replaces BTreeMap cost/predecessor stores with standard HashMap.
+Neither table is iterated for decisions or results: the BTreeSet frontier still
+chooses (cost,column,row), removes superseded entries and yields sorted diagnostic
+frontier. Parent lookup reconstructs the same route. No dense whole-rectangle
+allocation, A* heuristic, dependency or public signature is introduced. Hashing
+has randomized seeds, but only lookup results affect the ordered algorithm.
+
+All12 before/after configurations match same-toolchain DefaultHasher fingerprints
+of complete Debug results (status/path/cost/visited/frontier); fingerprints are
+an experimental comparison, not stable serialization or collision-free proof.
+Regular tests add exact open-grid Manhattan expansion order, canonical tied route
+and frontier checks at budgets0/1/3/8/16. Existing weighted/tie/repeatability,
+unreachable/budget, endpoint/zero-cost and coordinate-limit tests pass. Probe
+assertions check statuses, wall reachability size, path endpoints/adjacency/cost,
+open optimal cost and frontier sorting outside timing.
+
+Each sample records capacity bytes for owned path/visited/frontier vectors only;
+this excludes search maps/queue, allocator overhead, terrain and process state.
+A separate fresh after-process run sampled Windows PeakWorkingSet64 every50ms,
+with a500ms post-workload hold enabled by GRIDTHORN_NAVIGATION_MEMORY. Observed
+peak32,194,560 bytes (about30.70MiB) across the entire12-configuration matrix,
+including test harness and fingerprint/validation allocations. No baseline
+subtraction, per-query/phase attribution, heap peak or memory reduction claim.
+Monitor log target/navigation-memory.log and navigation-memory-summary.txt;
+monitored samples are excluded from the latency tables. Env override restored.
+
+Disposition: lookup change roughly halves large-query time in these fixtures, but
+512-square full searches remain well above frame durations. Use explicit settled
+budgets where appropriate; BudgetExceeded does not prove unreachable and calls
+cannot resume. No universal real-time limit is inferred from analytical terrain.
+Maze/corridor topology, repeated agent queries, real occupancy costs, budget sweeps,
+heap peaks, error paths and cross-platform measurements remain follow-ups. Fixed
+simulation, placement, collision and snapshots are still unreviewed in this domain
+increment. Public sibling pathfinding example passes and emits its SVG diagnostics.

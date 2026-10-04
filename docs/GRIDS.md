@@ -205,6 +205,13 @@ These read-only diagnostics can be projected into existing sprites/UI or custom
 tools without linking navigation to rendering. Queries mutate no world data;
 authoritative route consumption belongs at fixed ticks or explicit load/reset.
 
+Tentative cost and predecessor tables use hash lookups and are never iterated
+to choose work or generate diagnostics. An ordered frontier preserves the public
+cost/cell expansion and tie rules. Windows release measurements through 512x512
+are recorded in [Performance review](PERFORMANCE_REVIEW.md); full searches remain
+synchronous and may exceed a frame budget. The settled-cell budget is a work cap,
+not a wall-clock deadline or a resumable-search API.
+
 Run the public facade example:
 
 ```console

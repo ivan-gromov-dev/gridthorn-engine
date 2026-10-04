@@ -1,6 +1,62 @@
 use crate::{GridCell, NavigationBounds, PathStatus, search_path};
 
 #[test]
+fn open_grid_ties_preserve_exact_expansion_route_and_frontier() {
+    let bounds = NavigationBounds::new(GridCell::default(), GridCell::new(3, 3)).unwrap();
+    let mut expected = (0..4)
+        .flat_map(|column| {
+            (0..4).map(move |row| {
+                (
+                    GridCell::new(column, row),
+                    u64::try_from(column + row).unwrap(),
+                )
+            })
+        })
+        .collect::<Vec<_>>();
+    expected.sort_by_key(|(cell, cost)| (*cost, *cell));
+    for budget in [0, 1, 3, 8, 16] {
+        let result = search_path(
+            bounds,
+            GridCell::default(),
+            GridCell::new(3, 3),
+            budget,
+            |_| Some(1),
+        )
+        .unwrap();
+        assert_eq!(result.visited, expected[..budget]);
+        let settled = result
+            .visited
+            .iter()
+            .map(|(cell, _)| *cell)
+            .collect::<std::collections::BTreeSet<_>>();
+        let mut discovered = std::collections::BTreeSet::from([GridCell::default()]);
+        for cell in &settled {
+            for (column, row) in [(-1, 0), (0, -1), (0, 1), (1, 0)] {
+                let neighbor = GridCell::new(cell.column + column, cell.row + row);
+                if bounds.contains(neighbor) {
+                    discovered.insert(neighbor);
+                }
+            }
+        }
+        let mut frontier = discovered
+            .difference(&settled)
+            .map(|cell| (*cell, u64::try_from(cell.column + cell.row).unwrap()))
+            .collect::<Vec<_>>();
+        frontier.sort_by_key(|(cell, cost)| (*cost, *cell));
+        assert_eq!(result.frontier, frontier);
+        if budget == 16 {
+            assert_eq!(
+                result.path,
+                [(0, 0), (0, 1), (0, 2), (0, 3), (1, 3), (2, 3), (3, 3)]
+                    .map(|(column, row)| GridCell::new(column, row))
+            );
+        } else {
+            assert_eq!(result.status, PathStatus::BudgetExceeded);
+        }
+    }
+}
+
+#[test]
 fn weighted_route_avoids_expensive_direct_cell_and_is_repeatable() {
     let bounds = NavigationBounds::new(GridCell::new(-1, -1), GridCell::new(1, 1)).unwrap();
     let terrain = |cell| Some(if cell == GridCell::default() { 20 } else { 1 });

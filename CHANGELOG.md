@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Pathfinding uses hash lookups for tentative costs and predecessors while retaining
+  deterministic ordered frontier expansion, routes and diagnostics.
+
 - The sibling classic_2d audio worker preserves the latest pause/resume state
   under effect-queue saturation through a coalescing atomic mailbox.
 - Performance review records example-owned audio worker handoff and shutdown

@@ -125,6 +125,8 @@ warm reload, scene and world-save measurements are recorded in the same review.
   scaling evidence; native device and operating-system latency remain unmeasured.
   Audio output shares converted frames within bounded command batches and releases
   completed voice handles on processing, including empty queues.
+  Pathfinding uses hash lookups with an ordered frontier; release scaling evidence
+  and synchronous-search budget limits are recorded in the performance review.
 Milestone 4 remains open until this performance gate and
 native language/IME acceptance finish, followed by Milestone 5 desktop
 platform/device controls. The debugging workflow and
