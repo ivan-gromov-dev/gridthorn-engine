@@ -1193,3 +1193,58 @@ Full log target/milestone-4-5-font-editing-verify.log; example logs
 font-editing-clippy.log / font-editing-example-tests.log. Final whitespace checks
 for both repositories passed. No staging/commits. Next: mixed ECS/churn and cold
 localization, retaining the explicit larger-text/cache/layer follow-ups.
+
+## 2026-10-04 mixed world/cold localization checkpoint
+
+Baseline engine 59449e9d23b3e1634b673140ac754c01d3470c82; clean working tree
+at start, examples untouched. Added ignored domain probes in world/test/scaling.rs
+and runtime/test/publication.rs plus their module registrations. Two isolated
+release runs of each passed. Raw logs and summary under target/mixed-world-*,
+cold-localization-* and mixed-cold-summary.csv. Full protocols, percentile ranges
+and limits are in PERFORMANCE_REVIEW.md. No production change justified by these
+fixtures. Next: long/unique text, cache churn, expanded layers and allocation
+attribution; retain broader mixed ECS/reference-graph follow-ups. Full verification
+pending below. No staging or commits.
+
+Verification outcome: formatting, workspace check and Clippy passed after replacing
+an empty-string assertion flagged by Rust 1.99 Clippy. Full verify reached tests
+but failed in existing CLI generated_project_can_be_checked_and_run_offline:
+Cargo could not write the temporary project's invoked.timestamp (os error 3).
+Cause unconfirmed; not attributed to the performance probes. Full diagnostic log
+is target/mixed-cold-verify.log. No unchanged retry. Tests for the workspace excluding
+gridthorn_cli passed separately (target/mixed-cold-domain-tests.log), dependency
+boundaries and git diff --check HEAD passed. Full gate remains incomplete because
+of the CLI failure. The assertion correction changes no acquisition timing.
+
+## 2026-10-04 text/cache/expanded-layer checkpoint
+
+Continuing the prior uncommitted increment at engine HEAD
+59449e9d23b3e1634b673140ac754c01d3470c82. Examples inspected with a per-command
+safe.directory override; their Cargo.toml/Cargo.lock/README and untracked workbench
+changes predate this increment and were not edited. Added ignored renderer
+text/test/pressure.rs and app ui/composition/test/layer_pressure.rs, with module
+registrations. Two isolated release runs each of text pressure, expanded layers
+and Japanese attribution passed. Clippy for render/app all targets passed.
+Protocols, results and limits are in PERFORMANCE_REVIEW.md; raw/summary logs in
+target/text-pressure-*, layer-pressure-*, japanese-attribution-* and
+text-layer-pressure-summary.csv. No production changes: long Japanese fallback
+misses are the principal measured remaining cost (p95 ~11 ms versus explicit JP
+primary ~1.3 ms); author-selected font semantics must be preserved. Bitmap expanded
+layers need no fix for this fixture. Next: backend fallback/raster-allocation
+attribution and long-field editing/asset-font expanded-layer workloads.
+Full verification follows with TEMP/TMP explicitly routed to target/verify-text-tmp
+for this process, testing a workspace-local temp location after the previous
+system-temp CLI invoked.timestamp path failure. This does not change repository
+configuration or establish the earlier failure's cause. No staging or commits.
+
+Verification outcome: full ./scripts/verify.ps1 passed with CARGO_TARGET_DIR set
+to the absolute engine target directory and RUST_TEST_THREADS=1 for this invocation
+only (target/text-layer-verify-shared.log). Includes formatting, workspace check,
+Clippy, all workspace unit/doc tests, generated-project offline CLI check/native
+smoke, dependency boundaries and whitespace. Original temp-location experiment
+failed with MSVC LNK1181 on nested generated-project paths
+(target/text-layer-verify.log); no production/CLI fix made and no confirmed claim
+about the preceding invoked.timestamp failure. Env overrides were restored.
+This successful full gate also covers the earlier world/localization probe files.
+All acquisition was completed before checks. No native performance speedup inferred
+from the correctness smoke; native interaction/DPI2/IME acceptance stays open.

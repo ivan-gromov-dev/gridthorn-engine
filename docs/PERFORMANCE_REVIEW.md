@@ -707,3 +707,176 @@ Completion requires reproducible before/after results, regression checks for fix
 behavior, full repository verification, successful native workloads and maintainer
 acceptance. After Milestone 4.5, complete Milestone 4's language/platform and native
 IME acceptance; neither milestone is closed by compilation or smoke alone.
+
+## Mixed world and cold localization increment (2026-10-04)
+
+Engine baseline 59449e9d23b3e1634b673140ac754c01d3470c82, Rust 1.99.0
+(b940084d7 2026-09-28), Windows reference host recorded above. Two sequential
+release runs, no concurrent agent-launched builds/checks during acquisition.
+CPU clocks, background activity and power conditions remain uncontrolled.
+These are individual-call nearest-rank percentiles, 50 samples/config/run.
+
+```console
+cargo test -p gridthorn_world --release --locked measure_mixed_world_and_scene_churn -- --ignored --nocapture --test-threads=1
+cargo test -p gridthorn_localization --release --locked measure_cold_localization_publication -- --ignored --nocapture --test-threads=1
+```
+
+World fixture has 1000/10000/100000 persistent entities split evenly between
+Position, Velocity and 64-byte Inventory components, plus a replaceable scene
+with 10% as many entities. Each entity has one domain component; scene entities
+also have ownership metadata. This does not measure arbitrary multi-component
+queries or structural component insertion/removal. Three traversals mutate one
+integer each. One untimed traversal precedes 50 cycles of traversal, scene removal
+and repopulation. Removal includes owner matching, temporary entity collection
+and backend despawn; spawning includes per-entity scene-ID cloning. Output and
+count assertions are outside timing. Final counts verify persistent survivors.
+
+| Persistent entities | Traversal p95 us | Scene removal p95 us | Scene spawn p95 us |
+| --- | --- | --- | --- |
+| 1000 | 5.60–9.80 | 25.20–57.50 | 6.80–9.60 |
+| 10000 | 17.90–29.00 | 134.30–143.20 | 74.90–102.70 |
+| 100000 | 162.40–167.20 | 1299.50–1343.60 | 703.10–729.90 |
+
+Largest sampled removal was 2042.20 us; largest traversal 183.20 us.
+No production change is justified by this bounded workload. Large scene teardown,
+more owner partitions, memory peaks and arbitrary component combinations remain
+unmeasured; these samples do not establish a fixed-tick or whole-frame budget.
+
+Localization fixture uses 16/256/4096 messages, one NUMBER message and otherwise
+literal ASCII labels, for en-US/ru/ar-EG/ja. Each sample constructs a fresh asset
+and service, formats the first numeric message, then replaces the catalog with a
+separately validated changed candidate. The initial cycle is excluded; 50 fresh
+cycles follow. Source generation, candidate validation, correctness checks and
+service destruction are outside publication timing. Replacement includes releasing
+the previous bundle. Tests verify locale chain, exact changed labels and retained
+old output. Fresh-service caches are cold; process/OS/compiler caches are warm.
+This is not cold process startup, filesystem I/O or a complex reference-graph test.
+
+| Messages | Validation p95 us | Construction p95 us | First NUMBER p95 us | Replacement p95 us |
+| --- | --- | --- | --- | --- |
+| 16 | 12.70–25.80 | 2.70–5.60 | 1.70–5.40 | 3.80–9.80 |
+| 256 | 336.50–409.60 | 37.50–48.40 | 4.30–6.50 | 67.20–130.60 |
+| 4096 | 5350.20–7212.80 | 475.90–729.60 | 8.90–15.40 | 899.80–1643.20 |
+
+Ranges span locales and runs, not pooled percentiles. Largest validation was
+9602.20 us; largest replacement 2040.50 us. Keep source validation away from
+latency-sensitive polling as required by LOCALIZATION.md. No runtime optimization
+is justified by these samples; preparation/publication is bounded but consumes
+part of a shared frame budget. Multi-locale simultaneous publication, complex
+references, retained bytes and allocation peaks remain unmeasured.
+Raw logs: target/mixed-world-<1|2>.log and target/cold-localization-<1|2>.log;
+per-run median/p95/max summary: target/mixed-cold-summary.csv. With 50 samples, nearest-rank p99 equals the recorded maximum. Neither probe runs
+in the default test suite; these are reproducible manual workloads, not timing
+thresholds in CI. Remaining long/unique-text, expanded-layer and input-allocation
+work stays open in the roadmap.
+
+## Long text, cache pressure and expanded layers (2026-10-04)
+
+Baseline engine 59449e9d23b3e1634b673140ac754c01d3470c82 plus the preceding
+uncommitted world/localization probes, Rust 1.99.0 and the Windows host recorded
+above. Examples were inspected only and retain their pre-existing changes.
+No production behavior, font selection, cache limits or dependencies changed.
+Two sequential isolated release runs of each probe, diagnostics unset and no
+concurrent agent-launched builds/checks during acquisition. CPU clocks, background
+activity and power conditions remain uncontrolled.
+
+```console
+cargo test -p gridthorn_render --release --locked measure_long_text_and_cache_pressure -- --ignored --nocapture --test-threads=1
+cargo test -p gridthorn_render --release --locked measure_japanese_layout_attribution -- --ignored --nocapture --test-threads=1
+cargo test -p gridthorn_app --release --locked measure_expanded_layer_pressure -- --ignored --nocapture --test-threads=1
+```
+
+Text uses the renderer's licensed Noto Sans/Arabic/JP fixtures, explicit service
+locales en-US/ru/ar-EG/ja, primary Noto Sans at 24 logical pixels, width 600 and
+WordOrGlyph wrapping. Script phrases repeat 8/64/256 times, followed by a unique
+numeric suffix. Working sets of 1/32/96 strings test immediate reuse, aggregate
+geometry pressure and the 64-entry limit. All strings are prepared once before
+100 individual timed calls cycling through that working set. Returned backend
+buffer identity is checked against weak references outside timing to identify
+actual hits, rather than assuming that a warm backend means a layout-cache hit.
+A live original layout is retained and its measurement verified after churn;
+this caller-held buffer is outside cache retention limits. Missing glyphs are
+checked during setup. Source generation/output/validation and final layout release
+are excluded; internal eviction/allocation is included. Inputs share repeated
+phrases, so backend caches are warm; this is not unique-glyph/font discovery.
+
+For 256 repetitions, one-string workloads hit all 100 times, p95 0.20–0.30 us.
+Both 32/96-string workloads miss all 100 times: long entries exhaust the aggregate
+16K-glyph/1024-line budgets before the 64-entry limit. This is expected bounded
+retention behavior, not evidence to raise limits without memory measurements.
+
+| Script | 256 repeats, 32/96 strings: layout p95 us | 64 repeats, DPI 2: warm raster p95 us |
+| --- | --- | --- |
+| English | 1098.90–1947.00 | 2937.80–3945.80 |
+| Russian | 1288.70–1413.80 | 4176.90–5399.50 |
+| Arabic | 2767.80–2887.50 | 2465.80–2641.10 |
+| Japanese | 11192.10–11824.70 | 4730.20–6319.70 |
+
+Raster uses 8/64 repeats, one layout, DPI 1/2 and 100 individual calls after one
+untimed raster call. Full snapshot equality is validated outside timing. Snapshot
+creation and output geometry allocation are included, final release is excluded.
+The CSV hit column describes buffer reuse for layout; for raster it is a fixed
+placeholder and does not measure raster output caching. Long 256-repeat rasters
+are excluded from this bounded probe. No GPU upload/execution or native frame
+budget is measured. Percentiles are nearest-rank per config/run; ranges span runs
+and configurations, never pooled percentiles. Largest sampled Japanese layout
+was 14175.40 us, and DPI-2 64-repeat Japanese raster 8508.80 us.
+
+A separate Japanese attribution fixture repeats 256 times across 96 strings,
+using primary Noto Sans versus Noto Sans JP, with WordOrGlyph versus None wrapping.
+Same fonts, service locale, font size, width and validation; two repeated runs:
+
+| Primary/wrapping | Layout p95 us |
+| --- | --- |
+| Noto Sans / WordOrGlyph | 11078.20–11201.60 |
+| Noto Sans / None | 10978.40–11106.40 |
+| Noto Sans JP / WordOrGlyph | 1319.60–1354.10 |
+| Noto Sans JP / None | 1281.90–1306.00 |
+
+This attributes the dominant difference to primary/fallback selection rather than
+line wrapping for this fixture. It does not isolate backend font matching from
+shaping or guarantee equivalent font metrics/appearance. Explicit Japanese primary
+selection is an application styling choice; the engine must preserve authored
+font semantics. Long Japanese fallback cache misses remain a measured limitation;
+backend attribution and an equivalent-semantics fix remain open. No engine-wide
+speedup is claimed. Raster span generation/allocations also deserve separate
+attribution before changing cache/resource policies.
+
+Expanded UI fixture has 3/16/64 overlapping open panels, 1/16 bitmap fields each,
+1000x800 logical viewport/DPI 1, with optional top modal scope. Fields contain
+Review 123; each panel clips and has a distinct offset. After 10 excluded cycles,
+50 cycles time one batch of 32 cursor moves inside the top field and one router
+layout. Correctness checks outside timing verify complete input consumption, top
+picking and open-layer count. Setup/registration/source construction and final
+layout release are excluded; layout assignment releases its previous snapshot
+inside timing. This workload always targets the top layer; it does not measure
+alternating lower scopes, layer transitions, actual IME, asset-font editing or
+native rendering. Modal/nonmodal ranges are observations, not isolated policy gains.
+
+| Layers x fields | Layout p95 us | Pointer32 p95 us |
+| --- | --- | --- |
+| 3 x 1 | 5.70–6.30 | 4.60–5.10 |
+| 3 x 16 | 78.30–91.90 | 25.40–30.10 |
+| 16 x 1 | 29.70–36.70 | 13.50–15.70 |
+| 16 x 16 | 472.60–547.00 | 127.40–138.70 |
+| 64 x 1 | 118.30–147.60 | 54.10–96.30 |
+| 64 x 16 | 1818.60–1844.80 | 657.80–688.70 |
+
+No production fix justified by the expanded bitmap-layer fixture. Largest layout
+was 2070.30 us and pointer batch 1114.50 us. With 50 samples nearest-rank p99 is
+max; text's 100-call p99 is separate from max. Allocator counts, opaque backend
+memory, long-field editing/preedit, asset-font expanded layers and DPI-2 native
+acceptance remain open.
+Logs: target/text-pressure-<1|2>.log, layer-pressure-<1|2>.log and
+japanese-attribution-<1|2>.log. Summaries with median/p95/p99/max and layout hit
+counts: target/text-layer-pressure-summary.csv and japanese-attribution-summary.csv.
+Ignored manual probes do not impose CI timing thresholds. The milestone's full
+native budget and remaining domain review remain outstanding.
+
+Verification: full ./scripts/verify.ps1 passed with process-local
+CARGO_TARGET_DIR=<absolute engine target> and RUST_TEST_THREADS=1, including all
+workspace tests and the generated-project offline check/native smoke. Log:
+target/text-layer-verify-shared.log. The shared shorter build output avoids the
+nested MSVC path failure observed in the temp-location experiment; it does not
+prove the cause of the earlier invoked.timestamp failure. Environment overrides
+were restored; no persistent configuration or CLI behavior changed.

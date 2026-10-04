@@ -351,7 +351,9 @@ record implemented and verified increments; measurements and limitations are in
           invalidation; verify transitions/atomic rejection and remeasure layered routing.
     - [x] Measure warm asset-font preedit/commit paint and alternating pointer scopes
           across three overlapping layers, four scripts and DPI 1/2 through public APIs.
-    - [ ] Measure mixed ECS/churn, long/unique-text and expanded-layer workloads, and cold localization
+    - [x] Measure mixed single-component populations/scene churn and fresh-service localization publication; record repeated samples and workload limits.
+    - [x] Measure repeated long/unique text and layout-cache pressure, attribute Japanese primary/fallback costs, and measure expanded bitmap layers through 64 roots/1024 fields.
+    - [ ] Attribute long Japanese fallback misses/raster allocations and measure long-field editing, asset-font expanded layers, broader mixed ECS/component churn and complex cold localization
         publication; attribute larger input burst and remaining layout/routing costs.
   - [ ] Record runtime, world, input and localization dispositions and remeasure fixes.
 - [ ] Review assets/reload, scenes/saves, audio and platform lifecycle for I/O,
