@@ -4,6 +4,7 @@ use super::*;
 fn disabled_collection_and_independent_phase_limits() {
     let mut performance = WindowPerformance {
         enabled: false,
+        frames: frames::FrameSamples::default(),
         preparation: Vec::new(),
         redraw: Vec::new(),
         extraction: Vec::new(),
@@ -26,6 +27,7 @@ fn disabled_collection_and_independent_phase_limits() {
 fn extraction_has_its_own_cap_and_stops_timing_when_full() {
     let mut performance = WindowPerformance {
         enabled: true,
+        frames: frames::FrameSamples::default(),
         preparation: Vec::new(),
         redraw: Vec::new(),
         extraction: Vec::new(),

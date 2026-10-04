@@ -9,6 +9,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Asset-font UI field geometry now locates glyph cluster boundaries by binary
+  search instead of scanning and copying all grapheme boundaries per glyph,
+  preserving caret/selection positions while reducing measured long-field costs.
+
+- The sibling multilingual workbench adds a manual long-field preedit/commit
+  CPU probe for four scripts and synthetic DPI 1/2, reporting oversized layouts.
+
+- Opt-in native window diagnostics now pair preparation callbacks with the next
+  redraw and report bounded callback CPU sums and preparation counts; event-loop
+  waiting and actual display intervals remain outside this measurement.
+
+- Opt-in native window performance diagnostics report initial window DPI/extent
+  and available monitor/refresh metadata for reference performance acquisitions.
+
+- The sibling multilingual workbench adds isolated selection and injected preedit
+  native smoke, preserving committed text with DPI tests and repeated measurements.
+
+- The sibling multilingual workbench adds isolated static-window and animated
+  window smoke cycles with layer/control tests and repeated native measurements.
+
+- The sibling multilingual workbench adds isolated short-viewport wheel-scroll
+  native smoke, with DPI/overflow tests and repeated four-locale measurements.
+
+- The sibling multilingual workbench adds isolated catalog-switch native smoke
+  with caption/editor regression coverage and repeated first-cycle/warm timings.
+
+- The sibling multilingual workbench adds isolated slider-drag native smoke,
+  with pointer capture/DPI regression coverage and repeated four-locale timings.
+
+- The sibling classic_2d example loads complete assets beside its executable
+  before using source assets, with headless/native relocation checks.
+
+- Performance review inventories direct Windows DLL imports and staged package
+  bytes, recording classic_2d's compile-time source asset-path portability limit.
+
+- Performance review records independent empty-target classic_2d release builds,
+  unchanged warm repeats, headless/native smoke and external asset footprint.
+
+- Performance review separates generated-project empty-target release compilation
+  from unchanged warm repeats and verifies the resulting headless executable.
+
+- Performance review extends isolated release rebuild measurements to generic
+  world, renderer and additive facade API edits, with compilation chains recorded.
+
+- Performance review compares empty-target SDK release builds with default,
+  four and two Cargo jobs; measured limits increase build time on the test machine.
+
+- Performance review attributes cold Cargo unit durations and measures isolated
+  release rebuilds after game-model and simulation implementation edits.
+
 - Performance review records Windows release build baselines for CLI/SDK,
   generated-project and example warm builds, dependency closures and binary sizes.
 
@@ -184,6 +234,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Opt-in native window diagnostics now pair preparation callbacks with the next
+  redraw and report bounded callback CPU sums and preparation counts; event-loop
+  waiting and actual display intervals remain outside this measurement.
+
+- Opt-in native window performance diagnostics report initial window DPI/extent
+  and available monitor/refresh metadata for reference performance acquisitions.
+
+- The sibling multilingual workbench adds isolated selection and injected preedit
+  native smoke, preserving committed text with DPI tests and repeated measurements.
+
+- The sibling multilingual workbench adds isolated static-window and animated
+  window smoke cycles with layer/control tests and repeated native measurements.
+
+- The sibling multilingual workbench adds isolated short-viewport wheel-scroll
+  native smoke, with DPI/overflow tests and repeated four-locale measurements.
+
+- The sibling multilingual workbench adds isolated catalog-switch native smoke
+  with caption/editor regression coverage and repeated first-cycle/warm timings.
+
+- The sibling multilingual workbench adds isolated slider-drag native smoke,
+  with pointer capture/DPI regression coverage and repeated four-locale timings.
+
+- The sibling classic_2d example loads complete assets beside its executable
+  before using source assets, with headless/native relocation checks.
+
+- Performance review inventories direct Windows DLL imports and staged package
+  bytes, recording classic_2d's compile-time source asset-path portability limit.
+
+- Performance review records independent empty-target classic_2d release builds,
+  unchanged warm repeats, headless/native smoke and external asset footprint.
+
+- Performance review separates generated-project empty-target release compilation
+  from unchanged warm repeats and verifies the resulting headless executable.
+
+- Performance review extends isolated release rebuild measurements to generic
+  world, renderer and additive facade API edits, with compilation chains recorded.
+
 - Large text raster requests reuse bounded glyph spans within one call, preserving
   font selection, ordered pixels, tint and DPI; short requests retain direct sampling.
 
@@ -245,6 +332,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Opt-in native window diagnostics now pair preparation callbacks with the next
+  redraw and report bounded callback CPU sums and preparation counts; event-loop
+  waiting and actual display intervals remain outside this measurement.
+
+- Opt-in native window performance diagnostics report initial window DPI/extent
+  and available monitor/refresh metadata for reference performance acquisitions.
+
+- The sibling multilingual workbench adds isolated selection and injected preedit
+  native smoke, preserving committed text with DPI tests and repeated measurements.
+
+- The sibling multilingual workbench adds isolated static-window and animated
+  window smoke cycles with layer/control tests and repeated native measurements.
+
+- The sibling multilingual workbench adds isolated short-viewport wheel-scroll
+  native smoke, with DPI/overflow tests and repeated four-locale measurements.
+
+- The sibling multilingual workbench adds isolated catalog-switch native smoke
+  with caption/editor regression coverage and repeated first-cycle/warm timings.
+
+- The sibling multilingual workbench adds isolated slider-drag native smoke,
+  with pointer capture/DPI regression coverage and repeated four-locale timings.
+
+- The sibling classic_2d example loads complete assets beside its executable
+  before using source assets, with headless/native relocation checks.
+
+- Performance review inventories direct Windows DLL imports and staged package
+  bytes, recording classic_2d's compile-time source asset-path portability limit.
+
+- Performance review records independent empty-target classic_2d release builds,
+  unchanged warm repeats, headless/native smoke and external asset footprint.
+
+- Performance review separates generated-project empty-target release compilation
+  from unchanged warm repeats and verifies the resulting headless executable.
+
+- Performance review extends isolated release rebuild measurements to generic
+  world, renderer and additive facade API edits, with compilation chains recorded.
+
 - Large text raster requests reuse bounded glyph spans within one call, preserving
   font selection, ordered pixels, tint and DPI; short requests retain direct sampling.
 
@@ -289,6 +413,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dependency-growth baselines plus explicit runtime deferrals.
 
 ### Changed
+
+- Opt-in native window diagnostics now pair preparation callbacks with the next
+  redraw and report bounded callback CPU sums and preparation counts; event-loop
+  waiting and actual display intervals remain outside this measurement.
+
+- Opt-in native window performance diagnostics report initial window DPI/extent
+  and available monitor/refresh metadata for reference performance acquisitions.
+
+- The sibling multilingual workbench adds isolated selection and injected preedit
+  native smoke, preserving committed text with DPI tests and repeated measurements.
+
+- The sibling multilingual workbench adds isolated static-window and animated
+  window smoke cycles with layer/control tests and repeated native measurements.
+
+- The sibling multilingual workbench adds isolated short-viewport wheel-scroll
+  native smoke, with DPI/overflow tests and repeated four-locale measurements.
+
+- The sibling multilingual workbench adds isolated catalog-switch native smoke
+  with caption/editor regression coverage and repeated first-cycle/warm timings.
+
+- The sibling multilingual workbench adds isolated slider-drag native smoke,
+  with pointer capture/DPI regression coverage and repeated four-locale timings.
+
+- The sibling classic_2d example loads complete assets beside its executable
+  before using source assets, with headless/native relocation checks.
+
+- Performance review inventories direct Windows DLL imports and staged package
+  bytes, recording classic_2d's compile-time source asset-path portability limit.
+
+- Performance review records independent empty-target classic_2d release builds,
+  unchanged warm repeats, headless/native smoke and external asset footprint.
+
+- Performance review separates generated-project empty-target release compilation
+  from unchanged warm repeats and verifies the resulting headless executable.
+
+- Performance review extends isolated release rebuild measurements to generic
+  world, renderer and additive facade API edits, with compilation chains recorded.
 
 - Large text raster requests reuse bounded glyph spans within one call, preserving
   font selection, ordered pixels, tint and DPI; short requests retain direct sampling.

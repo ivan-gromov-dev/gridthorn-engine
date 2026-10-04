@@ -278,6 +278,8 @@ record implemented and verified increments; measurements and limitations are in
         percentiles and separate construction/first-prepare observations.
   - [x] Record compiler/target, CPU, GPU/backend/driver, native surface extent
         and configured present mode on the available Windows host.
+  - [x] Add opt-in native window/current-monitor metadata; record repeated DPI 1
+        display extent/refresh and power-plan observations on the Windows host.
   - [ ] Complete reference metadata with native DPI, display refresh and power
         conditions; establish remaining domain workloads and budgets.
   - [ ] Establish controlled cold/warm baselines for whole-engine CPU, GPU
@@ -294,6 +296,20 @@ record implemented and verified increments; measurements and limitations are in
         all four locales at native DPI 1 with separate CPU/GPU-pass samples.
     - [x] Add bounded native preparation/redraw CPU callback diagnostics, including
           runtime schedules and render extraction; keep input/waiting exclusions explicit.
+    - [x] Pair completed preparations with the next redraw; test bounded accumulation
+          and record repeated Japanese idle callback sums with timing exclusions.
+    - [x] Measure paired callback sums for all nine native isolation modes across
+          four locales at DPI 1, twice each; retain blocking/display exclusions.
+  - [x] Add isolated injected slider-drag smoke with capture-release/DPI tests;
+        measure two native DPI 1 release runs for each locale.
+  - [x] Add isolated catalog-switch smoke with editor-preservation tests; measure
+        repeated native DPI 1 cycles and separate first-cycle layout observations.
+  - [x] Add isolated short-viewport wheel-scroll smoke with DPI/overflow tests;
+        measure repeated native DPI 1 runs for all four locales.
+  - [x] Add matching static-window and host-time-animation smoke scripts with
+        layer/preservation tests; measure two native DPI 1 runs per mode/locale.
+  - [x] Add isolated selection and injected preedit smoke with preservation/DPI
+        tests; measure two native DPI 1 runs per mode/locale.
   - [ ] Measure isolated idle, editing/selection, clipboard/IME, pointer/slider,
         scrolling, locale-switch, nested-window and animation workloads at DPI 1/2.
   - [ ] Measure whole-engine frame CPU work, GPU execution and actual presented
@@ -354,7 +370,11 @@ record implemented and verified increments; measurements and limitations are in
           across three overlapping layers, four scripts and DPI 1/2 through public APIs.
     - [x] Measure mixed single-component populations/scene churn and fresh-service localization publication; record repeated samples and workload limits.
     - [x] Measure repeated long/unique text and layout-cache pressure, attribute Japanese primary/fallback costs, and measure expanded bitmap layers through 64 roots/1024 fields.
-    - [ ] Attribute long Japanese fallback misses/raster allocations and measure long-field editing, asset-font expanded layers, broader mixed ECS/component churn and complex cold localization
+    - [x] Measure long-field asset-font preedit/commit cycles for four content scripts
+          at synthetic DPI 1/2; record repeated costs and rejected largest layouts.
+    - [x] Attribute long-field UI/text phases and replace per-glyph full-boundary
+          scans with indexed ranges; verify cluster/RTL offsets and remeasure.
+    - [ ] Attribute long Japanese fallback misses/raster allocations and long-field editing costs; measure asset-font expanded layers, broader mixed ECS/component churn and complex cold localization
         publication; attribute larger input burst and remaining layout/routing costs.
   - [ ] Record runtime, world, input and localization dispositions and remeasure fixes.
 - [ ] Review assets/reload, scenes/saves, audio and platform lifecycle for I/O,
@@ -392,7 +412,21 @@ record implemented and verified increments; measurements and limitations are in
   - [ ] Run controlled cold/warm engine, examples and generated-project builds.
     - [x] Record empty-target CLI/SDK release builds and warm repeats, plus
           dependency-primed generated-project and existing-cache example builds.
+    - [x] Measure a generated project with an independent empty build target and
+          two unchanged warm repeats; verify the resulting headless smoke.
+    - [x] Measure classic_2d with an independent empty target and two unchanged
+          warm repeats; verify headless/native smoke and record external asset bytes.
+    - [x] Inspect cold Cargo unit timings and measure game-model/simulation edits
+          in isolated source copies with dependency invalidation recorded.
+    - [x] Extend isolated release edit measurements to generic world, renderer and
+          additive facade API changes; record compilation chains and restore sources.
+    - [x] Compare default/4/2-job empty-target SDK release builds and retain
+          existing jobs policy based on the measured Windows results.
   - [ ] Record dependency footprint/binary sizes and resolve measured regressions.
+    - [x] Audit direct Windows DLL imports and staged executable/asset bytes;
+          verify local runs and record the example's source-path relocation limit.
+    - [x] Resolve classic_2d assets beside the executable with source fallback;
+          verify headless/native relocation while the copied source path is absent.
     - [x] Record Windows CLI/default-SDK dependency closures and CLI/template/
           classic_2d release executable sizes without changing release profiles.
 - [ ] Add repeatable performance workloads/regression checks, rerun the complete

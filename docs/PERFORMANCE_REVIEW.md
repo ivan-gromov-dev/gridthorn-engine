@@ -89,7 +89,10 @@ costs to add. Host-frame indices differ from renderer and native callback indice
 This example-only probe consumes public APIs, excludes startup/animation/render
 extraction/platform requests/stdout, and does not introduce an SDK profiling API.
 
-GRIDTHORN_WINDOW_PERFORMANCE records up to 240 preparation, 240 redraw and
+GRIDTHORN_WINDOW_PERFORMANCE also emits an initial window_configuration snapshot
+with native physical size/DPI and optional current-monitor name/extent/origin/system
+refresh in millihertz. None means unavailable; this is not displayed-frame timing.
+It records up to 240 preparation, 240 redraw and
 240 extraction
 callbacks, independently, and prints `window_cpu,phase,sample,elapsed_us` at
 shutdown. Preparation includes lifecycle idle (runtime schedules), render-frame
@@ -1600,3 +1603,1077 @@ single-domain edit/rebuild costs, Cargo critical-path/unit attribution, optional
 feature matrix, dependency/build-artifact bytes, full asset/runtime packaging,
 profile tradeoff experiments with correctness/runtime checks and cross-platform
 runs. Broad build/footprint milestone items remain open.
+
+## Cargo units and source-edit rebuilds — 2026-10-04
+
+Engine baseline67cd899649a0009dbdbd8a7b6ec12dec388da795, initially clean after
+prior build/simulation changes were committed. Continues the preceding retained
+measurement root target/build-footprint-20261004-140430. No tracked source,
+manifest, dependency or build-profile change. SDK crates/manifests/config were
+copied to ignored sdk-source, and generated-game's temporary dependency path was
+redirected there. Offline metadata adapted only its temporary lockfile. Priming
+that path fixture took13.90s; it is excluded from edit comparisons.
+
+Parsed UNIT_DATA from the dated original SDK cold Cargo HTML report into
+cold-units.csv. Use the dated report, not cargo-timing.html, which is a mutable
+alias replaced by later builds. Unit elapsed durations overlap heavily; they
+are not CPU time and must not be added into build wall time.
+
+| Cold compile unit | Unit start /elapsed seconds |
+| --- | --- |
+| naga | 33.68 /120.29 |
+| bevy_ecs | 52.24 /100.99 |
+| moxcms | 34.67 /77.61 |
+| wgpu-hal | 80.99 /75.97 |
+| image | 52.72 /75.65 |
+| read-fonts (one of two versioned units) | 19.11 /72.77 |
+| wgpu-core | 95.20 /66.20 |
+
+wgpu-core finishes near161.40s at the end of the161.54s wall build, followed in
+finish order by wgpu-hal, app, naga and ECS. Metadata pipelining permits dependent
+units to begin before upstream codegen ends. This identifies long units and the
+observed tail, not an exact causal critical path or proof that removing one crate
+saves its full duration. Scheduler contention, default parallel jobs, optimization
+and linker work are not separately attributed. Feature/backend or job-limit
+experiments remain follow-ups before changing dependencies or profiles.
+
+Source edits are actual implementation-text changes, not timestamp-only touches:
+generated model changes i16 subtraction to wrapping_sub for values constrained
+to0/1; copied RNG changes the local state read to wrapping_add(0), preserving
+SplitMix64 outputs. For each workload, one build uses the alternate source and
+one restores the original. Both are timed source edits; neither is a no-op warm
+repeat. Files are restored in a finally block. No-op algebra does not represent
+all realistic codegen changes, public API edits or generic-heavy edits.
+
+| Source edit | Two release build wall times | Compiling packages in logs |
+| --- | --- | --- |
+| Generated game model | 2.51 /2.62 s | generated-game |
+| Copied SDK RNG implementation | 6.51 /6.68 s | simulation, app, facade, generated-game |
+
+All use cargo build --manifest-path <temporary generated Cargo.toml> --release
+--locked --offline --target-dir <measurement root>/sdk --timings, sequentially,
+with no overlapping build/check. Source read/write is outside Stopwatch timing.
+Same target/cache/profile/toolchain as preceding baseline; path priming establishes
+a stable copied source context. No external/GPU/text dependencies recompile in
+these edits. Release profile is unchanged; no custom incremental setting or fast-
+compile profile introduced. Log evidence is edit-game_model-{1,2}.log,
+edit-sdk_rng-{1,2}.log, edit-times.csv and Cargo HTML reports. Final generated
+release --smoke passed after the copied source expressions were restored.
+
+Disposition: separate no-op Cargo checks (~0.5–0.7s) from source-edit rebuilds
+(~2.5s local model,~6.5s simulation edit) and genuinely empty-target compilation
+(~161s SDK). The evidence supports keeping normal caches and clean domain
+boundaries; it does not establish a regression or justify changing runtime,
+RNG compatibility, feature defaults or release tuning. Next controlled experiments
+can vary one costly backend/feature or build parallelism at a time and compare
+runtime/correctness tradeoffs. Broader edit matrix (renderer/world/public API,
+procedural macros, generic code), repeated cold examples/generated projects,
+exact critical-path/CPU attribution, artifact/package bytes and cross-platform
+measurements remain open. Reviewed changes in this increment are Markdown only;
+measurement sources/logs stay under ignored target.
+
+## Cargo job limits — 2026-10-04
+
+Continues baseline67cd899649a0009dbdbd8a7b6ec12dec388da795 with preceding
+uncommitted Markdown review changes preserved. Default/4/2-job SDK release builds
+use identical unchanged sources, lockfile, profile, target/toolchain and offline
+registry cache. Cargo reports ncpu=12; CARGO_BUILD_JOBS is unset and project config
+sets no jobs override. Default report confirms jobs=12. Physical CPU model/cores
+were not available through the permitted CIM query; no physical-core assumption.
+
+Serial order is -j4, -j2, then fresh default, each in its own new empty target
+under the retained measurement root. Source/registry/OS caches remain warm; no
+other agent build/check overlaps acquisition. Stopwatch covers Cargo invocation
+only; report copying, artifact enumeration and cleanup occur after stopping it.
+One sample per setting: these are not confidence intervals, randomized trials or
+proof of a globally optimal job count.
+
+| Cargo setting | Empty-target release wall time | Logical artifact bytes |
+| --- | --- | --- |
+| -j4 | 206.89s (3m27s) | 1077449289 |
+| -j2 | 347.28s (5m47s) | 1077463685 |
+| default (12 jobs) | 137.68s (2m18s) | 1077456489 |
+
+Prior independent default sample was161.54s; this variation prevents exact savings
+or universal thresholds. The tested limits are slower than both default samples.
+Against the fresh default, -j4 takes about1.50x and -j2 about2.52x as long.
+Artifact byte totals are sums of file lengths, not physical disk use, peak disk
+requirements or process memory; ~1GiB is essentially unchanged across settings.
+No RAM/responsiveness/thermal/power advantage is measured or claimed.
+
+Some individual units complete faster with lower concurrency: naga elapsed
+96.08s default,64.66s at4 jobs,55.63s at2; ECS79.72/50.41/44.84s respectively.
+Whole-build time still rises. This is consistent with lower unit contention but
+less overlapping work; wall unit durations and one serial-order sample do not
+isolate CPU contention or establish a causal critical-path model. Cargo reports
+max-concurrency13/5/3 while jobs are12/4/2; use its explicit jobs value to identify
+the requested policy rather than assuming every recorded overlapping unit holds
+an independent job slot. No compile-job algorithm or crate backend changed.
+
+Exact acquisition commands (new target required each time):
+
+```powershell
+cargo build -p gridthorn --release --locked --offline -j 4 --target-dir target/jobs-probe-new-4 --timings
+cargo build -p gridthorn --release --locked --offline -j 2 --target-dir target/jobs-probe-new-2 --timings
+cargo build -p gridthorn --release --locked --offline --target-dir target/jobs-probe-new-default --timings
+```
+
+Raw evidence: target/build-footprint-20261004-140430/jobs-times.csv, jobs-{4,2,
+default}.log, self-contained jobs-{4,2,default}.html, and parsed jobs-*-units.csv.
+Free space at start was about4.4GiB. After each successful build the report was
+copied out and only that run's newly-created jobs target was removed, after
+resolving/checking its absolute path under the measurement root. Original SDK,
+CLI, examples, generated sources, normal targets and earlier evidence are retained.
+Reports/logs remain reviewable after cleanup; artifact sizes were sampled before
+removal. No user/source files or lockfiles were modified.
+
+Disposition: preserve default Cargo jobs policy on this test machine; no project
+or global jobs override is added. Further experiments could test intermediate
+limits, repeat/reorder settings and measure memory/responsiveness on constrained
+hardware before choosing per-machine limits. CI job counts, dev/check/test builds,
+source-edit rebuilds under alternate jobs, full example/generated cold builds,
+profile/backend feature tradeoffs and cross-platform runs remain open. This
+increment changes only reviewed Markdown; builds above passed and DocsOnly
+verification applies to the resulting diff.
+
+## World, renderer and facade source-edit rebuilds — 2026-10-04
+
+Continues engine baseline `67cd899649a0009dbdbd8a7b6ec12dec388da795` and the
+isolated copied SDK/generated-game fixture under
+`target/build-footprint-20261004-140430`. Prior uncommitted Markdown changes are
+preserved. Same Windows target, Rust/Cargo 1.99.0, default release profile/jobs,
+locked offline resolution and primed dependency cache as preceding experiments.
+No tracked Rust, manifest, dependency or configuration changes.
+
+Each case has two sequential builds: apply the alternate source, then restore
+original bytes and build again. Stopwatch covers Cargo invocation with redirected
+logs; source writes and final smoke are excluded. These are two source-edit
+observations, not no-op repeats, confidence intervals or a performance speedup.
+
+| Copied source edit | Alternate / restored release wall time | Packages reported compiling in both builds |
+| --- | --- | --- |
+| Generic `WorldAccess::spawn` body | 8.41 / 7.93 s | world, scene, app, facade, generated-game |
+| `Color::rgba` body | 7.64 / 7.93 s | render, app, facade, generated-game |
+| Add unused facade version function | 2.85 / 2.66 s | facade, generated-game |
+
+World edit extracts `StoredComponent(component)` into a local before spawning.
+Renderer edit extracts the identical RGBA array into a local. Both preserve
+observable behavior but need not represent realistic codegen or generic changes.
+The facade case adds `build_probe_version() -> &'static str`, delegating to
+`version()`, then removes it. This is an additive unused API in the temporary
+copy only; no production API was added. No third-party package reports compilation
+in these six final builds. Simulation does not report compilation in the final
+world cases; the log list describes this fixture/cache, not a promise about every
+consumer or complete metadata invalidation. Logs are Cargo progress evidence,
+not a count of rustc processes or rebuilt machine-code functions.
+
+The initial acquisition rewrote restored files again in `finally`, changing
+mtime and contaminating the next case with previous-domain compilation. Those
+numbers were discarded. The retained script restores in `finally` only when
+contents differ, while the second timed iteration explicitly restores original
+bytes. A separate untimed build re-primed the fixture before final acquisition.
+Final logs/CSV replace initial observations. Raw evidence: `edit-domain-probe.ps1`,
+`edit-domain-reprime.log`, `edit-domain-times.csv`,
+`edit-{world_generic,render_color,facade_api}-{1,2}.log` and
+`edit-domain-smoke.log` in the measurement root. Final generated release
+`--smoke` passed; all three copied files match tracked originals by SHA-256.
+
+Disposition: subsystem edits cost about 7.6–8.4 seconds in this warm release
+fixture, compared with about 2.7–2.9 seconds for the unused facade API edit.
+This extends the earlier model/RNG matrix without justifying dependency or
+profile changes. It does not establish development-profile latency, changed
+public signatures, procedural macro costs, cold builds, native runtime correctness
+or a cross-platform limit. True-empty examples/generated builds, repeated trials,
+realistic generic/API edits and packaging remain open.
+
+## Generated project with empty build target — 2026-10-04
+
+Continues engine `67cd899649a0009dbdbd8a7b6ec12dec388da795`, preserving earlier
+uncommitted Markdown measurements. Examples revision is
+`c89adb9a5317007b3469782c1c8da9d8b4b1b04a`; no sibling files changed.
+Use the existing CLI-generated `generated-game`, restored copied SDK sources and
+already adapted temporary lockfile from the preceding experiments. No generation,
+registry resolution, source-copy preparation or lockfile adaptation is timed.
+Rust/Cargo 1.99.0, Windows x86_64-pc-windows-msvc, default release profile/features
+and default jobs remain unchanged. CPU power/frequency and background load were
+not controlled. Source/registry/OS caches remain warm.
+
+A previously nonexistent target directory,
+`target/build-footprint-20261004-140430/generated-empty-20261004`, isolates all
+compiler artifacts from the prior SDK/CLI/example targets. The script rejects an
+existing directory instead of deleting or reusing it. Acquisition runs sequentially
+with no overlapping Cargo checks/builds. Stopwatch includes Cargo invocation and
+redirected output; enumeration and smoke occur after timing.
+
+| Build state | Wall seconds | Cargo `Compiling` progress lines |
+| --- | --- | --- |
+| Empty target | 142.41 | 227 |
+| First unchanged warm repeat | 0.70 | 0 |
+| Second unchanged warm repeat | 0.72 | 0 |
+
+The initial observation includes dependencies, SDK and game compilation/linking.
+The 227 lines are Cargo progress entries, not distinct package/version counts,
+rustc process counts or an exact compile-unit metric. Warm repeats are no-op
+fingerprint checks, not source-edit rebuilds. This is one empty-target sample,
+not a cold-build distribution or uncached registry/download/storage benchmark.
+The earlier generated-project 10.75-second build used primed SDK dependency
+artifacts and must remain separately labeled. The 137.68/161.54-second SDK-only
+samples differ in workspace context and workload; their proximity does not prove
+that adding the game is free or that compilation improved.
+
+Final executable is 8421376 bytes (about 8.03 MiB); PDB is 4911104 bytes
+(about 4.68 MiB). Target logical file lengths sum to 1104095557 bytes
+(about 1.03 GiB), including dependencies, reports and build intermediates.
+This is neither physical disk usage nor peak RAM/disk consumption. Earlier
+executable size was 8419840 bytes; this small difference is not attributed to a
+code regression or profile change. Build paths/context and linking differ;
+no controlled binary reproducibility experiment was performed. Assets, runtime
+DLLs, installer size and deployment requirements remain excluded.
+
+The final executable's `--smoke` passed with exit 0. Its source runs a headless
+runtime frame with two fixed ticks and shutdown; it does not open a window,
+exercise GPU presentation, test IME or establish native runtime acceptance.
+Normal build targets and the newly measured target are retained.
+
+Exact acquisition is retained as `generated-empty-probe.ps1` in the measurement
+root; rerunning requires a different unused target directory name. Build command:
+
+```powershell
+cargo build --manifest-path target/build-footprint-20261004-140430/generated-game/Cargo.toml --release --locked --offline --target-dir target/build-footprint-new-generated --timings
+```
+
+Run the same command twice more without modifying sources for warm comparisons.
+Raw evidence in the measurement root: `generated-empty-times.csv`,
+`generated-empty-sizes.csv`, `generated-empty-{0,1,2}.log` and
+`generated-empty-smoke.log`. Dated Cargo timing reports remain under the new
+target's `cargo-timings`; the original dated report must be used for cold unit
+analysis because `cargo-timing.html` is replaced on subsequent builds.
+
+Disposition: generated-project empty-target and unchanged warm states are now
+measured separately. No measured regression justifies changing dependency defaults
+or release profiles. Repeated empty-target samples, genuinely empty-target
+examples, dev/check profiles, realistic source/API edits, packaging and
+cross-platform coverage remain open. The broader build gate and milestone native
+acceptance are not closed by this increment.
+
+## Example with empty build target — 2026-10-04
+
+Engine revision `67cd899649a0009dbdbd8a7b6ec12dec388da795`, examples revision
+`c89adb9a5317007b3469782c1c8da9d8b4b1b04a`. Measurements describe current working
+trees: preceding engine Markdown changes and existing sibling manifest/lockfile,
+classic audio and workbench changes are preserved. No sibling files are edited.
+`classic_2d` consumes tracked engine paths and enables native audio output; the
+minimal generated game uses a copied SDK without that optional output feature.
+Their workspace/feature contexts differ, so elapsed differences do not isolate
+the cost of native audio or game logic.
+
+Rust/Cargo 1.99.0, Windows x86_64-pc-windows-msvc, default release profile/jobs,
+locked offline resolution. Source, registry and OS caches remain warm; power,
+CPU frequency and background load are uncontrolled. New target
+`target/build-footprint-20261004-140430/classic-empty-20261004` was absent before
+acquisition. Script rejects existing targets; normal engine/sibling/generated
+build caches are retained. Cargo commands run sequentially without overlapping
+checks/builds. Stopwatch includes Cargo invocation/output redirection only.
+
+| Build state | Wall seconds | Cargo `Compiling` progress lines |
+| --- | --- | --- |
+| Empty target | 147.39 | 228 |
+| First unchanged warm repeat | 0.75 | 0 |
+| Second unchanged warm repeat | 0.67 | 0 |
+
+This is one empty-target sample and two no-op repeats, not a repeated cold-build
+distribution, source-edit workload or uncached registry/storage benchmark.
+Progress lines are not unique package counts or rustc process counts. The prior
+3.58-second example build used existing release-test artifacts; it remains
+separately labeled and is not a comparable empty-target baseline. No speedup or
+regression is inferred from these two contexts.
+
+Release EXE is 9138688 bytes (about 8.72 MiB), matching the previously measured
+example executable size. PDB is 5345280 bytes (about 5.10 MiB). Logical target
+file lengths total 1182135505 bytes (about 1.10 GiB), including dependency and
+build intermediates/reports. External example assets total 107609 bytes:
+`atlas.ppm` 10501, `music.wav` 88244 and `pickup.wav` 8864. These are file lengths,
+not physical storage, peak memory/disk or compressed distribution sizes. Assets
+resolve through the source package path; this is not a relocatable packaging test
+or an audit of runtime DLLs/device requirements.
+
+The new executable passed both `--headless-smoke` and `--smoke`, exit 0.
+Headless exercises asset decoding/game extraction without a device/window.
+Native mode opens a window, starts a round and exits after 30 frames with the
+example audio worker enabled. An empty stderr/stdout log and successful exit
+prove lifecycle completion, not audible output quality, native device/mixer
+latency, frame budgets, IME, manual interaction or suspend/resume acceptance.
+No native renderer timing was enabled for this build measurement.
+
+Reproduction requires an unused target name:
+
+```powershell
+cargo build --manifest-path ../gridthorn-examples/Cargo.toml -p classic_2d --release --locked --offline --target-dir target/build-footprint-new-classic --timings
+```
+
+Repeat the unchanged command twice for no-op warm measurements. Full acquisition
+script/log evidence remains under `target/build-footprint-20261004-140430`:
+`classic-empty-probe.ps1`, `classic-empty-times.csv`, `classic-empty-sizes.csv`,
+`classic-empty-{0,1,2}.log`, `classic-empty-headless.log` and
+`classic-empty-native.log`. Dated Cargo reports remain in the new target's
+`cargo-timings`; the mutable alias does not preserve initial unit timings.
+
+Disposition: an existing runnable example now has independent empty-target and
+unchanged warm observations, complementing CLI/SDK/generated-project baselines.
+No production dependency/profile change is justified. Broader examples/features,
+repeated empty targets, debug/check builds, realistic edits, full packaging and
+cross-platform trials remain open. The broad build gate and whole milestone
+native acceptance remain unfinished.
+
+## Direct DLL imports and staged package footprint — 2026-10-04
+
+Engine revision `67cd899649a0009dbdbd8a7b6ec12dec388da795`; existing engine
+Markdown and sibling example changes are preserved. Use the previously measured
+CLI, generated empty-target and classic_2d empty-target release executables.
+No build, dependency, profile, source or sibling file changes in this increment.
+Microsoft COFF/PE Dumper 14.44.35228.0 (`dumpbin /DEPENDENTS` and `/IMPORTS`)
+reads each image; complete outputs are retained. DLL names are normalized to
+lowercase and deduplicated, since images include differently cased names.
+
+| Artifact | Unique direct DLL names | EXE bytes | Staged EXE plus assets bytes |
+| --- | --- | --- | --- |
+| CLI | 11 | 2234880 | 2234880 |
+| Generated game | 23 | 8421376 | 8421376 |
+| classic_2d | 26 | 9138688 | 9246297 |
+
+All three images import `vcruntime140.dll` and six `api-ms-win-crt-*` names
+(math, runtime, string, stdio, locale, heap). Counts are import names in these
+images, not total recursively loaded libraries, distributable files or measured
+DLL memory. No DLL installation/copied runtime was performed. Local smoke
+success only establishes that the exercised paths work on this development host.
+A clean Windows installation/runtime prerequisite check remains unperformed.
+
+Generated/classic additionally import window/graphics-related names such as
+`user32.dll`, `gdi32.dll`, `opengl32.dll` and `dxgi.dll`. Relative to generated,
+classic has three additional names: `combase.dll`, `mmdevapi.dll` and
+`api-ms-win-core-winrt-error-l1-1-0.dll`. The native audio-enabled fixture differs
+in source, features and workspace context; this comparison is an import-table
+inventory, not isolated audio binary-size or latency attribution. Driver/runtime
+modules loaded dynamically, transitive dependencies, API-set resolution and
+unused linked paths are outside this audit. Static imports do not establish
+which backend executes or which components belong in an installer.
+
+A new `package-stage-20261004` under the measurement root contains each EXE in
+its own directory, plus the example's three assets in `classic/assets`. No PDB,
+runtime DLL, installer or compression output is included. File-length totals
+exclude folder metadata and are not physical disk size, resident memory or a
+complete deployment bill of materials. The script rejects an existing stage.
+CLI `--help`, generated `--smoke` and classic `--headless-smoke` all passed from
+the respective staged working directories, exit 0. No native staged run was
+needed to repeat the previously completed native lifecycle smoke.
+
+A concrete portability limit remains: classic loads its atlas and WAV files
+through compile-time `CARGO_MANIFEST_DIR`, not the staged assets directory.
+Source inspection shows both load sites, and byte inspection confirms the
+absolute sibling package path embedded in the EXE. Since that source directory
+remains available, successful staged smoke cannot prove that staged assets were
+used. No original files were renamed/removed to force failure. The example's
+source-release workflow remains runnable; a relocatable distribution requires
+an explicit asset-location policy and validation on a machine without the source
+checkout. This audit does not silently implement a packaging capability.
+
+Raw evidence under `target/build-footprint-20261004-140430`:
+`package-probe.ps1`, `package-{cli,generated,classic}-{dependents,imports,smoke}.log`,
+`package-direct-imports.csv`, `package-classic-extra-imports.csv`,
+`package-embedded-path.csv`, `package-stage-sizes.csv` and staged copies.
+Reproduction uses the same `/DEPENDENTS` and `/IMPORTS` commands on the desired
+release artifact; a new unused stage directory is required for the script.
+
+Disposition: direct import names and executable/asset staging bytes are measured;
+full runtime/deployment footprint remains open. No performance regression or
+profile/dependency fix is inferred. Follow-ups are recursive/dynamic module and
+clean-host coverage, explicit runtime prerequisites, relocatable asset resolution,
+installer/compression tradeoffs and platform-specific packaging. The broad build
+footprint and native milestone gates remain open.
+
+## Example asset relocation fix — 2026-10-04
+
+The preceding staged audit found classic_2d loading assets only through its
+compile-time source path. The sibling example now resolves one asset directory
+for both presentation and audio: an existing `assets` directory beside the EXE
+has priority, otherwise source-package assets remain the development fallback.
+An incomplete adjacent directory fails at the normal texture/audio load boundary;
+there is no per-file fallback that mixes package and source assets. No SDK API,
+dependency edge, profile or automatic packaging subsystem was added.
+
+The focused resolver lives in `classic_2d/src/assets/resolution.rs`, with a small
+module surface and domain tests. Two tests verify development fallback and that
+an empty adjacent asset directory overrides a valid source atlas and produces a
+load error. Package tests passed: 10 passed, 1 ignored; package all-target Clippy
+with warnings denied passed. Existing audio pause-mailbox changes are preserved.
+
+A separate standalone copy of the current example under ignored engine target
+was compiled in release against tracked engine paths with native audio enabled.
+Only its temporary manifest/lockfile were adapted; sibling manifests/lockfile
+were unchanged. Offline metadata initially attempted to unpack a non-Windows
+package into the restricted Cargo registry. Filtering metadata to
+x86_64-pc-windows-msvc avoided that unused-platform acquisition and succeeded.
+Release build used --locked --offline and the retained classic target; no
+empty-target build timing is claimed for this reused cache.
+
+EXE and assets were copied into `classic-relocation-package`. The copied source
+directory, whose path is embedded in this EXE, was temporarily moved to a checked
+sibling path under the ignored measurement root. While the compile-time source
+path was absent, both headless and native 30-frame smokes passed, exit 0. Removing
+the packaged atlas and pickup WAV in separate checks caused expected exit 1;
+assets and source fixture were restored in finally blocks. Only these newly
+created ignored fixtures were moved, never user source assets. This demonstrates
+asset relocation on the current development host; native sound quality, clean
+Windows runtime prerequisites and displayed-frame budgets remain unverified.
+
+Evidence under `target/build-footprint-20261004-140430`:
+`classic-relocation-probe.ps1`, `classic-relocation-metadata.json`,
+`classic-relocation-build.log`, `classic-relocation-{headless-smoke,smoke}.log`,
+`classic-relocation-missing-{atlas.ppm,pickup.wav}.log`, copied source/package.
+Engine target logs `classic-assets-tests.log` and `classic-assets-clippy.log`
+record package checks. The reused classic release target's executable was rebuilt;
+original measured executable bytes remain in `package-stage-20261004/classic`.
+Historical build/size observations still describe their earlier artifacts.
+
+Disposition: the measured source-path asset portability limit is fixed and
+validated for this example. This is a reliability/package behavior change, not a
+measured rendering or compilation speedup. Direct/dynamic DLL deployment,
+clean-host installation, full packaging footprint and native milestone acceptance
+remain open. No total deployment capability is marked complete.
+
+Full `./scripts/verify.ps1` passed with process-local `CARGO_TARGET_DIR` set to
+engine target and `RUST_TEST_THREADS=1`; previous environment values were restored.
+The first default run passed format/check/Clippy but failed the generated CLI
+project build with disk-full errors in its separate temporary target. Full logs
+are `target/classic-assets-full-verify.log` and
+`target/classic-assets-full-verify-shared.log`; the successful rerun includes all
+workspace tests, generated-project workflows and dependency boundaries.
+
+To provide build space, the two newly created empty-target measurement caches
+were removed only after validating their absolute paths under the measurement
+root and copying timing reports/EXE/PDB into
+`generated-empty-20261004-evidence` and `classic-empty-20261004-evidence`.
+Earlier CSV/logs and original staged artifacts remain; normal targets, user source
+and sibling assets were preserved. Historical statements that the temporary
+build targets were retained describe the state at acquisition; archived evidence
+is now the location for their reports/binaries. Reproduction still needs unused
+fresh targets. Final documentation and sibling diff whitespace checks passed.
+
+## Isolated native slider drag — 2026-10-04
+
+Engine revision remains `67cd899649a0009dbdbd8a7b6ec12dec388da795`; sibling revision
+`c89adb9a5317007b3469782c1c8da9d8b4b1b04a` with existing workbench/manifest/audio
+and preceding asset-resolution working-tree changes preserved. Adds mutually
+exclusive `--slider-smoke` to the public-API workbench. Ten host frames warm the
+unchanged UI. Frame 11 moves to slider value 80 and presses left; subsequent
+frames alternate 20/80 while holding capture, and frame 120 moves/releases.
+Physical coordinates derive from current layout content and actual window DPI.
+Normal Changed effects refresh localization and prepare updated layout. No SDK
+API, dependency or normal interactive behavior changed.
+
+A domain test covers DPI 1/2 logical-equivalent viewports, warmup, Changed effects,
+values, localized refresh and capture release (later pointer motion does not
+change the value). Package tests: 8 passed, 1 ignored. Package all-target Clippy
+passed after changing an empty assertion to the required equality form. Release
+build passed. Conflicting slider/idle flags return nonzero before opening a window.
+DPI 2 here is injected headless validation, not a native monitor measurement.
+
+Two sequential native release runs per locale, 120 host input frames and 119
+rendered/GPU samples each. All eight report physical 1000x800, scale factor 1,
+RTX 3070/Vulkan/NVIDIA 616.56/Fifo with timestamp queries. No GPU readback errors,
+skips or pending samples. Refresh, power/frequency and display intervals remain
+uncontrolled/unmeasured. Flags GRIDTHORN_WORKBENCH_PERFORMANCE,
+GRIDTHORN_RENDER_PERFORMANCE and GRIDTHORN_WINDOW_PERFORMANCE were enabled only
+for runs and restored afterward; avoid manual input during acquisition.
+
+| Locale | Input phase sum p95 ms, first/repeat | Encode p95 ms, first/repeat | GPU pass p95 us, first/repeat | Host cadence p99 ms, first/repeat |
+| --- | --- | --- | --- | --- |
+| en-US | 0.631 / 0.646 | 1.385 / 1.346 | 32 / 32 | 11.029 / 11.455 |
+| ru | 0.614 / 0.614 | 1.372 / 1.286 | 33 / 33 | 10.842 / 11.446 |
+| ar-EG | 0.485 / 0.667 | 0.918 / 1.036 | 26 / 26 | 9.769 / 11.077 |
+| ja | 0.640 / 0.634 | 1.197 / 1.126 | 30 / 30 | 11.262 / 10.620 |
+
+Nearest-rank distributions each contain 109 samples. Workbench input frames
+11-119 select active drag and exclude final shutdown/release; renderer/GPU
+indices 10-118 and window callback phase indices 10-118 are separate warm ranges.
+These indices do not establish one-to-one callback pairing. Input phase sum is
+prepare-before + real-input-route + scripted-workload + effects + prepare-after +
+anchor per sample; snapshot/layout timings are nested and excluded from the sum.
+It is input-system timing, not whole-engine CPU work. Repeated values reuse warm
+shaping/cache histories; this does not model arbitrary new captions or slider
+ranges. Existing UI effect stdout occurs outside input phase timers and can affect
+callback/cadence observations. Native redraw callback p95 ranges 8.919-9.177 ms,
+including acquire/present calls; it is not pure engine CPU execution. Do not add
+percentiles of separate phases/callbacks into an invented frame distribution.
+GPU pass excludes upload/queue/display work; host cadence is a CPU present-call
+proxy, not actual displayed intervals.
+
+Raw logs `target/workbench-slider-<en-US|ru|ar-EG|ja>-<1|2>.log`,
+`target/workbench-slider-summary.py`/CSV/log retain median/p95/p99/max and counts
+for each phase. Tests/Clippy/build and conflicting-flags logs use
+`target/workbench-slider-*`. Reproduce each locale twice with the three diagnostic
+variables and the release example `--slider-smoke --locale=<locale>`; the example
+README records its public command. No allocations/heap peaks, OS pointer latency
+or native DPI 2 are measured.
+
+Disposition: bounded injected slider dragging on the recorded native DPI 1 host
+shows no new measured bottleneck requiring a production fix. Remaining pointer,
+scrolling, locale-switch, nested-window/animation isolation, clipboard/IME, native
+DPI 2 and displayed-frame/whole-GPU coverage remain open. This workload and its
+headless DPI test do not close the broader native interaction or acceptance gate.
+
+Full ./scripts/verify.ps1 passed (target/workbench-slider-full-verify.log), using
+process-local shared engine target and sequential tests; prior env restored.
+Sibling formatting and diff whitespace passed. No staging/commits.
+
+## Isolated native locale switches — 2026-10-04
+
+Continues engine revision67cd899649a0009dbdbd8a7b6ec12dec388da795 and sibling
+c89adb9a5317007b3469782c1c8da9d8b4b1b04a working trees, preserving prior changes.
+Workbench adds mutually exclusive --locale-smoke. Initial locale is chosen by
+--locale, ten host frames leave it unchanged, then each frame selects the next
+of en-US/ru/ar-EG/ja through the public tree command. A Changed effect enters the
+normal localized-caption/preview refresh and prepared-layout invalidation path.
+Editor text, worker count, windows and animations are not scripted to change.
+This measures catalog/UI switching separately from pointer/list navigation.
+
+Focused domain test validates warmup, four successive catalog selections,
+caption changes/return to English and unchanged editor contents at injected DPI2.
+Package tests9passed/1ignored, package all-target Clippy and release build passed.
+Conflicting locale/idle smoke flags reject before window creation. No SDK API,
+dependency, release profile or normal interactive behavior changed.
+
+Two sequential native release runs starting en-US, cycling all four captions.
+Both record physical1000x800/native scale1, RTX3070/Vulkan/NVIDIA616.56/Fifo,
+timestamps enabled. Rendered119 frames per run. GPU samples119/118; second run
+skips one frame before the selected warm range, with no errors/pending samples.
+All selected warm ranges contain105 samples including105 GPU samples each.
+Diagnostic env values were enabled only for acquisition and restored afterward.
+Display refresh/power/frequency/background activity remain uncontrolled or unknown.
+
+| Phase | First median/p95 ms | Repeat median/p95 ms |
+| --- | --- | --- |
+| Input phase sum | 0.877 / 1.417 | 0.866 / 1.385 |
+| Localized refresh effects | 0.042 / 0.054 | 0.044 / 0.056 |
+| Prepare after effects | 0.796 / 1.337 | 0.782 / 1.308 |
+| Renderer encode | 0.980 / 1.244 | 0.987 / 1.269 |
+| GPU render pass | 0.031 / 0.033 | 0.031 / 0.032 |
+
+Nearest-rank input distributions use host frames15-119, excluding ten idle frames,
+first full locale cycle11-14 and final exit frame120. Renderer/GPU indices14-118
+and independent window callback indices14-118 exclude startup/first-cycle work
+conservatively; no exact host/render/callback pairing is claimed. Input sum uses
+prepare-before/input-route/workload/effects/prepare-after/anchor, without nested
+snapshot/layout duplication. First-cycle prepare-after observations, first/repeat:
+Russian3.425/3.356ms, Arabic4.065/3.951ms, Japanese2.497/3.151ms,
+return-English0.786/0.876ms. These are individual first-switch observations in a
+font/cache-warmed process, not cold-process latency distributions.
+
+Warm host present-call cadence p99 is11.206/10.860ms, worst11.379/10.914ms.
+Input sum excludes animation, render extraction, platform callbacks and existing
+UI-effect stdout. Renderer encode excludes acquire/present waits and GPU work;
+GPU pass excludes uploads/queue/display. Cadence remains a CPU proxy. Do not add
+separate phase percentiles to claim whole-engine CPU/GPU or displayed-frame
+acceptance. The mixed locale cycle has27/26/26/26 input observations per selected
+catalog and is reported as one deterministic cycle distribution, not four
+independent locale benchmarks. Native DPI2/OS list input remains unmeasured.
+
+Raw evidence target/workbench-locale-en-US-{1,2}.log,
+workbench-locale-summary.py/CSV/log and workbench-locale-{tests,clippy,build,
+invalid-flags}.log. CSV retains median/p95/p99/max/counts per phase. Reproduce
+with the README's --locale-smoke command twice, enabling workbench/render/window
+diagnostics; keep startup/first-cycle exclusion explicit. No allocation or peak
+memory claim. No new production bottleneck fix justified by these measurements.
+Remaining isolated scrolling/windows/animation, native DPI2, clipboard/IME,
+whole-GPU/display intervals and final acceptance remain open.
+
+Full ./scripts/verify.ps1 passed (target/workbench-locale-full-verify.log) with
+process-local shared target and sequential tests, previous env restored. Sibling
+formatting/whitespace and final documentation whitespace passed.
+
+## Isolated native wheel scrolling — 2026-10-04
+
+Continues the recorded engine/examples working trees with existing changes
+preserved. Workbench adds mutually exclusive --scroll-smoke. This mode alone
+opens a1000x400 window, leaving the normal/other smoke1000x800 configuration
+unchanged. The short viewport guarantees overflow in the existing base panel.
+After ten unchanged host frames, scripted physical cursor coordinates and wheel
+pixel deltas route through public APIs. Deltas are96 logical pixels down on odd
+frames and up on even frames, scaled to the actual window DPI. Existing layout
+invalidations prepare scrolled/clipped paint. A nonoverflowing viewport returns a
+contextual workload error rather than silently benchmarking unchanged UI.
+No SDK API, dependency, asset or release-profile change.
+
+Domain tests verify actual bounded scroll offsets and return to origin at DPI1/2,
+consumed wheel events, layout invalidation, unchanged editor/language controls and
+nonoverflow rejection. Cursor motion over a noninteractive label can still be
+forwarded; the test asserts wheel consumption rather than blanket pointer-event
+blocking. Package11passed/1ignored, all-target Clippy and release build passed.
+Conflicting scroll/idle flags reject before opening a window.
+
+Two sequential native release runs per locale, each120 host input frames and119
+renderer samples. Physical1000x400, native scale1, RTX3070/Vulkan/NVIDIA616.56/Fifo,
+timestamp queries. GPU samples118 in ru-first/ar-EG-first/ja-repeat, with one
+skipped frame before the selected warm range; other runs119. No errors or pending
+samples. Every selected warm CPU/GPU distribution contains109 samples. Workbench,
+renderer and window diagnostic env values were restored after acquisition.
+Display refresh/power/frequency/background conditions remain uncontrolled/unknown.
+
+| Locale | Input sum p95 ms, first/repeat | Encode p95 ms, first/repeat | GPU pass p95 us, first/repeat | Host cadence p99 ms, first/repeat |
+| --- | --- | --- | --- | --- |
+| en-US | 0.859 / 1.052 | 0.457 / 0.695 | 13 / 13 | 11.204 / 9.584 |
+| ru | 1.471 / 1.048 | 0.820 / 0.651 | 12 / 12 | 11.107 / 9.601 |
+| ar-EG | 0.734 / 0.643 | 0.450 / 0.419 | 12 / 12 | 9.560 / 9.778 |
+| ja | 1.005 / 1.015 | 0.460 / 0.529 | 12 / 13 | 9.725 / 9.568 |
+
+Nearest-rank input distributions select host frames11-119; renderer/GPU and window
+callback indices10-118 are independently selected warm ranges, not proven exact
+callback pairing. Input sum includes prepare-before/input-route/workload/effects/
+prepare-after/anchor and excludes nested snapshot/layout columns. It excludes
+animation, render extraction and event-loop/platform work. Encoder/GPU-pass and
+CPU present-call cadence retain the exclusions documented in earlier workloads.
+Do not combine phase percentiles or infer whole-frame CPU/GPU/display budgets.
+The smaller viewport and changing visible text/vertex volume prevent attributing
+lower encoder/pass values relative to other workloads to an optimization.
+
+Raw target/workbench-scroll-<en-US|ru|ar-EG|ja>-<1|2>.log and
+workbench-scroll-summary.py/CSV/log retain phase median/p95/p99/max/counts. Tests,
+Clippy, release build and flag rejection logs use workbench-scroll-* names.
+Reproduce each locale twice with the README's --scroll-smoke command and
+workbench/render/window diagnostics. These are injected wheel events on native
+DPI1, not OS wheel-input latency, native DPI2 or measured allocation/heap peaks.
+
+Disposition: this bounded short-viewport scroll fixture shows no new bottleneck
+requiring a production fix. The repeatable scenario adds native scroll coverage;
+1000x800 acceptance, isolated windows/animation, selection/clipboard/IME, native
+DPI2, actual displayed intervals and whole-GPU work remain open.
+
+Full ./scripts/verify.ps1 passed (target/workbench-scroll-full-verify.log) with
+process-local shared engine target/sequential tests; env restored. Sibling
+formatting/diff whitespace and final documentation whitespace passed.
+
+## Isolated window actions and host-time transitions — 2026-10-04
+
+Continues recorded engine/examples working trees, preserving earlier changes.
+Workbench adds --windows-smoke and --animation-smoke, mutually exclusive with
+other native smoke modes. They share the same fixed120-host-frame action script:
+review open11, confirmation open26/close41, popup open56/close71, review close86,
+review reopen101/close116. Initial locale/editor/count remain unchanged. On frame1
+only the example animation toggle is configured: false/true respectively.
+Activated effects use the normal handler, preserving existing layer focus and
+platform-request handling; they are not injected OS clicks. A focused domain test
+checks identical layer sequences, editor/locale preservation and initial transition
+offset versus static offset at injected DPI2. Package12passed/1ignored, all-target
+Clippy/release build passed; conflicting windows/animation flags reject before UI.
+No SDK/dependency/profile or normal interactive behavior change.
+
+Two sequential native release runs per mode/locale (16 runs), physical1000x800,
+scale1, RTX3070/Vulkan/NVIDIA616.56/Fifo, timestamp queries. All complete119
+renderer samples. One pre-warm GPU sample is skipped in windows en-US-repeat,
+ru-first, ar-EG-first, ja-repeat and animation en-US-repeat/ja-first; other runs
+collect119. No GPU errors/pending. All selected warm CPU/GPU ranges contain109
+samples. Workbench/render/window diagnostic env restored after acquisition.
+Display refresh, power/frequency/background conditions remain uncontrolled/unknown.
+
+| Mode / locale | Native preparation p95 ms, first/repeat | Encode p95 ms, first/repeat | GPU pass p95 us, first/repeat | Host cadence p99 ms, first/repeat |
+| --- | --- | --- | --- | --- |
+| Windows / en-US | 0.702 / 0.674 | 1.503 / 1.488 | 44 / 44 | 11.266 / 11.211 |
+| Windows / ru | 0.833 / 0.731 | 1.572 / 1.588 | 47 / 47 | 11.297 / 11.095 |
+| Windows / ar-EG | 0.610 / 0.600 | 1.292 / 1.150 | 36 / 36 | 11.229 / 11.144 |
+| Windows / ja | 0.735 / 0.630 | 1.489 / 1.353 | 41 / 41 | 11.226 / 11.177 |
+| Animation / en-US | 0.932 / 0.997 | 1.697 / 1.595 | 44 / 44 | 10.478 / 10.893 |
+| Animation / ru | 1.088 / 1.062 | 1.768 / 1.768 | 47 / 47 | 10.291 / 9.707 |
+| Animation / ar-EG | 0.835 / 0.883 | 1.309 / 1.257 | 36 / 36 | 9.752 / 9.841 |
+| Animation / ja | 1.073 / 1.091 | 1.445 / 1.482 | 41 / 43 | 11.248 / 9.683 |
+
+Nearest-rank preparation/renderer/GPU distributions independently select phase
+indices10-118; input diagnostics use host frames11-119. Preparation callback
+includes runtime frame scheduling/animation work but excludes native event-loop
+waiting and redraw/presentation. It remains a partial CPU measure, not complete
+engine/event-loop execution. Input-phase sum p95 ranges0.540-0.749ms static and
+0.399-0.530ms animated; animation runs in the subsequent Update stage and is
+excluded from those input timers. Lower input percentile with animation is not
+an optimization: different dirty-layout histories and mixed frame distributions
+prevent attributing it to a speedup. Do not subtract mode percentiles to claim
+isolated transition cost or add separate phase percentiles into a frame budget.
+
+The normal transitions use elapsed host time with350ms duration while actions
+use fixed frame numbers. Transitions can be superseded by the next open, and
+closing a layer follows the current implementation's animation lifecycle. This
+is mixed active-transition/unchanged-frame coverage, not109 guaranteed active
+animation frames, completed350ms transitions for every layer or a controlled
+animation-time before/after experiment. The script includes8 action frames in
+the selected109-input range. Static mode contains unchanged open/closed frames.
+GPU-pass exclusions and CPU cadence proxy limitations remain unchanged; actual
+presented intervals, full GPU execution and native DPI2 remain unmeasured.
+
+Raw target/workbench-<windows|animation>-<en-US|ru|ar-EG|ja>-<1|2>.log and
+workbench-<windows|animation>-summary.py/CSV/log retain phase median/p95/p99/max
+and counts. Package checks use workbench-windows-{tests,clippy,build}.log; flag
+rejection uses workbench-windows-invalid-flags.log. Reproduce both README modes
+twice per locale with workbench/render/window diagnostics, avoiding manual input.
+No allocation/heap peak, native mouse latency or visual acceptance is inferred.
+
+Disposition: these bounded window/transition cycles show no newly measured
+production bottleneck requiring a fix. Native DPI1 isolation now covers idle,
+injected editing, slider, catalog switches, short-viewport scrolling and fixed
+window/animation scripts. Remaining native selection/clipboard/IME, DPI2,
+whole-frame CPU/GPU/display intervals and maintainer acceptance remain open.
+
+Full ./scripts/verify.ps1 passed (target/workbench-windows-full-verify.log), with
+process-local shared engine target/sequential tests and previous env restored.
+Sibling formatting/diff whitespace and final documentation whitespace passed.
+
+## Native selection and injected preedit isolation — 2026-10-04
+
+Continues the recorded working trees, preserving existing engine/sibling work.
+Workbench adds mutually exclusive --selection-smoke and --preedit-smoke with
+shared editor-focus preparation extracted from existing editing mode. During ten
+warm frames the public navigation API focuses the editor. Selection then
+alternates caret-at-zero/full-value selection; preedit injects bounded Japanese
+`にほん` and Arabic combining-text compositions with byte-end cursor positions.
+Frame120 cancels composition. Existing input/layout/paint/native-anchor handling
+runs; committed text and localization parameters remain unchanged. No SDK API,
+dependency, release profile or normal interactive behavior change.
+
+Domain test covers DPI1/2 focus, expected selection/preedit, cancellation, dirty
+layout preparation and unchanged committed controls. Existing editing replacement
+test still passes after focus extraction. Package13passed/1ignored, package
+all-target Clippy/release build passed. Conflicting selection/preedit flags reject
+before window creation. These tests do not validate OS keyboard/IME/clipboard.
+
+Two native release runs per mode/locale (16), physical1000x800/native scale1,
+RTX3070/Vulkan/NVIDIA616.56/Fifo, timestamps. All119renderer samples. One pre-warm
+GPU sample skipped in both selection en-US runs, selection ja-repeat and both
+preedit en-US runs; all other runs119GPU. No errors/pending samples. Selected
+warm distributions each109samples, including109GPU. Workbench/render/window
+diagnostic environment values were restored after runs. Display refresh,
+power/frequency/background conditions remain uncontrolled or unrecorded.
+
+| Mode / locale | Input sum p95 ms, first/repeat | Encode p95 ms, first/repeat | GPU pass p95 us, first/repeat | Host cadence p99 ms, first/repeat |
+| --- | --- | --- | --- | --- |
+| Selection / en-US | 0.499 / 0.752 | 1.131 / 1.808 | 32 / 32 | 11.050 / 11.710 |
+| Selection / ru | 0.637 / 0.473 | 1.413 / 1.125 | 33 / 33 | 11.187 / 9.593 |
+| Selection / ar-EG | 0.516 / 0.467 | 1.119 / 0.943 | 26 / 26 | 9.560 / 10.942 |
+| Selection / ja | 0.555 / 0.522 | 1.056 / 1.009 | 30 / 30 | 9.885 / 9.573 |
+| Preedit / en-US | 0.478 / 0.572 | 1.164 / 1.153 | 32 / 33 | 9.759 / 10.984 |
+| Preedit / ru | 0.548 / 0.491 | 1.141 / 1.111 | 33 / 33 | 9.916 / 9.557 |
+| Preedit / ar-EG | 0.399 / 0.551 | 0.897 / 1.016 | 27 / 27 | 9.708 / 11.054 |
+| Preedit / ja | 0.628 / 0.507 | 1.212 / 1.109 | 31 / 31 | 9.793 / 9.702 |
+
+Nearest-rank input samples use host11-119, excluding warmup and final cancel/exit.
+Renderer/GPU and window callbacks independently use indices10-118; no exact
+host/callback pairing is claimed. Input phase sum is prepare-before/input-route/
+workload/effects/prepare-after/anchor, without nested snapshot/layout duplication.
+The existing bounded editor text and two repeated preedit strings exercise warm
+cache histories, not arbitrary long compositions or grapheme-walk/key throughput.
+No normal Changed effect is generated because committed text does not change;
+localized-preview refresh is therefore not part of these modes.
+
+Native submission and text-anchor requests do not establish actual Windows IME
+candidate placement, keyboard layouts, composition commit correctness or system
+clipboard performance. GPU-pass/encode/cadence exclusions are unchanged: uploads,
+queue/display work and complete event-loop CPU are not covered by these separate
+numbers. No whole-frame budget, allocation/heap peak or optimization speedup is
+inferred; en-US selection repeat variance remains in raw distributions.
+
+Raw target/workbench-<selection|preedit>-<en-US|ru|ar-EG|ja>-<1|2>.log and
+workbench-<selection|preedit>-summary.py/CSV/log retain phase median/p95/p99/max
+and counts. Package checks use workbench-editor-{tests,clippy,build}.log; conflicting
+flags use workbench-editor-invalid-flags.log. Reproduce twice per locale with
+README commands and workbench/render/window diagnostics, avoiding manual input.
+
+Disposition: injected native selection/composition coverage has no newly measured
+production bottleneck requiring a fix. Actual OS clipboard/IME, nativeDPI2,
+whole-engine CPU/full GPU/display timing and maintainer acceptance remain open.
+
+Full ./scripts/verify.ps1 passed (target/workbench-editor-full-verify.log), with
+process-local shared engine target/sequential tests and previous env restored.
+Sibling formatting/diff whitespace and final documentation whitespace passed.
+
+## Reference display metadata increment — 2026-10-04
+
+Engine window diagnostics now emit one `window_configuration` snapshot when a
+native window is created and GRIDTHORN_WINDOW_PERFORMANCE is present. Private
+window/performance/display.rs reads the existing winit window's current monitor:
+window physical extent/scale, optional monitor name/extent/origin and optional
+system refresh rate in millihertz. No new dependency, public monitor API, monitor
+selection or display setting change. Unavailable values remain None and zero
+refresh is normalized to None; Some values are backend reports, not invented
+fallbacks. Logging happens during initialization outside callback sample timing.
+No monitor queries occur in disabled runs. Each snapshot describes that creation,
+not continuous monitor/refresh tracking after a move or configuration change.
+
+Two native release Japanese idle smokes, physical1000x800, scale1, reported
+monitor `\\.\DISPLAY2`, extent1920x1080, origin[0,0], refresh144000millihertz
+(144Hz system report). RTX3070/Vulkan/NVIDIA616.56/Fifo renderer configuration
+remains recorded separately. Both powercfg observations before/after acquisition
+report Balanced GUID381b4222-f694-41f0-9685-ff5bb260df2e. This establishes metadata
+for these new runs only: earlier absent monitor/refresh/power observations cannot
+be retroactively filled. Power-plan selection does not measure CPU/GPU frequency,
+thermal state, throttling or resource contention during sampling. Backend nominal
+refresh does not measure VRR/compositor/displayed frame intervals or effective FPS.
+Native DPI2 remains unmeasured; no Windows scaling/resolution was changed.
+
+Window performance domain tests2passed; package all-target Clippy and release
+workbench build passed. Enabled smokes verify exactly one configuration snapshot
+per run. A separate native idle run with diagnostic environment entries removed
+passes and emits neither window_configuration nor window_cpu. The first disabled
+check still inherited present empty diagnostic entries; explicit removal verified
+the existing presence-based flag semantics. No production gating fix was needed.
+No new behavior test substitutes for the actual native creation path.
+
+Evidence target/window-display-{tests,clippy,build}.log,
+window-display-native-{1,2}.log, window-display-disabled-native.log and
+window-display-power-{before,after}.log. Reproduce by setting window/render/
+workbench diagnostic flags, running release --idle-smoke --locale=ja twice and
+recording powercfg /getactivescheme before/after; remove environment entries for
+the disabled check. Monitor fields use Rust debug Option formatting (Some/None),
+not a stable public CSV/serialization API. Quotes/backslashes in names are escaped.
+
+Disposition: native reference display information can now accompany future
+performance acquisitions instead of remaining implicitly unknown. Complete
+reference hardware/power conditions, nativeDPI2, actual displayed intervals,
+whole-engine CPU/full GPU coverage, OS clipboard/IME and final acceptance are
+still outstanding. This metadata collection is measurement tooling, not a runtime
+performance optimization or the Milestone5 device configuration subsystem.
+
+Full ./scripts/verify.ps1 passed (target/window-display-full-verify.log), with
+process-local shared engine target/sequential tests and previous env restored.
+Final documentation/code whitespace passed; no sibling source changes in this increment.
+
+## Paired native callback CPU instrumentation — 2026-10-04
+
+Opt-in `GRIDTHORN_WINDOW_PERFORMANCE` now emits bounded
+`window_frame_cpu,sample,preparations,elapsed_us` rows. Each row sums completed
+preparation callbacks since the preceding redraw and the next completed redraw.
+Multiple preparations are accumulated explicitly; redraws without preparation
+and unfinished preparation at shutdown produce no row. Retention stops at 240
+rows. Existing independent phase diagnostics remain available.
+
+This is paired callback CPU elapsed time, including renderer blocking in redraw,
+not whole-engine active CPU or actual displayed-frame intervals. Native event
+translation, device callbacks, event-loop waiting, compositor and display work
+remain outside this sum. Extraction is already inside preparation and must not
+be added again. Pairing does not prove a successful surface presentation.
+
+Focused tests cover exact accumulation, skipped redraws, unfinished preparation
+and bounded retention. No frame budget acceptance or optimization claim follows
+from adding this diagnostic.
+
+Two Japanese release idle-smoke runs exited successfully, each with119 paired
+rows, all preparation counts1. Excluding first10 rows leaves109: nearest-rank
+p50=6023/6174us, p95=9612/9424us, p99=9825/11028us, max=10983/11038us.
+Evidence: target/window-paired-native-{1,2}.log and window-paired-build.log.
+These repeat samples do not establish the full interaction/DPI/display gate.
+The initial full verify failed in generated-project CLI test with temporary-target
+filesystem errors; repeat uses process-local shared engine target as in earlier
+checkpoints. Formatting, workspace check and Clippy passed in the initial run.
+
+Full ./scripts/verify.ps1 passed using process-local shared CARGO_TARGET_DIR and
+sequential tests (target/window-paired-full-verify-shared.log), including the
+previously failing generated-project CLI workflow and dependency boundaries.
+
+## Paired callback native interaction matrix — 2026-10-04
+
+Measured the existing release workbench sequentially in nine isolation modes,
+four starting locales (en-US/ru/ar-EG/ja), two repeats each:72 successful runs.
+Engine HEAD67cd899649a0009dbdbd8a7b6ec12dec388da795 and examples
+HEADc89adb9a5317007b3469782c1c8da9d8b4b1b04a with the existing uncommitted
+changes, including paired callback instrumentation. No new source/dependency change.
+Window diagnostics and renderer CPU/GPU-pass diagnostics enabled; other diagnostic
+flags were not set by this command. NVIDIA RTX3070/Vulkan, driver616.56, Fifo,
+DISPLAY2 at1920x1080/system144000mHz, native scale1. Windows power scheme observed
+Balanced during the matrix and after completion. Live clocks/thermal/background
+load were not controlled. Viewport1000x800 except scrolling1000x400.
+
+Every run contains119 paired callback rows with exactly one preparation per row,
+and119 renderer rows. Exclude pair indices0-9 (109 warm rows/run), except locale
+switching excludes0-13 (105 rows) to omit the initial switch cycle. Percentiles
+use nearest rank on individual callback sums, not sums of separate percentiles.
+The table ranges over eight runs per mode and reports milliseconds.
+
+| Mode | Paired callback p95 range | Paired callback p99 range |
+| --- | --- | --- |
+| Idle | 9.292–9.514 | 9.400–11.484 |
+| Editing | 9.338–9.760 | 9.495–11.309 |
+| Slider | 9.261–9.516 | 9.521–11.020 |
+| Locale switching | 9.052–9.621 | 9.413–11.267 |
+| Scrolling | 9.270–9.496 | 9.438–11.276 |
+| Static windows | 9.292–10.743 | 10.440–11.261 |
+| Animated windows | 9.196–9.786 | 9.664–11.236 |
+| Selection | 9.322–10.332 | 9.578–12.281 |
+| Injected preedit | 9.332–10.190 | 9.580–11.302 |
+
+GPU diagnostics report119 collected in59 runs and118 collected/one skipped in13;
+all report zero errors and no pending sample. No inference of zero GPU cost for
+skipped samples. Full per-locale/repeat distributions and maxima are retained in
+`target/window-paired-matrix-summary.csv`; raw evidence is
+`target/window-paired-matrix-<mode>-<locale>-<repeat>.log`.
+Reproduce with the existing release binary, both diagnostic flags set to1,
+`--<mode>-smoke --locale=<locale>`, sequentially, twice for each combination.
+
+Largest selected paired sample: selection/ru/repeat1/index54=22402us;
+independent phase rows at index54 show preparation1020us and redraw21382us.
+Renderer index54 records acquire6048us, encode5182us, submit337us, present9808us
+and host present-call interval34388us. Index alignment here is a local observation
+of this run's one-preparation/one-redraw sequence, not a new cross-probe contract.
+The row shows blocking and encoding contributions; it does not identify their
+OS/driver cause or prove a UI regression. No speculative production fix follows.
+
+Disposition: paired native DPI1 callback evidence now covers all existing isolation
+modes and locales. Callback elapsed sums include redraw blocking and exclude native
+event handling and event-loop waiting. Renderer intervals are host-call proxies;
+actual displayed intervals, full GPU execution and whole-engine active CPU remain
+unmeasured. Scroll uses a different viewport; animated actions may supersede active
+transitions. Injected selection/preedit/editing do not validate OSIME/clipboard.
+NativeDPI2, controlled reference conditions and maintainer acceptance remain open;
+this matrix does not close the performance gate or justify optimization claims.
+
+Full ./scripts/verify.ps1 passed with process-local shared engine target and
+sequential tests (target/window-paired-matrix-verify.log). No new source changes.
+
+## Long-field asset-font preedit/commit probe — 2026-10-04
+
+PresentMon/WPA/GPUView are absent from PATH on this host; built-in WPR reports
+GPU/DesktopComposition profiles and no active recording. No recording was started:
+an ETW file without validated event analysis would not close display acceptance.
+Continued with the next open CPU workload rather than changing system display DPI.
+
+The sibling workbench adds ignored `measure_long_field_editing` beside its existing
+layered font-editing probe. It uses public APIs, Noto Sans/Arabic/JP assets, a
+1000x800 logical viewport, synthetic DPI1/2, three overlapping clipped panels
+with120-pixel-tall fields and a top modal layer. Four content phrases repeat
+8/64/256 times. Font service locale stays en-US, so labels identify content scripts,
+not localization changes. Each cycle selects the entire top-field value, routes
+injected preedit, lays out/paints, commits alternating suffix0/1 and lays out/paints
+again. Final assertions check layer order, focus, committed value and cleared preedit.
+Ten warmups precede100 individually timed cycles/configuration. Two sequential
+release runs, UI/text diagnostics unset, no concurrent build/test during acquisition.
+Source strings/event construction, initial font/layout setup, preflight size check,
+CSV printing and final validation are excluded; two layouts and result destruction
+are included. The preflight font service remains resident during the timed probe;
+no memory/allocation measurement or cold-service baseline is implied.
+
+Reproduce from sibling examples root:
+
+```console
+cargo test -p gridthorn_example_multilingual_workbench --release --locked measure_long_field_editing -- --ignored --nocapture --test-threads=1
+```
+
+Both runs pass20 timing configurations with100 samples each. All four256-repeat
+DPI2 layouts reject with `UiCompositionError::Text(TextError::TooLarge)` before
+measurement; rejected configurations have no timing samples. The first exploratory
+run stopped at this error; retained as target/long-field-editing-1.log. Completed
+runs are target/long-field-editing-complete-{1,2}.log; individual percentiles/maxima
+are in target/long-field-editing-summary.csv. Nearest-rank p95 ranges across repeats,
+in milliseconds, follow. Strings have different scalar/byte counts; do not compare
+script rows as equal-size workloads.
+
+| Content | 8 repeats DPI1 / DPI2 | 64 repeats DPI1 / DPI2 | 256 repeats DPI1 |
+| --- | --- | --- | --- |
+| English | 0.774–0.870 / 1.882–1.905 | 7.480–8.365 / 14.464–14.744 | 47.493–59.540 |
+| Russian | 0.830–1.064 / 2.394–2.742 | 12.066–12.140 / 26.673–32.465 | 71.561–96.676 |
+| Arabic | 0.550–0.637 / 1.172–1.520 | 8.148–8.944 / 14.777–15.127 | 45.291–54.508 |
+| Japanese | 0.770–0.806 / 2.649–2.670 | 8.264–11.336 / 27.559–33.502 | 58.601–61.098 |
+
+At256 repeats, UTF8bytes/scalars are English3072/3072, Russian7680/4096,
+Arabic5632/3072 and Japanese5632/2048. Japanese64-repeat content is1408bytes/
+512scalars. These are warm repeated-glyph, two-value working sets, not unique-glyph
+or long unique-string churn. Composition and two paints share one timed cycle;
+these timings are not one native frame or isolated editing/raster attribution.
+
+Disposition: long-field edit/preedit cost and initial DPI2 rejection are now
+measured through the public UI path. Costs grow substantially despite panel clips.
+The rasterizer's existing one-million-covered-pixel guard can report TooLarge;
+this increment does not remove that safety bound or prove which phase dominates.
+Next: attribute shaping, raster spans, decoration and clipping before selecting a
+focused fix; add transactional failure regression if editing exposes partial state.
+Asset-font expanded layers, heap peaks, native DPI2/OSIME/clipboard, actual display
+intervals and the overall performance acceptance gate remain open. No production
+behavior/dependency change or optimization claim in this increment.
+
+Engine full ./scripts/verify.ps1 passed with shared process-local target/sequential
+tests (target/long-field-full-verify.log). Sibling workbench package:13passed,
+2ignored in normal tests; both manual long-field runs passed. All-target Clippy,
+workspace formatting and sibling/engine diff whitespace passed. Logs:
+target/long-field-package-{tests,clippy}.log. Engine changes in this increment are
+documentation only; sibling changes are the focused probe and README. No commits.
+
+## Long-field geometry attribution and indexed cluster ranges — 2026-10-04
+
+The sibling probe now has a separate ignored `measure_long_field_phases` entrypoint
+requiring UI/text diagnostic flags. It runs the same long-field cases. The normal
+measurement still requires those flags unset. One diagnostic acquisition before
+and one after the fix complement two normal, diagnostic-free acquisitions on each
+side. No concurrent builds/tests during acquisition. Reference revisions, fixtures,
+viewport, synthetic DPI, warm repeated content and environmental limits match the
+preceding increment. Clocks, thermals and background load remain uncontrolled.
+
+Router diagnostics retain221 samples/case: initial layout plus110preedit/commit
+cycles with two layouts each. Exclude indices0-20 to retain200warm individual
+layout samples. Text-service diagnostics for the main service contain1883layout
+and776raster calls/case; exclude first183layout and76raster calls (setup plus
+10warm cycles), leaving1700/700. The separate preflight service is excluded from
+attribution. All main router summaries report skipped0. Phase percentiles below
+are from single diagnostic runs, include timer overhead and are not repeated-run
+confidence intervals. Decoration is nested in paint; text layout/raster calls
+are nested within UI work and must not be added to UI phase percentiles.
+
+| 256-repeat DPI1 content | Geometry p95 before → after (us) | Paint p95 before → after (us) | Warm text-layout p95 before → after (us) | Raster-call p95 before → after (us) |
+| --- | --- | --- | --- | --- |
+| English | 15886 → 1418 | 18784 → 15134 | 3 → 2 | 4942 → 4226 |
+| Russian | 22019 → 1963 | 20370 → 20288 | 4 → 5 | 5469 → 5410 |
+| Arabic | 11878 → 1313 | 14367 → 13679 | 3 → 3 | 3873 → 3641 |
+| Japanese | 7871 → 1106 | 39569 → 36224 | 12460 → 12111 | 6080 → 5503 |
+
+This identifies geometry as a substantial independent cost for long fields.
+`TextGeometry::shaped` previously scanned every grapheme boundary and allocated a
+new vector for every glyph. It now uses two partition searches in the already
+sorted boundary list and borrows the inclusive cluster-endpoint slice. Glyph
+visual order, RTL subdivision, paragraph offsets, geometry ownership and output
+remain unchanged. Private shaped input now accepts the existing public TextLine
+slice, permitting focused synthetic RTL/paragraph regression coverage. Tests cover
+ligature endpoints, combining graphemes, distant paragraphs, empty ranges, RTL
+caret/hit positions and segment byte offsets. No new public API/dependency/cache
+or raster safety-limit change.
+
+Two normal release runs after the fix pass all20timed configurations and report
+the same four largestDPI2 initial-layout rejections. Before/after cycle p95 ranges
+from the two runs per side (milliseconds):
+
+| 256-repeat DPI1 content | Before cycle p95 range | After cycle p95 range |
+| --- | --- | --- |
+| English | 47.493–59.540 | 33.408–37.389 |
+| Russian | 71.561–96.676 | 44.313–45.885 |
+| Arabic | 45.291–54.508 | 27.406–33.001 |
+| Japanese | 58.601–61.098 | 53.660–61.457 |
+
+Smaller/DPI2 cases vary and do not all improve; for example English8/DPI2 p95 is
+1.882–1.905ms before and2.265–2.437ms after, Russian64/DPI2 is26.673–32.465ms
+before and24.862–35.907ms after. Do not claim a uniform end-to-end speedup. The
+geometry phase and removed full-boundary scan support the focused fix; remaining
+raster/paint and Japanese layout costs require further attribution. These warm
+layout-call timings do not isolate cold shaping or fallback allocation costs.
+No total allocation/heap-peak measurement is implied by removal of the temporary
+per-glyph vector. Panel clips still act after complete text rasterization.
+
+Evidence: target/long-field-phases-{before,after}.log,
+long-field-phase-comparison.csv, long-field-geometry-comparison.csv,
+long-field-after-{1,2}.log; before repeats remain in
+long-field-editing-complete-{1,2}.log. Reproduce the normal command from the
+preceding section. For diagnostics, set GRIDTHORN_UI_PERFORMANCE and
+GRIDTHORN_TEXT_PERFORMANCE to1 and use filter measure_long_field_phases instead.
+
+Eight native release smokes passed, editing/selection for ru/ja twice each, with
+window/render diagnostics (target/long-field-fix-native-<mode>-<locale>-<repeat>.log).
+These are the existing bounded short-field interaction scripts; they do not prove
+native long-field, DPI2, actual OSIME/clipboard or display acceptance. The next
+focus is remaining long-field paint/raster work and Japanese layout misses while
+preserving clipping output, last-good behavior and the raster safety bound.
+
+Full ./scripts/verify.ps1 passed with process-local shared target/sequential tests
+(target/long-field-geometry-full-verify.log). Sibling package tests, all-target
+Clippy, formatting, two normal/manual phase acquisitions and eight native smokes
+passed. Final engine/sibling diff whitespace passed. Env overrides scoped to tool
+processes. No commits.

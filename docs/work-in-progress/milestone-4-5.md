@@ -1535,3 +1535,369 @@ Final docs/checkpoint diff whitespace checked. No staging/commits. Next:
 repeat true-empty examples/generated builds, critical-path/edit rebuild attribution,
 feature/profile tradeoffs and complete packaging bytes; realistic/native domain
 acceptance remains open. No regression or profile improvement claim from baseline.
+
+## 2026-10-04 Cargo units and edited rebuild checkpoint
+
+Engine baseline67cd899649a0009dbdbd8a7b6ec12dec388da795 initially clean. Only
+CHANGELOG/ROADMAP/PERFORMANCE_REVIEW/checkpoint Markdown reviewed changes.
+Retained prior measurement root; copied SDK crates/config/manifests under ignored
+sdk-source and retargeted temporary generated-game manifest only. Priming13.90s
+excluded. Original source contents restored via finally; tracked source untouched.
+Actual equivalent implementation edits: model subtraction ->wrapping_sub for
+0/1 input, copied RNG state ->wrapping_add(0). Alternate/restored source builds
+2.51/2.62s model and6.51/6.68s SDK. Compilation chains model:game; SDK:simulation,
+app,facade,game. External GPU/text deps not recompiled. Final release smoke passed.
+
+Parsed dated SDK cold HTML UNIT_DATA, not mutable cargo-timing.html alias.
+Longest unit naga120s; ECS101s; GPU/image/font units overlap. wgpu-core end161.4s
+near total161.5s; not additive CPU durations or exact causal critical path.
+Logs target/build-footprint-20261004-140430/edit-*.log, edit-times.csv,
+cold-units.csv and dated Cargo reports. No profile/dependency/feature changes.
+DocsOnly verification passed; final checkpoint/correction rechecked. Sibling
+untouched; no staging/commits. Next controlled profile/backend/jobs experiments
+or broader edit/native acceptance matrix; no regression/improvement claim.
+
+## 2026-10-04 Cargo parallelism checkpoint
+
+Same HEAD67cd899649a0009dbdbd8a7b6ec12dec388da795, existing Markdown changes
+preserved. No production/config/profile/dependency changes. SDK offline locked
+release empty-target serial builds-j4 206.89s,-j2 347.28s,default137.68s. Reports
+confirm ncpu12/defaultjobs12; environment jobs override unset. One sample each,
+prior default161.54s retained, no exact/universal optimization claim. Reduced
+jobs shorten some units but slow whole build; default policy preserved.
+
+Each new jobs target was resolved/validated under measurement root then removed
+after successful build, metrics and report preservation (start free~4.4GiB).
+Only newly-created artifacts cleaned; original target/source/evidence preserved.
+Logical artifact totals~1.0GiB each, not disk/RAM peaks. Logs under retained
+build-footprint-20261004-140430/jobs-{4,2,default}.log/html/units.csv and
+jobs-times.csv. No memory/responsiveness claims. CIM hardware details unavailable;
+Cargo runtime CPU count sufficient for settings used, no escalation requested.
+
+Only changelog/roadmap/review/checkpoint Markdown changed in this increment.
+DocsOnly verification passed; no staging/commits or sibling edits. Next: feature/
+profile tradeoff experiments, repeated cold examples/generated builds, alternate
+jobs edit matrix, realistic/native acceptance; broad milestone remains open.
+
+## 2026-10-04 World/render/facade rebuild checkpoint
+
+Engine HEAD remains67cd899649a0009dbdbd8a7b6ec12dec388da795; preceding Markdown
+changes preserved. Extended ignored copied SDK fixture with equivalent generic
+world spawn and renderer RGBA body edits, plus an unused additive facade version
+function. Alternate/restored release builds: world8.41/7.93s, render7.64/7.93s,
+facade2.85/2.66s. Logged chains world->scene/app/facade/game,
+render->app/facade/game, facade->game; no third-party compilation reported.
+Original copy bytes restored; final generated release --smoke passed.
+
+Initial results discarded after identifying redundant finally restoration changing
+mtime and contaminating the next case. Script fixed, fixture re-primed outside
+timing, all six final measurements repeated sequentially. Evidence under retained
+measurement root: edit-domain-probe.ps1, edit-domain-times.csv,
+edit-{world_generic,render_color,facade_api}-{1,2}.log and edit-domain-smoke.log.
+Only Markdown reviewed changes; no production API/profile/dependency changes.
+Next: realistic API/generic edits, true-empty examples/generated builds and native
+acceptance matrix. Broad milestone remains open.
+
+Verification: ./scripts/verify.ps1 -DocsOnly passed; SHA-256 comparison confirms
+all three copied sources match tracked originals. Final smoke exit0. No sibling
+changes, staging or commits in this increment.
+
+## 2026-10-04 Generated-project empty-target checkpoint
+
+Same engine HEAD67cd899649a0009dbdbd8a7b6ec12dec388da795 and examples
+HEADc89adb9a5317007b3469782c1c8da9d8b4b1b04a. Existing Markdown changes preserved;
+no tracked code/config or sibling edits. Retained generated-game/copied SDK and
+adapted lockfile used unchanged. New previously nonexistent
+build-footprint-20261004-140430/generated-empty-20261004 target;
+release locked offline build142.41s, no-op repeats0.70/0.72s. Cargo progress
+counts227/0/0, not distinct packages. Registry/OS caches warm, one empty sample.
+
+Executable8421376bytes, PDB4911104bytes, logical target1104095557bytes; not disk
+or memory peaks. Normal/new targets retained. Final generated --smoke exit0,
+headless two fixed ticks plus shutdown, no native display coverage.
+Logs/script/CSV: generated-empty-* under retained measurement root; dated timing
+reports in new target. No performance gain or dependency/profile change claimed.
+Next: repeated empty-target examples/generated acquisitions, packaging, realistic
+edit/profile workloads and outstanding native interaction/display acceptance.
+
+Verification: ./scripts/verify.ps1 -DocsOnly passed; generated-empty-{0,1,2}
+builds and final headless smoke passed. Log: generated-empty-docs-verify.log.
+No staging or commits.
+
+## 2026-10-04 Example empty-target checkpoint
+
+Same engine HEAD67cd899649a0009dbdbd8a7b6ec12dec388da795 and examples
+HEADc89adb9a5317007b3469782c1c8da9d8b4b1b04a, existing working-tree changes
+preserved. No sibling edits. classic_2d release locked offline build with native
+output uses new absent classic-empty-20261004 target under retained measurement
+root;147.39s empty,0.75/0.67s no-op repeats,228/0/0 Compiling progress lines.
+One empty sample, source/registry/OS caches warm, not native audio attribution.
+
+EXE9138688bytes, PDB5345280, target logical1182135505, assets107609bytes;
+not physical disk, peak memory or relocatable package. New release headless smoke
+and native30-frame smoke both exit0, no sound-quality/frame-budget claim.
+Logs/script/CSV retained as classic-empty-*; original and new targets retained.
+No code/profile/dependency changes. Next: repeat/reorder cold trials, feature/dev
+matrix, packaging and outstanding native performance/interaction acceptance.
+
+Verification: ./scripts/verify.ps1 -DocsOnly passed; three release builds and
+both smokes passed. Log: classic-empty-docs-verify.log. No staging or commits.
+
+## 2026-10-04 Direct import/package audit checkpoint
+
+Same engine HEAD, existing engine/sibling changes preserved. No source/build/
+profile/dependency changes. dumpbin14.44.35228.0 reads retained release images;
+case-normalized direct DLL names CLI11, generated23, classic26. All import
+VCRUNTIME140 plus six CRT API-set names. No recursive/dynamic/clean-host audit.
+Classic extra names combase/mmdevapi/winrt-error; no audio cost attribution.
+
+New package-stage-20261004 copies EXEs and classic assets; logical file bytes
+CLI2234880, generated8421376, classic9246297. CLI --help and generated/classic
+headless smokes pass from staged working directories. Source inspection and
+binary bytes verify classic compile-time absolute source asset path, so staging
+success cannot prove relocation while source assets exist. Original assets untouched.
+No runtime/PDB/installer bytes included or packaging capability implemented.
+Evidence package-* scripts/logs/CSV/stage under retained measurement root.
+Next: explicit asset-resolution policy, clean-host/dynamic runtime audit and
+outstanding native performance/interaction matrix; broad gates remain open.
+
+Verification: ./scripts/verify.ps1 -DocsOnly passed; all dumpbin calls and three
+staged local workflows passed. Log: package-docs-verify.log. Sibling Git status
+unchanged from start; no staging/commits.
+
+## 2026-10-04 Example asset relocation checkpoint
+
+Starting engine67cd899649a0009dbdbd8a7b6ec12dec388da795, examples
+c89adb9a5317007b3469782c1c8da9d8b4b1b04a. Existing changes preserved. Sibling
+classic main/presentation/audio now use focused assets resolver; adjacent assets
+folder overrides source fallback as a whole, incomplete folder fails. New domain
+resolution tests; package tests10passed/1ignored and all-target Clippy passed.
+README documents precedence, relocation and deployment limits. No SDK/dependency
+or profile changes. Existing pause-mailbox work remains.
+
+Ignored standalone copied example compiled release after target-filtered offline
+metadata adapts only temporary lockfile. Initial unfiltered metadata failed on
+restricted non-Windows registry unpack; filtered Windows metadata succeeded.
+Copied source path temporarily moved under validated ignored measurement root;
+headless/native smokes pass with source absent. Missing packaged atlas/WAV each
+exit1. All fixture assets/source restored finally; original sibling files never
+moved. Evidence classic-relocation-* under retained root. Prior classic build
+cache executable rebuilt; original measured artifact retained in package-stage.
+Next: clean-host/dynamic runtime coverage and remaining native performance gate.
+
+Full verify first failed CLI-generated project compilation due to disk-full
+errors; format/check/Clippy had passed. Preserved reports/EXE/PDB from own two
+empty-target caches into *-evidence then removed only those validated ignored
+build caches, freeing space. Logs/CSV/original staged artifacts and normal targets
+remain. Full ./scripts/verify.ps1 rerun with process-local shared engine target
+and sequential tests passed; env restored. Logs target/classic-assets-full-verify.log
+and target/classic-assets-full-verify-shared.log. No SDK dependencies/API changed;
+no staging/commits. Final documentation and sibling whitespace checked.
+
+## 2026-10-04 Native slider checkpoint
+
+Existing engine/sibling changes preserved. Workbench adds --slider-smoke: ten
+warm frames, press11, alternate20/80 drag, release120. Public router/physical
+coordinates at window DPI, normal Changed localization/layout refresh. Domain
+test covers DPI1/2, values/effects and capture release. Package8passed/1ignored,
+all-target Clippy/release build passed; incompatible flags rejected before window.
+
+Two native release runs per four locales:119 GPU/renderer samples, all no skips/
+errors/pending, scale1 physical1000x800 RTX3070/Vulkan616.56/Fifo. Warm109 separate
+input/render/window samples. Input sum p950.485-0.667ms, encode0.918-1.385ms,
+GPU pass26-33us, host cadence p999.769-11.455ms. Not whole-engine CPU/GPU or
+actual display acceptance. No new production bottleneck fix justified.
+Evidence target/workbench-slider-* logs/summary.py/CSV; env diagnostics restored.
+Next: scrolling/locale/window isolation, native DPI2, OS clipboard/IME and actual
+presented intervals. No SDK/dependency change. Broader native gate stays open.
+
+Full ./scripts/verify.ps1 passed with process-local shared engine target and
+RUST_TEST_THREADS=1; previous values restored. Log target/workbench-slider-full-verify.log.
+Sibling formatting/diff whitespace passed. All eight native runs and CLI flag
+rejection passed. No staging or commits.
+
+## 2026-10-04 Locale-switch native checkpoint
+
+Same starting revisions/current working trees preserved. Workbench --locale-smoke
+warms10 host frames then cycles public Select + Changed effects through all four
+catalogs every frame. Test verifies captions/roundtrip/editor preservation at
+injectedDPI2. Package9passed/1ignored, all-target Clippy/release build passed;
+conflicting flags rejected. No SDK/dependency change.
+
+Two native release en-US-start cycles, scale1 physical1000x800 RTX3070/Vulkan
+616.56/Fifo.119 rendered each, GPU119/118 with one skipped pre-warm sample in
+repeat, no errors/pending. Warm105 per distribution excludes first cycle and exit.
+Input p951.417/1.385ms, encode1.244/1.269ms, GPU pass33/32us; host cadence
+p9911.206/10.860ms. First-cycle layout observations separate in review. No
+whole-frame/display acceptance or production optimization claim. Evidence
+workbench-locale-* under engine target, diagnostics env restored.
+Next: scroll/windows/animation isolation, nativeDPI2, OS clipboard/IME and actual
+displayed intervals. Broad milestone stays open.
+
+Full ./scripts/verify.ps1 passed with process-local shared engine target and
+sequential tests; env restored. Log target/workbench-locale-full-verify.log.
+Sibling formatting/whitespace passed, final documentation whitespace checked.
+No staging/commits.
+
+## 2026-10-04 Scroll native checkpoint
+
+Existing engine/sibling changes preserved. Workbench --scroll-smoke opens1000x400
+only for this mode;10warm frames then96logical-pixel down/up wheel events via
+router at actual DPI. Rejects absent overflow. Focused scrolling module/tests
+validate DPI1/2 offsets/return, consumed wheel, layout dirtiness and unchanged
+editor/language. Package11passed/1ignored, all-target Clippy/release build passed;
+conflicting flags rejected. No SDK/dependency changes.
+
+Eight native release runs, two/locale, scale1 RTX3070/Vulkan616.56/Fifo.119renderer
+samples/run, selected109CPU/GPU samples/run. ru-first/ar-first/ja-repeat each
+skip one pre-warm GPU sample, no errors/pending. Input p950.643-1.471ms,
+encode0.419-0.820ms, GPU pass12-13us; no full-frame or1000x800 acceptance claim.
+Evidence target/workbench-scroll-* logs/summary, env restored. Next isolated
+windows/animation, selection/clipboard/IME, nativeDPI2 and actual display timing.
+Broad milestone stays open.
+
+Full ./scripts/verify.ps1 passed with process-local shared engine target and
+sequential tests; env restored. Log target/workbench-scroll-full-verify.log.
+Sibling formatting/diff whitespace and final docs whitespace passed. No commits.
+
+## 2026-10-04 Windows/animation native checkpoint
+
+Existing engine/sibling changes preserved. Workbench adds --windows-smoke and
+--animation-smoke: identical8-action review/confirmation/popup cycle after10warm
+frames, only toggle differs. Activated effects run normal handler; locales/editor
+unchanged. Test validates layer order, offset start and control preservation at
+injectedDPI2. Package12passed/1ignored, all-target Clippy/release build passed;
+conflicting flags rejected. No SDK/dependency/profile changes.
+
+16native release runs, scale1 physical1000x800 RTX3070/Vulkan616.56/Fifo.
+119renderer samples/run, selected109GPU/CPU each. Six runs skip one pre-warm GPU
+sample; no errors/pending. Preparation p95static0.600-0.833ms,
+animated0.835-1.091ms; encode maxp951.768ms. No whole-frame/display acceptance
+or new bottleneck fix claim. Host-time transitions + frame-based actions mean
+mixed active/idle samples and possible supersession; do not subtract percentiles.
+Evidence target/workbench-windows-* and workbench-animation-*; env restored.
+Next native selection/clipboard/IME, actualDPI2, whole-frame/display measurements
+and final acceptance. Broader milestone remains open.
+
+Full ./scripts/verify.ps1 passed with process-local shared engine target and
+sequential tests; env restored. Log target/workbench-windows-full-verify.log.
+Sibling formatting/whitespace and final docs whitespace passed. No commits.
+
+## 2026-10-04 Selection/preedit native checkpoint
+
+Existing working trees preserved. Workbench --selection-smoke/--preedit-smoke
+share extracted editor-focus preparation with editing mode.10warm frames then
+caret/full selection or alternating bounded Japanese/Arabic compositions;cancel120.
+DPI1/2 test verifies focus/selection/preedit/layout dirtiness/cancel and unchanged
+committed text. Package13passed/1ignored, all-target Clippy/release build passed;
+conflicting flags rejected. No SDK/dependency/profile change.
+
+16native release runs, scale1 physical1000x800 RTX3070/Vulkan616.56/Fifo,
+119renderer each and109selectedCPU/GPU samples each. Five runs skip one pre-warm
+GPU sample, no errors/pending. Input p95selection0.467-0.752ms,
+preedit0.399-0.628ms; encode maxp951.808ms. Env restored, raw workbench-selection-*
+and workbench-preedit-* logs/summary, package workbench-editor-* evidence.
+No genuine OS IME/clipboard, nativeDPI2 or full-frame/display acceptance claim.
+Next actual clipboard/IME, reference display metadata/DPI2 and whole-frame timing.
+
+Full ./scripts/verify.ps1 passed with process-local shared engine target and
+sequential tests; env restored. Log target/workbench-editor-full-verify.log.
+Sibling formatting/diff whitespace and final docs whitespace passed. No commits.
+
+## 2026-10-04 Display metadata checkpoint
+
+Existing engine/sibling changes preserved. Opt-in native window diagnostics add
+initial window_configuration via private performance/display.rs: physical size,
+window scale, optional monitor name/size/origin/system refresh. Missing/zero refresh
+stays unavailable. No dependency/public API/display settings change or per-frame
+monitor poll. Snapshot at creation does not track later monitor changes.
+
+Two Japanese native release idle runs report DISPLAY2,1920x1080,origin0/0,
+144000mHz,scale1/window1000x800; renderer RTX3070/Vulkan616.56/Fifo. Powercfg
+before/after Balanced, not clock/thermal/background measurements. Do not fill old
+metadata retrospectively or infer display cadence. Domain2passed, package Clippy,
+release build/enabled native checks passed. Disabled native check after removing
+env entries emits no window diagnostics (empty present flags still enable them).
+Evidence target/window-display-* logs. NativeDPI2/actualdisplay/fullGPU/OSIME and
+clipboard remain open. Next actual frame timing and native reference matrix.
+
+Full ./scripts/verify.ps1 passed with process-local shared engine target and
+sequential tests; env restored. Log target/window-display-full-verify.log.
+Final documentation/code whitespace passed. No sibling source changes or commits.
+
+## 2026-10-04 Paired callback timing checkpoint
+
+Existing engine/sibling changes preserved. Private window performance frames
+collector pairs completed preparation callbacks with next completed redraw,
+retains at most240 rows and reports preparation count. Unprepared redraws and
+unfinished preparation are omitted. Four focused performance tests passed.
+This excludes native event handling/wait/display and includes redraw blocking;
+not whole-engine activeCPU/display acceptance. Next: use paired native evidence,
+then actual display/fullGPU/nativeDPI2/OSIME and clipboard acceptance.
+
+Full ./scripts/verify.ps1 passed with process-local shared CARGO_TARGET_DIR and
+RUST_TEST_THREADS=1 (target/window-paired-full-verify-shared.log); initial temporary
+build target failure retained in window-paired-full-verify.log. Two native release
+idle runs exited0,119pairs each,109warm rows,p95=9612/9424us; count1 throughout.
+No sibling source changes, staging or commits. Evidence/limits in performance review.
+
+## 2026-10-04 Paired native interaction matrix checkpoint
+
+Existing working trees/revisions preserved. No source/dependency/sibling edits.
+Ran9isolation modes x4locales x2repeats sequentially with window/render diagnostics:
+72exit0,119pairs/render rows each,preparation count1 throughout. Warm109pairs except
+locale105. p95ranges9.052-10.743ms,p99 up to12.281ms. Largest22.402ms selection/ru
+sample attributed locally to preparation1.020ms + redraw21.382ms; renderer acquire/
+encode/present elevated, cause unproven. No speculative production optimization.
+GPU59runs119collected,13runs118/1skipped,all errors0/pendingfalse. Native scale1,
+DISPLAY2/144000mHz/RTX3070/Vulkan616.56/Fifo; scroll1000x400,others1000x800.
+Power scheme Balanced observed during/after. Raw target/window-paired-matrix-*
+and CSV summary; detailed evidence/limits in PERFORMANCE_REVIEW.md.
+Next: actual displayed intervals/fullGPU/nativeDPI2/OSIME/clipboard and reference
+controls; broad milestone/acceptance remains open. No staging or commits.
+
+Full ./scripts/verify.ps1 passed with shared process-local engine target and
+RUST_TEST_THREADS=1; log target/window-paired-matrix-verify.log. Final whitespace
+check passed. Environment overrides were scoped to tool processes.
+
+## 2026-10-04 Long-field editing checkpoint
+
+Existing engine/sibling revisions and unrelated changes preserved. WPR available
+with GPU/DesktopComposition profiles,no recording; PresentMon/WPA/GPUView absent
+onPATH. Did not change display settings or infer display timing from ETW availability.
+Sibling layered_editing.rs adds ignored public long-field preedit/commit probe;
+README documents command/limits.4content scripts x8/64/256repeats xsyntheticDPI1/2,
+3overlapping panels/topmodal,10warmups+100cycles.2sequential release passes:
+20configs each,4largestDPI2 initial layouts reject Text(TooLarge) with no samples.
+First exploratory failure retained separately. Warm2value/repeatedglyph costs,
+fontservice localeen-US; notnative/alloc/cold/isolated raster. p95x256DPI1
+45.291-96.676ms; x64DPI2 up to33.502ms. Evidence target/long-field-editing-complete-*
+and summaryCSV; detailed table/rejections in PERFORMANCE_REVIEW.md.
+Next attribute long-field shaping/raster/clipping/decoration, preserve safety bound,
+then focusedfix/rollback regression if evidence warrants. Broad milestone staysopen.
+No staging/commits.
+
+Verification passed: engine fullverify target/long-field-full-verify.log; sibling
+package13passed/2ignored, all-targetClippy, formatting and bothdiff whitespace.
+Two manual longfield release runs passed. Env overrides scoped to toolprocesses.
+
+## 2026-10-04 Indexed long-field cluster geometry checkpoint
+
+Existing working trees preserved. Sibling attribution entrypoint measure_long_field_phases
+requiresUI/textdiagnostics and shares unchanged long cases.1phase run before/after;
+2normal samples before (priorstep)/after. UIgeometry p95x256DPI1 before->after:
+en15886->1418us,ru22019->1963us,ar11878->1313us,ja7871->1106us. Normalrux256
+cyclep95 71.561-96.676->44.313-45.885ms; Japanese53.660-61.457ms after stillpaint/
+layout dominated. Smaller/DPI2 costs variable, no uniformspeedup. Same4TooLarge
+rejections retained. Fix TextGeometry::shaped per-glyph fullboundaryscan/vector
+replaced by partition_point borrowedrange; noAPI/dependency/rasterlimit change.
+3focused regressions: inclusive combining/ligature endpoints, distantparagraphs,
+RTLcaret/hit/selectionsegments.5filtered tests passed. Native8 editing/selection
+ru/ja repeats passed. Sibling13passed/3ignored,Clippy/formatting/releasebuild passed.
+Evidence long-field-phases-{before,after},long-field-after-{1,2},comparisonCSVs,
+long-field-fix-native-* undertarget. docs/UI.md/roadmap/changelog/README updated.
+Next remaininglongfieldpaint/raster/Japaneselayout attribution and broadergate.
+No staging/commits.
+
+Fullverify passed target/long-field-geometry-full-verify.log (process-local shared
+target/sequentialtests). Finalbothrepo whitespacepassed; env scopedtoolprocesses.

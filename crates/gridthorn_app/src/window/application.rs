@@ -111,6 +111,7 @@ where
                 .map_err(ApplicationError::window_creation)?,
         );
         let size = window.inner_size();
+        self.performance.report_configuration(&window);
         if self.rendering_enabled {
             let target = WindowSurfaceTarget::new(window.clone());
             self.renderer = Some(SurfaceRenderer::new(target, size.width, size.height)?);

@@ -32,7 +32,13 @@ Further measurements still execute normally after the limit. Bitmap measurement,
 paint and editing geometry retain their existing behavior.
 
 Router layout prepares field geometry once for hit testing, native text anchors
-and focused caret/selection decoration. Active preedit still prepares its separate
+and focused caret/selection decoration. It looks up glyph cluster endpoints in
+sorted grapheme boundaries without a
+full-text scan or temporary vector for each glyph. This preserves byte offsets,
+ligature subdivision and visual RTL caret/selection positions. Layout still owns
+the complete field geometry, including offscreen text.
+
+Active preedit still prepares its separate
 composition text; changed field content, placement or theme requires fresh layout.
 
 `UiLength` supports intrinsic `Auto`, fixed `Pixels`, parent-relative `Fraction`
