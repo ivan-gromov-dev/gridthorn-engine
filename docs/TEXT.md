@@ -112,3 +112,10 @@ protocol and limits are in [the performance review](PERFORMANCE_REVIEW.md).
 Whole-frame GPU execution and actual presented intervals remain unmeasured. The span renderer
 is a correctness foundation for modest UI text, not a measured high-throughput
 text renderer. [ADR 0004](adr/0004-multilingual-text.md) records the provisional backend.
+
+Large raster requests (256 glyphs or more) reuse glyph-relative tinted spans within
+one call, capped at 128 entries/65536 retained spans. Small requests use direct
+sampling. This temporary reuse does not survive a call or change snapshot ownership,
+font choice, tint, DPI or the one-million sample rejection limit. Scratch/output
+capacity and opaque backend caches are outside the span count cap. Measured gains,
+tradeoffs and unmeasured memory/unique-glyph limits are in PERFORMANCE_REVIEW.md.

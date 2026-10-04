@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Large text raster requests reuse bounded glyph spans within one call, preserving
+  font selection, ordered pixels, tint and DPI; short requests retain direct sampling.
+
 - Performance review adds a public-example warm asset-font editing and overlapping
   layer probe across four scripts and DPI 1/2, with explicit workload limits.
 
@@ -154,6 +157,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Large text raster requests reuse bounded glyph spans within one call, preserving
+  font selection, ordered pixels, tint and DPI; short requests retain direct sampling.
+
 - Raised the MSRV and pinned local engine/example toolchains to Rust 1.99.0
   to align local Clippy diagnostics with current stable CI; updated the MSRV job
   and generated project manifest.
@@ -212,6 +218,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Large text raster requests reuse bounded glyph spans within one call, preserving
+  font selection, ordered pixels, tint and DPI; short requests retain direct sampling.
+
 - `gridthorn check` now validates that the Cargo package name and Gridthorn
   dependency requirement agree with `gridthorn.toml` and the running CLI.
 - CI now restores Cargo dependency artifacts and shares one target directory
@@ -253,6 +262,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dependency-growth baselines plus explicit runtime deferrals.
 
 ### Changed
+
+- Large text raster requests reuse bounded glyph spans within one call, preserving
+  font selection, ordered pixels, tint and DPI; short requests retain direct sampling.
 
 - Raised the project MSRV to Rust 1.97.1 so current `bevy_ecs` and `wgpu`
   releases can be validated.

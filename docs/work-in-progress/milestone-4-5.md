@@ -1248,3 +1248,36 @@ about the preceding invoked.timestamp failure. Env overrides were restored.
 This successful full gate also covers the earlier world/localization probe files.
 All acquisition was completed before checks. No native performance speedup inferred
 from the correctness smoke; native interaction/DPI2/IME acceptance stays open.
+
+## 2026-10-04 request-local raster reuse checkpoint
+
+Engine baseline 129f9de8bbcbfcd43183dd0e65a0045e25d2de3b, initially clean after
+maintainer committed preceding increments. Examples still have pre-existing
+manifest/lock/README/untracked workbench changes, untouched here. Renderer raster
+loop delegates to focused text/raster_spans.rs; cache lifetime is one request,
+128-entry/65536-span retention, direct path below 256 glyphs. No dependency/feature
+edges or public signatures changed. Added ordered backend-reference pixel test
+and bounded cache-saturation test under text/test/. Protocol/evidence/tradeoffs in
+PERFORMANCE_REVIEW.md; README/roadmap/TEXT/changelog updated together.
+
+Two isolated before runs and three final runs of the existing text-pressure probe
+passed; two unconditional-cache prototype runs are retained as intermediate data.
+A small-request regression in that prototype led to the measured threshold.
+Russian/Arabic/Japanese long DPI2 medians improve, English mixed (all runs kept).
+Shaping fallback misses unchanged; optional backend shape-run cache not enabled
+without a cap. Renderer text tests 20 passed/2 ignored; focused Clippy passed before
+final constant extraction. Sibling release build and native editing smokes for all
+four locales passed (physical 1000x800/DPI1), with logs under target/raster-spans-*.
+No real OS IME/DPI2/full-frame performance acceptance inferred.
+
+Next: remaining domain I/O/worker/scaling review; retain explicit long-field,
+asset-font expanded-layer, unique-glyph/cold raster, allocator/peak-byte and fallback
+shaping follow-ups. Full verification follows using the previously successful
+process-local CARGO_TARGET_DIR=<engine target>, RUST_TEST_THREADS=1 settings.
+No staging or commits.
+
+Final verification: ./scripts/verify.ps1 passed with process-local shared engine
+target and sequential tests, overrides restored. Includes format/check/Clippy,
+all workspace unit/doc tests, offline generated-project CLI check/native smoke,
+dependency boundaries and whitespace. Full log target/raster-spans-verify.log.
+All benchmark acquisition preceded checks. No staging/commits; examples unedited.

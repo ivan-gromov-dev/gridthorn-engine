@@ -4,6 +4,7 @@ mod layout;
 mod layout_cache;
 mod performance;
 mod raster;
+mod raster_spans;
 mod service;
 mod style;
 

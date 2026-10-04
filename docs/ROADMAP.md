@@ -315,6 +315,7 @@ record implemented and verified increments; measurements and limitations are in
           LRU; verify style changes, font-owner isolation, eviction and live snapshots.
     - [x] Add cache hit/miss/eviction and peak-retention diagnostics; verify that
           unowned backend buffers are released on eviction.
+    - [x] Reuse bounded request-local glyph raster spans for large layouts; preserve exact pixel output/tint/fractional DPI and record repeated before/after samples.
   - [ ] Profile remaining shaping/rasterization, invalidation, hidden-node sizing,
         focused editing/preedit, routing and allocation costs; resolve measured issues.
 - [ ] Review and optimize measured rendering/presentation bottlenecks: text/sprite

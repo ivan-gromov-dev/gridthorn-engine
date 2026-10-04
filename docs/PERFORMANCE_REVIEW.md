@@ -880,3 +880,75 @@ target/text-layer-verify-shared.log. The shared shorter build output avoids the
 nested MSVC path failure observed in the temp-location experiment; it does not
 prove the cause of the earlier invoked.timestamp failure. Environment overrides
 were restored; no persistent configuration or CLI behavior changed.
+
+## Request-local raster span reuse (2026-10-04)
+
+Baseline 129f9de8bbcbfcd43183dd0e65a0045e25d2de3b, clean engine working tree at
+start, Rust 1.99.0 and previously recorded Windows host. No dependency/features
+changed. Examples retain their existing manifest/lock/README/untracked workbench
+changes; this increment edits engine files only.
+
+Source inspection identified repeated per-pixel tint conversion and span building
+for every glyph occurrence, even when Swash already cached the glyph image. The
+renderer now reuses tinted, glyph-relative integer spans within one rasterize call
+for layouts with at least 256 glyphs. Cache keys include font/glyph, size and
+subpixel placement; tint is fixed for the request. Absolute integer translation,
+ordered output and adjacent-span merging preserve the existing pixel stream.
+Short requests use direct sampling: the initial unconditional cache prototype
+increased short Arabic/Japanese DPI-1 medians and was corrected before handoff.
+
+The request cache retains at most 128 entries and 65536 spans; saturation uses a
+reusable scratch vector. Cache/scratch state is dropped before rasterize returns.
+Vector capacity, temporary scratch, final output, Swash images and font caches are
+not covered by a new byte budget. The existing one-million image-sample work limit
+still counts every glyph occurrence, including cache hits, and errors preserve
+caller-held snapshots. Allocation counts and peak bytes remain unmeasured; this
+change avoids repeated span preparation but does not claim allocation-free drawing.
+
+Used the existing measure_long_text_and_cache_pressure command above. Two before
+runs, two intermediate unconditional-cache runs, and three final thresholded runs;
+100 individual warm raster calls/config after one excluded raster. Acquisition
+was isolated from agent-launched builds/checks. Third final run investigates the
+inconsistent English sample; all final runs are retained rather than discarding
+it. Background activity/clocks/power remain uncontrolled. Tables use per-run
+nearest-rank percentiles; ranges are not pooled statistics.
+
+| 64 repetitions / DPI 2 | Before median ms | Final median ms | Before p95 ms | Final p95 ms |
+| --- | --- | --- | --- | --- |
+| English | 2.608–2.696 | 2.112–2.932 | 2.853–3.138 | 2.216–5.127 |
+| Russian | 3.856–3.882 | 2.929–3.128 | 4.330–4.729 | 3.199–3.654 |
+| Arabic | 2.246–2.252 | 1.705–1.735 | 2.471–2.533 | 1.780–2.035 |
+| Japanese | 4.467–4.519 | 3.074–3.147 | 4.856–5.683 | 3.268–4.012 |
+
+These repeated-phrase workloads show consistent Russian/Arabic/Japanese gains;
+English is mixed, with final run 1 reaching 9.448 ms max and 5.127 ms p95 while
+runs 2/3 have medians 2.144/2.112 ms. No universal speedup or native frame-budget
+claim is made. 8-repeat fixtures remain on the direct path; their full results
+are in the summary, with the same uncontrolled host variability. Unique-glyph
+workloads, cold rasterization and general cache-saturation latency remain open.
+Long Japanese fallback shaping misses are unchanged by this raster optimization.
+The optional backend shape-run cache was inspected but is not enabled: its
+retention is an age-trimmed map without an entry/byte cap, so enabling it alone
+would not establish the engine's bounded-retention requirements.
+
+Regression coverage compares the expanded ordered raster pixel stream against
+independent backend sampling for mixed Latin/Cyrillic/Arabic/Japanese, combining
+marks, repeated/unique glyphs, DPI 1/1.25/2, colored partial alpha and transparent
+tint. Cold rebuilds match snapshots; request-cache saturation respects retained
+limits. Existing error/work-limit/font-owner/DPI/cache-clear tests continue passing.
+
+Raw logs target/raster-spans-before-<1|2>.log,
+raster-spans-after-<1|2>.log (intermediate only), and
+raster-spans-final-<1|2|3>.log. Final summary with median/p95/p99/max:
+target/raster-spans-final-summary.csv. Renderer text tests passed (20 passed,
+2 ignored); final full verification is recorded in the checkpoint. Sibling release
+build and native --editing-smoke --locale=<en-US|ru|ar-EG|ja> passed at configured
+1000x800 physical pixels/native DPI 1. Logs target/raster-spans-workbench-build.log
+and raster-spans-native-<locale>.log. Correctness smokes do not prove real OS IME,
+DPI-2 native performance or displayed-frame timing.
+
+Full ./scripts/verify.ps1 passed with the previously documented process-local
+shared target/sequential-test settings, including workspace tests, generated-project
+CLI smoke, dependency boundaries and whitespace. Log target/raster-spans-verify.log;
+overrides restored. Native Workbench acceptance and the remaining domain matrix
+stay open.

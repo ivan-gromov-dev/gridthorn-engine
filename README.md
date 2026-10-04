@@ -116,6 +116,9 @@ with measured construction and retention tradeoffs in the review.
   A public example probe measures warm asset-font editing and three overlapping
   layers across four scripts at DPI 1/2; its bounded workload and limits are recorded
   in the performance review.
+Large text raster requests reuse bounded glyph spans within a call; short requests
+retain direct sampling. Before/after evidence and workload limits are recorded
+in the performance review.
 Milestone 4 remains open until this performance gate and
 native language/IME acceptance finish, followed by Milestone 5 desktop
 platform/device controls. The debugging workflow and

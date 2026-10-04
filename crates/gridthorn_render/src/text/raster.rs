@@ -2,6 +2,9 @@ use super::{TextError, TextLayout, TextMeasurement, TextSystem};
 use crate::presentation::Color;
 use std::sync::Arc;
 
+/// Amortize request-local span preparation only across sufficiently large layouts.
+const MIN_GLYPHS_FOR_SPAN_REUSE: usize = 256;
+
 /// DPI-specific immutable text draw data, independent of the font service and GPU.
 #[derive(Clone, Debug, PartialEq)]
 pub struct RasterText {
@@ -77,14 +80,6 @@ impl TextSystem {
     ///
     /// # Errors
     /// Rejects foreign layouts, invalid DPI, excessive output or failed glyph rasterization.
-    #[expect(
-        clippy::cast_precision_loss,
-        reason = "bounded raster pixel coordinates become GPU f32 positions"
-    )]
-    #[expect(
-        clippy::float_cmp,
-        reason = "merge only exactly identical raster colors and integer pixel positions"
-    )]
     pub fn rasterize(
         &mut self,
         layout: &TextLayout,
@@ -103,7 +98,12 @@ impl TextSystem {
         }
         let mut pixels: Vec<TextPixel> = Vec::new();
         let mut samples = 0_usize;
-        let tint = color.components();
+
+        let glyphs: usize = layout.lines().iter().map(|line| line.glyphs.len()).sum();
+        let mut spans = super::raster_spans::GlyphSpans::new(
+            color.components(),
+            glyphs >= MIN_GLYPHS_FOR_SPAN_REUSE,
+        );
         for run in layout.buffer.layout_runs() {
             for glyph in run.glyphs {
                 let physical = glyph.physical((0.0, run.line_y * scale), scale);
@@ -129,35 +129,12 @@ impl TextSystem {
                 if samples > 1_000_000 {
                     return Err(TextError::TooLarge);
                 }
-                self.cache.with_pixels(
+                spans.append(
+                    &mut pixels,
+                    &mut self.cache,
                     &mut self.fonts,
                     physical.cache_key,
-                    cosmic_text::Color::rgb(255, 255, 255),
-                    |x, y, sample| {
-                        let [red, green, blue, alpha] = sample.as_rgba();
-                        if alpha != 0 {
-                            let pixel = TextPixel {
-                                position: [(physical.x + x) as f32, (physical.y + y) as f32],
-                                color: [
-                                    f32::from(red) / 255.0 * tint[0],
-                                    f32::from(green) / 255.0 * tint[1],
-                                    f32::from(blue) / 255.0 * tint[2],
-                                    f32::from(alpha) / 255.0 * tint[3],
-                                ],
-                                width: 1,
-                            };
-                            if let Some(previous) = pixels.last_mut().filter(|previous| {
-                                previous.position[1] == pixel.position[1]
-                                    && previous.position[0] + previous.width as f32
-                                        == pixel.position[0]
-                                    && previous.color == pixel.color
-                            }) {
-                                previous.width += 1;
-                            } else {
-                                pixels.push(pixel);
-                            }
-                        }
-                    },
+                    [physical.x, physical.y],
                 );
             }
         }
