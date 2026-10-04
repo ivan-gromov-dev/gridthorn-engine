@@ -1475,3 +1475,63 @@ example passed square/isometric picking, preview, rollback/move/removal checks
 updated; final GRIDS/checkpoint prose whitespace checked. No staging/commits.
 Next: fixed simulation and snapshots/RNG scaling; retain rejection/churn/heap/
 realistic collision candidate selection follow-ups. Broad milestone remains open.
+
+## 2026-10-04 Fixed simulation, snapshots and RNG checkpoint
+
+Engine baseline6561281b0537beeea9990e3933fd7a1f2f45920d initially clean. Added
+ignored probes in simulation/time/test/scaling, determinism/test/scaling and
+app/scenario/test/scaling. No production/dependency/API/algorithm encoding changes.
+Two isolated runs each passed:10000 clock calls normal/zero/catch-up/paused;
+16384 direct/named draws with1/64/1024 streams; typed root1024/16384/262144 values
+with64 commands and1/128 streams, capture/clone/restore;1000 exact ticks with
+0/16/256 scalar fixed systems. Checks verify output checksums/final RNG positions,
+assigned tick totals, final scalar work, complete snapshot/root equality and
+independent restored one-tick continuation. Existing fixed vectors unchanged.
+
+1000 ticks256 systems median4.5–4.6ms;2MiB scalar root capture0.49–0.55ms;
+1024-stream16384 named draws0.96–1.01ms, direct~0.03ms. No production fix justified
+by these synthetic workloads. Clone independence and RNG contracts preserved.
+Clock probe excludes schedule execution; explicit ticks bypass pause. Snapshot
+fixtures warm and retain reference runners/captures; no heap/peak/user-Clone budget.
+Protocol and limits in PERFORMANCE_REVIEW.md; logs target/simulation-{1,2}.log,
+snapshot-{1,2}.log, fixed-schedule-{1,2}.log, simulation-snapshot-summary.csv.
+
+Full verify passed(target/simulation-snapshot-verify.log), shared-target/sequential
+process overrides restored. Initial Clippy failures in new fixtures (names,
+doc markup, method closure and semicolon) corrected before successful gate.
+Includes format/check/Clippy/unit/doc tests, generated-project CLI/native smoke,
+dependency boundaries and whitespace. No sibling edits or commits. Docs/README/
+roadmap/changelog updated and final checkpoint whitespace checked. Remaining:
+real/entity-heavy catch-up work, speed/queue workloads, nested roots/retained
+snapshot heap peaks, named lookup attribution and native/device follow-ups.
+Next risk-ordered domain: cold/warm build footprint and binary size, while broad
+Milestone4.5 remains open for realistic/native acceptance and unresolved limits.
+
+## 2026-10-04 Build and footprint baseline checkpoint
+
+Same engine HEAD6561281b0537beeea9990e3933fd7a1f2f45920d; preceding uncommitted
+simulation probes/docs preserved. No source/config/dependency/profile changes in
+this increment. New ignored measurement root target/build-footprint-20261004-140430,
+separate empty CLI/SDK targets. Offline locked release builds:CLI23.21s,
+SDK161.54s, two no-op warms CLI0.38/0.30s and SDK0.71/0.65s. Registry/OS caches
+warm, default jobs/profile; one initial sample each, not repeated cold distribution.
+Generated template from measured CLI adapts copied lockfile via offline metadata
+before locked builds; external package/version set adds none relative to engine.
+SDK thirdparty artifact primed build10.75s, repeats0.60/0.54s; source-owned SDK
+crates recompile under standalone workspace context. Example classic_2d existing
+release-test cache3.58s, repeats0.72/0.62s (not cold). No sibling source/lock edits.
+
+CLI.exe2234880bytes; generated.exe8419840; classic.exe9138688; facade-only
+rlib51682 (not engine size). CLI/generated PDB separate, assets/runtime DLLs and
+packaging excluded. Target-normal closures CLI51/SDK220 packages including root,
+build/dev edges excluded. Logs/times/sizes/dependency trees/metadata/Cargo HTML
+reports retained in measurement root. All commands isolated/sequential; normal
+build caches not deleted. Detailed limits and reproduction in PERFORMANCE_REVIEW.
+
+Measured CLI --help, generated release --smoke and classic release --smoke passed.
+Full engine verify passed(target/build-footprint-verify.log), shared target and
+sequential-test process overrides restored; includes previous uncommitted probes.
+Final docs/checkpoint diff whitespace checked. No staging/commits. Next:
+repeat true-empty examples/generated builds, critical-path/edit rebuild attribution,
+feature/profile tradeoffs and complete packaging bytes; realistic/native domain
+acceptance remains open. No regression or profile improvement claim from baseline.

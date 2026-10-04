@@ -129,6 +129,10 @@ warm reload, scene and world-save measurements are recorded in the same review.
   and synchronous-search budget limits are recorded in the performance review.
   Placement cell queries use hash lookups with ordered objects; placement and
   collision scaling measurements distinguish ready pairs from all-pairs enumeration.
+  Fixed-clock/schedule, typed snapshot and RNG release probes record costs and
+  deterministic continuation limits in the same review.
+  Release build timings, dependency closures and CLI/generated-game/example
+  executable sizes are recorded with explicit cold-cache and packaging limits.
 Milestone 4 remains open until this performance gate and
 native language/IME acceptance finish, followed by Milestone 5 desktop
 platform/device controls. The debugging workflow and

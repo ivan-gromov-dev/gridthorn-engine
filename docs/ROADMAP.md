@@ -377,16 +377,24 @@ record implemented and verified increments; measurements and limitations are in
 - [ ] Review fixed simulation, grids, pathfinding/placement, collision and
       snapshots for scaling, allocation costs and preserved determinism.
   - [ ] Measure fixed ticks, grid/pathfinding/placement and collision scaling.
+    - [x] Measure fixed-clock normal/catch-up/paused arithmetic and exact-tick
+          orchestration through 256 scalar fixed systems on Windows release.
     - [x] Measure open/weighted/unreachable/budgeted pathfinding through 512x512;
           optimize cost/predecessor lookups and verify deterministic diagnostics.
     - [x] Measure sparse placement through 65536 objects and narrow-phase/all-pairs
           collision batches; optimize cell lookups while preserving transactions.
   - [ ] Measure snapshots/RNG and allocation costs; verify determinism after fixes.
+    - [x] Measure typed Vec-root capture/clone/restore through 262144 values and
+          named/direct RNG through 1024 streams; verify continuation and stream states.
   - [ ] Record each domain's disposition and supported workload limits.
 - [ ] Measure cold/warm build time, dependency footprint and binary size; address
       measured regressions without introducing unrelated subsystems.
   - [ ] Run controlled cold/warm engine, examples and generated-project builds.
+    - [x] Record empty-target CLI/SDK release builds and warm repeats, plus
+          dependency-primed generated-project and existing-cache example builds.
   - [ ] Record dependency footprint/binary sizes and resolve measured regressions.
+    - [x] Record Windows CLI/default-SDK dependency closures and CLI/template/
+          classic_2d release executable sizes without changing release profiles.
 - [ ] Add repeatable performance workloads/regression checks, rerun the complete
       matrix and repository verification, and document before/after results and limits.
   - [x] Add workbench CPU/native measurement entrypoints and behavior regression

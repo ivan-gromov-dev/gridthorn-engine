@@ -1430,3 +1430,173 @@ heavy placement, negative/sparse shapes, large relocation churn, clone/allocatio
 attribution, memory peaks, realistic mixed/corner/containment collision workloads,
 candidate pruning and cross-platform runs. Fixed simulation and snapshots/RNG
 remain next domain increments. Broad milestone checks remain open.
+
+## Fixed simulation, snapshots and RNG — 2026-10-04
+
+Baseline6561281b0537beeea9990e3933fd7a1f2f45920d, engine initially clean after
+placement/collision work was committed. Added ignored release probes under
+simulation/time/test, simulation/determinism/test and app/scenario/test. No
+production algorithm, RNG encoding, snapshot ownership, dependency or API change.
+Each probe/config has two excluded iterations and20 retained samples; two
+isolated runs passed, upper-middle median and nearest-rank p95. No acquisition
+overlap with other builds/checks. Logs target/simulation-{1,2}.log,
+snapshot-{1,2}.log, fixed-schedule-{1,2}.log and simulation-snapshot-summary.csv.
+
+```powershell
+cargo test -p gridthorn_simulation --release --locked measure_ -- --ignored --nocapture
+cargo test -p gridthorn_app --release --locked measure_snapshot_scaling -- --ignored --nocapture
+cargo test -p gridthorn_app --release --locked measure_fixed_schedule_scaling -- --ignored --nocapture
+```
+
+Clock:10000 calls per sample,10ms fixed step, catch-up limit8. Zero/normal/catch-up
+input is0/10/200ms per frame; paused input10ms. Fresh clocks/controls are created
+outside timing. Total assignments are asserted0/10000/80000/0 outside timing;
+catch-up repeatedly accumulates backlog rather than dropping it. Timed arithmetic
+includes checked duration/tick calculations, integer scaling and black-box timing
+results, not execution of assigned systems. Existing clock tests cover backlog,
+control/speed fractions, overflow atomicity and explicit tick indices.
+
+Exact-tick runner:1000 ticks per sample,0/16/256 fixed systems each incrementing
+one root scalar. Fresh schedules/runner and Startup precede timing. Timing includes
+per-tick Input/state-transition/fixed orchestration and resource access; no game
+work beyond scalar increments. Assert completed_ticks=1000 and root increment
+count outside timing. This is headless run_ticks, not native catch-up-frame/GPU or
+paused wall-clock acceptance; explicit ticks intentionally bypass pause controls.
+
+| Workload | Median, run1 /run2 | p95, run1 /run2 |
+| --- | --- | --- |
+| 10000 normal clock calls | 0.28 /0.35 ms | 0.34 /0.42 ms |
+| 10000 catch-up clock calls | 0.36 /0.36 ms | 0.39 /0.48 ms |
+| 10000 paused clock calls | 0.11 /0.11 ms | 0.11 /0.12 ms |
+| 1000 ticks,0 fixed systems | 1.09 /1.22 ms | 1.73 /1.78 ms |
+| 1000 ticks,16 fixed systems | 1.32 /1.36 ms | 1.55 /2.20 ms |
+| 1000 ticks,256 fixed systems | 4.53 /4.60 ms | 4.95 /6.88 ms |
+
+RNG:16384 draws per sample, round-robin names stream-0000 onward,1/64/1024
+registered streams, master seed42. Registration and fixture clones are excluded.
+Named path includes name lookup/validation-result handling and SplitMix64; direct
+path uses a vector of the identical derived stream states. XOR of values and
+all final stream states must match exactly outside timing. Direct median about
+0.03ms at every size; named median0.14–0.17/0.54–0.55/0.96–1.01ms respectively
+(1024-stream p951.30–1.45ms). Fixed named-then-direct phase order, warm name/cache
+history and modulo/index overhead limit attribution. This is lookup overhead,
+not evidence to alter algorithms or bypass a game's named-stream ownership.
+Existing fixed vectors pin seeds/outputs; no randomness compatibility change.
+
+Snapshots: root Vec<u64> sizes1024/16384/262144, each initialized7,64 queued
+u64 commands,1/128 registered streams including economy. Capture, snapshot.clone
+and restore are timed separately, including allocations/old-root destruction
+where performed by the API. Fixture initialization, comparisons and one-tick
+continuation are excluded. An independent compatible runner restores the initial
+snapshot and runs one tick to establish expected root/commands/RNG; every measured
+iteration reproduces that state, restores the initial root and checks equality.
+The game fixture appends an RNG/tick/command-derived value, so restoration replaces
+a mutated vector (potentially grown capacity), not an unchanged root. Captured
+snapshot remains at tick0; existing tests cover exact clock/control/exit restoration
+and incompatibility rollback. No arbitrary ECS/world snapshot or serialization.
+
+262144 values are2MiB of scalar payload excluding commands/streams/metadata.
+Capture medians0.49–0.55ms, clone0.30–0.34ms, restore0.37–0.47ms across both
+stream counts and runs; worst recorded p95 among these phases about0.66ms.
+These are repeated warm fixture phases with multiple reference snapshots/runners
+retained; no cold-cache, heap/resident peak, allocation-count or general user Clone
+budget is inferred. Owning root clone is required for independent snapshots.
+
+Disposition: no justified production fix in this increment. Clock arithmetic is
+small in these fixtures; exact-tick overhead and name lookup are measurable, but
+real fixed-system/root workloads are needed before changing contracts or adding
+stream handles, pools or incremental snapshots. Follow-ups: native runtime catch-up
+schedules, speed changes, entity-heavy simulation, queue/backlog workloads, larger
+and nested roots, retained snapshot count and heap peaks, concurrent/background
+snapshot policy, root destruction and name-lookup attribution, cross-platform runs.
+Supported milestone limits remain provisional; broad domain gate stays open.
+
+## Release build and executable footprint baseline — 2026-10-04
+
+Engine baseline6561281b0537beeea9990e3933fd7a1f2f45920d with preceding uncommitted
+simulation probes/docs preserved. Windows x86_64-pc-windows-msvc, rustc1.99.0
+(b940084d7), Cargo1.99.0, default release profiles and job selection. No custom
+profile, feature/dependency change, LTO/strip/panic policy or packaging change.
+Measurement root: target/build-footprint-20261004-140430. Each timed Cargo build
+uses --release --locked --offline, process wall time includes Cargo invocation,
+stdout/stderr redirected to logs. Commands run sequentially without overlapping
+builds/checks. CLI and SDK get separate new target directories; existing engine
+and sibling targets are preserved. Source/registry caches and OS filesystem caches
+are warm, so empty-target is not an uncached-download or cold-storage benchmark.
+
+| Build | Initial wall time | Two unchanged warm repeats |
+| --- | --- | --- |
+| gridthorn_cli,empty target | 23.21 s | 0.38 /0.30 s |
+| gridthorn default SDK,empty target | 161.54 s | 0.71 /0.65 s |
+| CLI-generated minimal game,SDK dependency artifacts primed | 10.75 s | 0.60 /0.54 s |
+| classic_2d,existing release-test artifact cache | 3.58 s | 0.72 /0.62 s |
+
+This is one initial sample/workload, not a repeated cold-build distribution or
+an optimization before/after comparison. SDK is a library build without optional
+grid/native-output features; it still compiles app/renderer/text/world dependencies.
+Generated game shares the measured SDK target but compiles project-owned SDK
+crates again under its standalone workspace context; third-party artifacts are
+primed. Example uses its pre-existing sibling target and enables native audio;
+its first number must not be presented as cold. Warm no-op times include Cargo
+fingerprint/manifest work; they do not measure an incremental source edit.
+
+The measured CLI executable created generated-game using --engine-path pointing
+at crates/gridthorn. A copied engine lockfile initially failed --locked because
+it required adaptation to the standalone project. Offline cargo metadata adapted
+only the temporary generated lockfile before acquisition; subsequent builds use
+--locked. Comparing metadata found no generated external package/version absent
+from the engine resolution. Root/sibling lockfiles were not changed.
+Generated-resolve.log/generated-metadata.json retain resolved context.
+This preparation is excluded from generated build time, as is project generation.
+
+| Release artifact | Bytes | Approx MiB |
+| --- | --- | --- |
+| CLI gridthorn.exe | 2234880 | 2.13 |
+| generated-game.exe | 8419840 | 8.03 |
+| classic_2d.exe | 9138688 | 8.72 |
+| facade libgridthorn.rlib | 51682 | 0.049 |
+
+Facade rlib contains only that library's surface; it excludes subsystem/dependency
+rlibs and is not total engine binary size or a runnable deliverable. Windows PDBs
+are separate: measured CLI2543616 bytes, generated game4894720 bytes. Executable
+sizes exclude PDBs, external game assets/fonts/audio, platform DLL/runtime needs,
+installer/compression and debug/test binaries. No asset/DLL distribution audit or
+runtime memory claim is inferred. Example assets are external to its executable.
+
+Target-filtered normal-dependency trees (--target x86_64-pc-windows-msvc --edges
+normal --prefix none --format '{p}') have51 distinct package/version lines for CLI
+and220 for default SDK, each including the root. Counts exclude build/dev edges,
+other platform-only dependencies and standard library; they are dependency breadth,
+not bytes, critical-path attribution or compile-unit counts. Graph/log evidence
+includes GPU/text/ECS/native-platform dependencies, but no single crate is declared
+the dominant bottleneck without timing attribution. Cargo HTML timing reports
+for empty-target builds are under cli/cargo-timings and sdk/cargo-timings.
+
+Reproduce empty-target and warm acquisition in a new ignored target directory;
+run the second command twice without source changes. Use another directory for
+SDK so its initial build does not inherit CLI artifacts:
+
+```powershell
+cargo build -p gridthorn_cli --release --locked --offline --target-dir target/build-footprint-new-cli --timings
+cargo build -p gridthorn_cli --release --locked --offline --target-dir target/build-footprint-new-cli
+cargo build -p gridthorn --release --locked --offline --target-dir target/build-footprint-new-sdk --timings
+cargo build -p gridthorn --release --locked --offline --target-dir target/build-footprint-new-sdk
+```
+
+Existing directories invalidate empty-target labeling; create new names rather
+than deleting normal targets. Capture Stopwatch wall time externally as above.
+Complete raw evidence in measurement root: times.csv, sizes.csv, cli-cold/cli-warm-
+{1,2}.log, sdk-cold/sdk-warm-{1,2}.log, generated-{0,1,2}.log, example-{0,1,2}.log,
+*-dependencies.txt, engine/generated-metadata.json. Classic executable size is
+reported above; sizes.csv records CLI/generated/facade only. CLI --help,
+generated release --smoke and classic_2d release --smoke passed; these exercise
+runnable lifecycle, not runtime performance/IME/audio-quality acceptance.
+
+Disposition: establish baseline without profile/dependency changes. Cold-from-
+empty SDK compilation is materially longer than CLI, but there is no prior
+controlled release baseline demonstrating regression. Follow-ups: repeated
+empty-target builds, genuinely empty-target examples/generated projects, controlled
+single-domain edit/rebuild costs, Cargo critical-path/unit attribution, optional
+feature matrix, dependency/build-artifact bytes, full asset/runtime packaging,
+profile tradeoff experiments with correctness/runtime checks and cross-platform
+runs. Broad build/footprint milestone items remain open.

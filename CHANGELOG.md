@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Performance review records Windows release build baselines for CLI/SDK,
+  generated-project and example warm builds, dependency closures and binary sizes.
+
+- Performance review adds fixed-clock/exact-tick schedule, typed snapshot and
+  direct/named RNG release probes with deterministic continuation assertions.
+
 - Placement cell occupancy uses hash lookups while preserving ordered object
   iteration and deterministic conflict/transaction behavior; performance review
   adds placement and narrow-phase/all-pairs collision scaling probes.
