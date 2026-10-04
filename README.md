@@ -340,6 +340,12 @@ verification; code, configuration, scripts, and releases retain full checks.
 
 ## License
 
+Native diagnostics enabled with `GRIDTHORN_WINDOW_PERFORMANCE` include bounded
+whole-process CPU deltas and wall intervals between completed redraws. They
+include all process threads and exclude startup before the first redraw; OS
+accounting precision must be assessed before treating frame percentiles as a
+budget result. These intervals are distinct from actual displayed-frame timing.
+
 See [LICENSE](LICENSE).
 
 Component/resource reflection is available through the public SDK; see the

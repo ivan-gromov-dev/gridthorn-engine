@@ -258,8 +258,8 @@ geometry and intermediate clipped-renderer geometry copies.
 Further work retains unchanged colored/UI GPU buffers and reuses CPU vertex
 capacity, with uploaded-byte and host present-call cadence diagnostics. Release CPU
 before/after samples and opt-in native renderer diagnostics are recorded in the
-checkpoint; whole-frame CPU/GPU/present acceptance and the remaining domain
-review are still outstanding.
+checkpoint. Native CPU/GPU/display review is accepted by the maintainer with
+documented measurement limits; the remaining domain reviews are outstanding.
 The review follows poor native multilingual-workbench performance,
 including after example-side layout reuse. It is the immediate target and a
 required gate before Milestone 4 closes or Milestone 5 starts. Review all implemented
@@ -282,10 +282,11 @@ record implemented and verified increments; measurements and limitations are in
         display extent/refresh and power-plan observations on the Windows host.
   - [ ] Complete reference metadata with native DPI, display refresh and power
         conditions; establish remaining domain workloads and budgets.
-  - [ ] Establish controlled cold/warm baselines for whole-engine CPU, GPU
-        execution and actual displayed-frame timing.
-- [ ] Profile the native workbench at idle and during editing, IME, pointer input,
-      scrolling, locale changes, nested windows and animation at DPI 1/2.
+  - [x] Accept recorded native CPU/GPU/display baselines with documented coverage
+        and clock-precision limits (maintainer disposition, 2026-10-04).
+- [x] Complete the native workbench performance review by maintainer acceptance
+      of recorded measurements and manual interaction/DPI/clipboard/OS IME testing
+      (2026-10-04); this is not verification of the entire quantitative matrix.
   - [x] Add bounded opt-in native renderer CPU timings, vertex/upload counters,
         retained vertex-capacity counters and host present-call cadence.
   - [x] Measure repeated native release smoke runs combining locale changes,
@@ -310,10 +311,12 @@ record implemented and verified increments; measurements and limitations are in
         layer/preservation tests; measure two native DPI 1 runs per mode/locale.
   - [x] Add isolated selection and injected preedit smoke with preservation/DPI
         tests; measure two native DPI 1 runs per mode/locale.
-  - [ ] Measure isolated idle, editing/selection, clipboard/IME, pointer/slider,
-        scrolling, locale-switch, nested-window and animation workloads at DPI 1/2.
-  - [ ] Measure whole-engine frame CPU work, GPU execution and actual presented
-        intervals; host present-call cadence alone does not satisfy this step.
+  - [x] Accept recorded isolated interaction workloads and maintainer manual
+        testing at DPI 1/2; unmeasured matrix cells remain documented limitations.
+  - [x] Close CPU/GPU/display review by maintainer decision with existing GPU/display
+        evidence and coarse whole-process CPU accounting. Precise per-frame CPU
+        attribution and the complete quantitative matrix are unverified follow-ups,
+        not blockers for this accepted gate.
 - [x] Review and resolve measured CPU text/UI bottlenecks within recorded workload limits: shaping/rasterization, invalidation,
       layout/paint duplication, hidden-layer work, routing and allocations.
   - [x] Remove discarded router paint and closed-layer editing geometry;
@@ -462,11 +465,18 @@ record implemented and verified increments; measurements and limitations are in
         completed optimization increment.
   - [ ] Complete workloads/regression checks for the remaining domains and rerun
         the entire performance matrix and final repository verification.
-- [ ] Meet the documented native workbench frame budget and obtain maintainer
-      acceptance; record a completion review before resuming Milestone 4 closure.
-  - [ ] Meet whole-engine CPU/GPU budgets and displayed-frame interval targets
-        across the required interaction, locale and DPI matrix.
-  - [ ] Obtain maintainer native acceptance and publish the Milestone 4.5 completion review.
+- [ ] Complete the Milestone 4.5 review before resuming Milestone 4 closure;
+      native performance acceptance is recorded below with measurement limits.
+  - [x] Accept the native workbench performance gate with recorded CPU/GPU/display
+        evidence and explicit measurement limitations (maintainer decision,
+        2026-10-04); full-matrix budget compliance is not established.
+  - [x] Obtain maintainer manual acceptance of the 1000×800 logical-pixel
+        window criterion at DPI 1/2 (2026-10-04, maintainer-reported testing).
+        Manual acceptance is recorded separately from performance measurements.
+  - [x] Obtain maintainer manual acceptance of native clipboard and OS IME
+        behavior (2026-10-04, maintainer-confirmed prior manual testing).
+  - [x] Obtain maintainer native acceptance with the documented measurement limits.
+  - [ ] Publish the Milestone 4.5 completion review after the remaining domain gates.
 
 **Result:** implemented engine capabilities have measured performance envelopes,
 the multilingual UI is usable within its recorded frame budget, and remaining
@@ -616,7 +626,7 @@ explicit world-input consumption. Context menus, popups and modal dialogs are
 implemented provisionally with ordered layers, modal scopes, focus restoration
 and configurable dismissal. Presentation transitions are implemented provisionally.
 The integrated sibling multilingual-workbench example combines localization, editing,
-controls and nested windows; native interactive IME acceptance remains outstanding.
+controls and nested windows; native interactive IME behavior has maintainer manual acceptance.
 The immediate target is now Milestone 4.5: establish performance baselines and
 profile the native workbench, then review all implemented domains in the order
 documented above. Milestone 4 remains open until the performance gate and its

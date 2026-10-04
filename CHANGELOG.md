@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Opt-in native window diagnostics now retain whole-process CPU accounting and
+  wall intervals between completed redraws, including work on background threads.
+  OS clock failures break pairing rather than merging frames; retention is bounded.
 - Renderer textures are reused across frames and nonadjacent batches sharing a
   decoded asset. Assets absent from the next rendered frame are evicted, and
   unchanged textured geometry retains its GPU vertex buffers.

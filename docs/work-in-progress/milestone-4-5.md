@@ -2181,3 +2181,68 @@ commands and raw-log references. Added sibling edits are only workbench main/run
 window workload/two-cycle domain test and README; earlier sibling edits preserved.
 No dependency changes, source staging or commits. Next initiative remains mixed
 ECS/input attribution and the other outstanding domain/native gates.
+
+2026-10-04 native acceptance update: engine HEAD99ba188, initially clean working
+tree. Windows Computer Use reached the workbench; real locale click and dialog
+open/dismiss were observed, but no new performance capture, clipboard or OS IME
+acceptance was established. Both displays reported1920×1080 and100% scaling;
+display2 standard scale choices were100–175%. No scale setting was changed.
+The maintainer subsequently reported manual testing and accepted the1000×800
+logical-pixel criterion at DPI1/2. Recorded this narrowly in ROADMAP and
+PERFORMANCE_REVIEW without asserting automated DPI2 evidence or measured budget
+compliance. Full CPU/GPU/display measurements and complete native interaction,
+clipboard/OSIME evidence remain open. Next: extend whole-frame CPU attribution
+and collect the remaining measurable native workloads, preserving this manual
+acceptance separately from measured results.
+
+The maintainer subsequently confirmed native clipboard and OSIME had already
+been tested manually and instructed marking their behavior accepted. ROADMAP
+and PERFORMANCE_REVIEW now record this manual acceptance. Do not request or
+repeat Windows UI automation for functional clipboard/IME acceptance. No
+measurement trace or per-locale/DPI performance results accompanied this
+confirmation; quantitative performance remains distinct.
+
+Whole-process CPU diagnostic increment: added cpu-time workspace dependency
+and private app window/performance/process.rs with domain tests. Safe backend
+reads Windows user+kernel time for all process threads; deltas span completed
+redraws, exclude startup before first redraw, retain at most4096 samples, and
+break pairing after failed reads. Wall deltas are separate, not displayed
+intervals. OS accounting resolution must be assessed before budget claims.
+Focused window performance tests7passed; initial fullverify caught empty-assert
+Clippy style, corrected. Second fullverify currently running in
+target/native-cpu-verify-2.log with jobs1/testthreads1/incremental0. No native
+capture with the new counter yet. Windows UI input was stopped by tool Escape
+signal; no further Computer Use calls this turn. Next: finish fullverify, build
+release workbench and evaluate OS CPU accounting precision in warmed runs.
+
+CPU increment verification complete: fullverify2 exit0, including CLI end-to-end
+fixtures, all workspace tests, Clippy, boundary checker and whitespace. Release
+workbench build passes, sibling Cargo.lock adds cpu-time/winapi entries while
+preserving pre-existing changes. Native Japanese idle --long-smoke passes with
+zero CPU clock errors.1079 warm deltas after redraw120: total CPU796.875ms,
+wall15014.15ms, meanCPU0.739ms/frame;46 positive rows, minimumpositive15.625ms,
+maximum31.25ms, p95zero. All zero rows retained. Windows accounting is too coarse
+for per-frame percentile acceptance; do not mark the CPU budget passed. Durable
+protocol/evidence added to PERFORMANCE_REVIEW. This run did not collect new
+external GPU/display ETW. Quantitative native performance gate remains open.
+Next: validate high-resolution CPU attribution via scheduler ETW and complete
+remaining GPU/display/interaction performance matrix. Native clipboard/OSIME
+functional behavior and window/DPI criteria have maintainer manual acceptance;
+do not repeat their functional UI automation. No source commits or staging.
+
+Latest disposition,2026-10-04: maintainer explicitly requested closing the native
+performance gate in documentation after discussing precise ETW measurement effort.
+ROADMAP and PERFORMANCE_REVIEW now close this gate by maintainer acceptance with
+known measurement limits. Do not describe complete quantitative coverage or
+CPU/GPU/display budget compliance as measured. Precise CPU tracing, controlled
+cold/warm whole-engine baselines and missing matrix cells are documented follow-ups,
+not blockers for this accepted gate. Other domain reviews, final matrix/verification
+for those domains and the milestone completion review remain open. Next initiative:
+broader mixed ECS/component churn and attribution of larger input bursts, followed
+by the remaining domain dispositions in roadmap risk-reduction order.
+
+Documentation closure validation: scoped git diff --check passes for all three
+updated documents. verify.ps1 -DocsOnly rejects the pre-existing CPU diagnostic
+code/manifest changes in this working tree; their fullverify2 already passed
+before this prose-only disposition update. No code or executable snippets were
+changed in the closure increment.

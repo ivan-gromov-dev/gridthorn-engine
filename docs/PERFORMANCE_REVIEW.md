@@ -701,6 +701,69 @@ limits without presenting untested results as cross-platform guarantees.
 
 ## Acceptance gate
 
+### Whole-process CPU accounting precision — 2026-10-04
+
+`GRIDTHORN_WINDOW_PERFORMANCE` now records `process_frame_cpu` rows with redraw
+sequence, whole-process CPU nanoseconds, wall nanoseconds and elapsed session
+nanoseconds. A private safe OS clock adapter includes user/kernel time from all
+process threads, including input and worker activity between completed redraws.
+Startup before the first redraw is excluded. Collection retains at most 4096
+rows; a failed clock read clears pairing so multiple frames are not merged.
+Existing callback and renderer phase clocks remain independent.
+
+The first release Japanese idle run used 1200 host frames at native DPI 1,
+1000×800 physical pixels, DISPLAY2 1920×1080/144 Hz. After excluding redraws
+1–120, 1079 CPU deltas span 15014.15 ms wall time and 796.875 ms accounted CPU
+time (approximately 0.739 ms CPU per redraw on average). Clock errors: zero.
+Only 46 deltas are positive; the smallest positive value is 15.625 ms, maximum
+31.25 ms, and nearest-rank p95 is zero. Zero deltas remain in the statistics.
+This demonstrates coarse Windows accounting on this host, not zero CPU work.
+The units are nanoseconds, but the observed accounting granularity prevents
+using these frame percentiles to establish the 16.67 ms CPU budget. Aggregate
+CPU consumption is useful; precise per-frame CPU attribution remains open and
+needs scheduler tracing or another validated high-resolution method.
+
+The safe backend uses Windows
+[GetProcessTimes](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getprocesstimes)
+through [ProcessTime](https://docs.rs/cpu-time/1.0.0/cpu_time/struct.ProcessTime.html).
+This increment introduces only an internal diagnostic dependency, with no new
+public profiling API or unsafe engine code. Native GPU/display capture and the
+remaining quantitative matrix are not closed by this run.
+
+Evidence: `target/native-cpu-idle-ja.log`, `target/native-cpu-release-build.log`,
+`target/native-cpu-tests.log` and `target/native-cpu-verify-2.log`. Seven focused
+diagnostic tests pass, including independent CPU/wall deltas, parallel work,
+clock failure recovery and bounded retention. Full Windows verification passed,
+including workspace tests, Clippy and dependency boundaries; the release native
+smoke also passed. The sibling lockfile adds the diagnostic dependency while
+preserving its prior workbench/game changes.
+
+### Maintainer functional acceptance and measured targets
+
+On 2026-10-04, after reviewing the coarse Windows CPU accounting and the effort
+needed for precise tracing, the maintainer explicitly instructed closing the
+native performance gate in documentation. The gate is accepted with the existing
+recorded CPU/GPU/display evidence and manual functional acceptance. This disposition
+replaces the requirement to complete the quantitative native matrix before closing
+this particular gate; it does not establish full-matrix budget compliance.
+Earlier sections retain the status at the time of their measurement; this
+disposition supersedes their statements that native acceptance remains open.
+Precise per-frame CPU attribution, controlled cold/warm whole-engine baselines
+and missing quantitative interaction/locale/DPI cells remain documented follow-ups,
+not blockers for the accepted native gate. No additional measurements were made
+for this decision. Other Milestone 4.5 domain gates and the final completion review
+remain open.
+
+On 2026-10-04, the maintainer reported manual testing and accepted the
+1000×800 logical-pixel window criterion at DPI 1/2. This is maintainer-reported
+acceptance; no automated DPI 2 measurement or new CPU/GPU/display capture is
+attached to that decision. The performance targets below remain unchanged.
+The maintainer also confirmed prior manual testing of native clipboard and OS
+IME behavior; their functional acceptance is complete. No timing traces or
+per-locale/DPI performance matrix were supplied with that confirmation. The
+complete measured interaction matrix is incomplete and retained as a follow-up
+under the maintainer disposition above. These decisions do not close Milestone 4.5.
+
 For the native workbench, the initial release target on the recorded reference
 hardware is 60 FPS at 1000×800 logical pixels, DPI 1 and 2, across the four locales.
 Measure idle and continuous interaction/animation separately: p95 engine CPU work

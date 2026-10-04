@@ -10,6 +10,7 @@ publish = false
 
 [dependencies]
 arboard.workspace = true
+cpu-time.workspace = true
 gridthorn_input = { path = "../gridthorn_input" }
 gridthorn_render = { path = "../gridthorn_render" }
 gridthorn_simulation = { path = "../gridthorn_simulation" }

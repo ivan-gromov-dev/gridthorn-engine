@@ -2,12 +2,14 @@ use std::time::{Duration, Instant};
 
 mod display;
 mod frames;
+mod process;
 
 const SAMPLE_LIMIT: usize = 240;
 
 /// Bounded native callback diagnostics, excluding event-loop waiting.
 pub(super) struct WindowPerformance {
     enabled: bool,
+    process: process::ProcessSamples,
     frames: frames::FrameSamples,
     preparation: Vec<Duration>,
     redraw: Vec<Duration>,
@@ -18,6 +20,7 @@ impl WindowPerformance {
     pub(super) fn new() -> Self {
         Self {
             enabled: std::env::var_os("GRIDTHORN_WINDOW_PERFORMANCE").is_some(),
+            process: process::ProcessSamples::default(),
             frames: frames::FrameSamples::default(),
             preparation: Vec::new(),
             redraw: Vec::new(),
@@ -43,6 +46,9 @@ impl WindowPerformance {
     }
 
     pub(super) fn redraw(&mut self, start: Option<Instant>) {
+        if self.enabled {
+            self.process.redraw();
+        }
         if let Some(start) = start {
             self.frames.redraw(start.elapsed());
         }
@@ -73,6 +79,7 @@ impl Drop for WindowPerformance {
         }
         eprintln!("window_cpu,phase,sample,elapsed_us");
         self.frames.report();
+        self.process.report();
         for (phase, samples) in [
             ("preparation", &self.preparation),
             ("redraw", &self.redraw),
