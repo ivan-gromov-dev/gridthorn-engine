@@ -339,7 +339,7 @@ record implemented and verified increments; measurements and limitations are in
         Japanese primary/fallback shaping and raster storage/release; record supported
         limits and concrete backend/incremental-layout follow-ups in the review.
         Native whole-frame/DPI/OS-IME acceptance remains in the gates below.
-- [ ] Review and optimize measured rendering/presentation bottlenecks: text/sprite
+- [x] Review and optimize measured rendering/presentation bottlenecks: text/sprite
       geometry, clipping, batching, GPU uploads, resource lifetime and frame pacing.
   - [x] Remove intermediate nested-clip geometry copies; verify sibling isolation
         and painter order, and record repeated native CPU before/after samples.
@@ -347,9 +347,13 @@ record implemented and verified increments; measurements and limitations are in
         capacity on invalidation, and verify camera/sprite/UI/overlay/resize changes.
   - [x] Measure cache hits/misses, uploaded bytes and retained-capacity tradeoffs
         in repeated native release smoke runs.
-  - [ ] Review sprite/text batching, dirty-frame uploads, textured-resource lifetime
+  - [x] Review sprite/text batching, dirty-frame uploads, textured-resource lifetime
         and GPU execution across workbench, Crystal Trail and Timber Harbor.
-  - [ ] Measure and resolve remaining frame-pacing/presentation bottlenecks.
+  - [x] Measure recorded Windows/DPI 1 frame-pacing/presentation workloads with
+        repeated native GPU/display capture and longer warmed confirmation runs;
+        retain the existing presentation policy after an inconclusive queue-depth
+        experiment. Native DPI 2 and complete interaction acceptance remain in
+        the baseline, workload and final acceptance gates above/below.
 - [ ] Review runtime/world/input/localization overhead and scaling with increasing
       entity/control/event counts; record measurements and each domain's disposition.
   - [x] Add bounded runtime schedule diagnostics and record repeated native Japanese

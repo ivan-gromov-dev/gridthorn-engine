@@ -2089,3 +2089,95 @@ also passed (text-ui-final-*-smoke.log, native actualDPI1); selection smoke pass
 in the preceding acquisition. Both repositories' final formatting/whitespace pass.
 No dependency edge, source staging or commit introduced. CPU Text/UI review is
 recorded complete with explicit workload limits, not native frame/OSIME acceptance.
+
+## 2026-10-04 Renderer resources and display acquisition
+
+Starting engine HEAD310edf85a8466493d5d281006a47232245a98318 (clean), sibling
+HEADc89adb9a5317007b3469782c1c8da9d8b4b1b04a with existing classic_2d/workbench changes
+preserved. Scope: batching, dirty geometry uploads, decoded texture lifetimes and
+frame pacing across workbench, Crystal Trail and Timber Harbor. No sibling edits.
+Read root/context, crate/render/app/docs instructions and diagnose skill.
+
+Confirmed surface/uploads recreated every texture for every adjacent sprite batch
+on every frame. New device-local TextureCache retains only current batch identities;
+cloned assets share resources, separately decoded/reloaded assets remain distinct,
+empty frames evict. TexturedFrame compares camera/extent/position/size/tint/UV and
+decoded identity; unchanged frames retain batch vertex buffers. Painter order and
+adjacent batching are unchanged. Diagnostics append textured batches, uploaded RGBA
+bytes, retained unique textures and decoded bytes (not allocated VRAM).
+
+Native before/after two repeats each: classic_2d --smoke, tycoon_slice --smoke,
+workbench --idle-smoke/--editing-smoke --locale=ja. Baseline release builds finished;
+final modified builds include an experimental desired_maximum_frame_latency=1.
+DO NOT retain that setting without positive evidence; default-depth matrix is in
+target/render-matrix-* and experimental runs in target/render-latency-one-*.
+Two baseline classic display captures were empty due short-lived process-name
+filter; later all-process collection filtered by exact child PID captures classic.
+Official signed standalone PresentMon2.6.0 downloaded to ignored target, no install,
+no service/group/driver/power/display changes. ETW uses GridthornRenderReview session,
+bounded timed shutdown. GPU adapter RTX3070/Vulkan616.56, Fifo, nativeDPI1,
+DISPLAY2 1920x1080 144Hz, Balanced; rustc1.99.0. Live clocks/HWS unknown.
+
+Native default-depth matrix: four locales x idle/editing/windows/animation x two
+runs,120 host frames each. Renderer quantiles exclude frames0..9; PresentMon excludes
+first10 captured rows and omits NA/zero display-change values while retaining raw
+rows. Short samples and dropped presentations limit percentiles. Some display p99
+exceeds33.33ms (Arabic windows97.224, Japanese animation125.0149) despite renderer
+CPU host-present gaps around11ms. Cause not established; frame-pacing gate remains
+open, no compositor/environment waiver. Resource p95 tycoon4359/4215us before vs
+121/117us after, warm texture uploads zero and three retained textures18,878,368bytes.
+
+Focused surface11tests pass. Ignored native GPU resource probe passes static/dirty
+1/32/1024 sprites, nonadjacent A/B/A batches with two unique resources, reload and
+empty eviction. target/render-resource-probe-1.log. At1024 sprites p95 unchanged3.6us,
+dirty94.4us;100 timed samples after10 warmups. Current source needs final formatting,
+Clippy and fullverify, repeat GPU probe and example tests/headless/native checks.
+Next: finish latency-one comparison, keep/revert based on evidence, resolve or record
+remaining display diagnosis accurately; update PERFORMANCE_REVIEW/ROADMAP/CHANGELOG,
+then complete ./scripts/verify.ps1 with sharedtarget/jobs1/testthreads1. No commits.
+
+Queue-depth experiment update: desired latency1 passed32 short native captures;
+reverse depth2 comparison also passed eight previously problematic short captures.
+Causality is not demonstrated, so context.rs returned to its original default
+configuration; no presentation policy change will be retained. Saved experiment
+logs remain in target/render-latency-{one,final,reverse,game}-*. Source context.rs
+should have no final diff. Sibling workbench now supports --long-smoke for1200
+frames in idle/editing/windows/animation; window scripts repeat120-frame actions.
+A two-cycle layer/editor preservation regression extends its existing domain test.
+Current measurement: target/render-long-*; five scenarios x two runs, external14s
+ETW captures, first120 captured rows to be excluded for warm display statistics.
+Renderer/window diagnostics remain240 capped; no tests/builds during acquisition.
+After acquisition, format both repos, run GPU probe again/fullverify/example tests,
+rebuild games against original presentation policy and verify their native smokes.
+
+Final renderer verification: ./scripts/verify.ps1 passed with process-scoped
+CARGO_TARGET_DIR=engine/target, CARGO_BUILD_JOBS=1, RUST_TEST_THREADS=1,
+CARGO_INCREMENTAL=0 (target/render-review-final-verify-4.log): formatting, workspace
+check, Clippy, all tests and dependency boundaries. Earlier checks caught exact
+float comparison lint (now a declaration-level expectation explaining cache
+invalidation), a redundant bind-group return binding and the empty assertion lint;
+all corrected. An intermediate test build exhausted the disk (OS112). Verified and
+removed only target/debug/incremental,17,023,799,832bytes of disposable compiler cache;
+measurement logs/source/saved comparison binaries preserved. No repository build
+policy changed. Final free space exceeds11GiB.
+
+Affected example packages: classic_2d10passed/1ignored; workbench14passed/6ignored;
+tycoon_slice22passed. All-target Clippy and final release build pass in sharedtarget
+with scoped jobs1/tests1/incremental0; logs render-review-example-{tests,clippy}.log
+and render-review-final-build.log. GPU resource probes both pass; second1024-sprite
+dirty p95176.3us with one9.0152ms maximum, retained in evidence. Engine renderer
+ordinary suite56passed/8ignored. Final three-package headless/native smokes pass,
+unsupported --slider-smoke --long-smoke rejects before window creation, Japanese
+--animation-smoke --long-smoke passes. Final both-repo formatting/whitespace pass.
+
+The ten1200-frame long captures under original presentation policy all contain1197
+ETW rows; after first120 rows,904–1077 displayed intervals each. P99range9.6896–
+16.6607ms, worst27.7584ms, no warm interval above33.33ms. Short-run outlier cause is
+unassigned and no presentation speedup/policy change is claimed. Renderer review
+closed in ROADMAP for documented Windows/DPI1 workloads; nativeDPI2/full interaction/
+whole-engine CPU/GPU/OSIME/maintainer acceptance and other milestone domains remain
+open. PERFORMANCE_REVIEW contains resource/render/display dispositions, reproducible
+commands and raw-log references. Added sibling edits are only workbench main/runtime,
+window workload/two-cycle domain test and README; earlier sibling edits preserved.
+No dependency changes, source staging or commits. Next initiative remains mixed
+ECS/input attribution and the other outstanding domain/native gates.

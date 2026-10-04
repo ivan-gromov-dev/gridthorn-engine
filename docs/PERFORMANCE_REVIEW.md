@@ -19,7 +19,9 @@ Encode includes geometry/resources; do not add these nested timings to it.
 Resources include textured geometry/batching and creation/upload calls. Submit
 includes encoder finishing. CPU upload-call time is not GPU transfer time, and
 CPU present-call time is not presented frame interval or GPU execution time.
-Counts exclude texture bytes, staging/internal driver allocations and GPU memory.
+Vertex counters exclude texture bytes. Dedicated texture counters now report
+uploaded and retained decoded RGBA payload; staging/internal driver allocations
+and physical GPU memory remain unmeasured.
 No per-frame logging occurs during collection; opt-in pipeline timers continue
 after the sample limit. The first row includes startup/cold work; warm analysis
 must identify its exclusions and interaction sequence explicitly.
@@ -31,8 +33,9 @@ counter. Uploaded bytes exclude textures and backend staging/padding. Host
 intervals are measured between successful CPU present calls; the first is zero,
 and gaps include engine work, event-loop pacing and skipped/suspended rendering.
 These are a cadence proxy, not compositor/display presentation timestamps.
-PresentMon was not found on PATH on the reference host; displayed-frame timing
-and whole-frame GPU execution remain unmeasured.
+PresentMon was initially absent from PATH. The renderer review below now records
+standalone PresentMon ETW display intervals and process GPU busy/wait evidence;
+this does not close the full native interaction/DPI acceptance matrix.
 
 When enabled, diagnostics request `TIMESTAMP_QUERY` only if the adapter supports
 it. `timestamp_query` in configuration metadata reports availability. An isolated
@@ -3289,3 +3292,175 @@ p95 0.388/0.914ms and edit-prepare0.497/0.946ms at syntheticDPI1/2. This is a sm
 warm CPU workload, not whole-engine frame or GPU/display acceptance. Headless,
 mixed native smoke, native selection and injected preedit at actualDPI1 pass.
 The final verification results are recorded in the accompanying checkpoint.
+
+## Renderer batching, uploads and decoded-resource lifetime — 2026-10-04
+
+Engine HEAD `310edf85a8466493d5d281006a47232245a98318`, examples HEAD
+`c89adb9a5317007b3469782c1c8da9d8b4b1b04a`; the existing sibling working tree
+was preserved. Rust 1.99.0, Windows reference host, Ryzen 5 5600X, RTX 3070,
+Vulkan driver 616.56, Fifo, Balanced power plan. Native monitor metadata reports
+1920x1080,144Hz,DPI1. Game surfaces are960x540; workbench1000x800. NativeDPI2,
+other platforms, live clocks/thermal/background conditions remain unmeasured.
+
+The textured path previously recreated/uploaded one texture and vertex buffer
+per adjacent batch every frame. It now retains bind groups by decoded allocation
+identity, including reuse across nonadjacent batches. An unchanged textured frame
+also retains its ordered vertex buffers. Position/size/tint/region/order/camera/
+extent or decoded identity changes rebuild geometry; a separately loaded equal
+image remains a distinct identity. Absent batch identities are evicted on the next
+prepared frame, and pipeline replacement/drop releases cache ownership. Backend
+in-flight work can retain its own resource references; no immediate physical-VRAM
+release guarantee is implied. Suspended/occluded rendering retains the last frame.
+
+Adjacent shared-atlas batching and painter order remain unchanged. Crystal Trail
+uses one textured batch/one64x16RGBA atlas (4096bytes). Timber Harbor's warm smoke
+uses ten ordered batches but only three unique decoded textures (18,878,368bytes).
+Do not merge nonadjacent batches across intervening painter content. Workbench
+bitmap/shaped text goes through colored/UI geometry, not these textured batches:
+its idle frame reuses the existing colored buffer; editing/layer animation still
+regenerates and uploads colored geometry. Shaped text is currently raster pixel
+quads rather than a GPU glyph atlas. This increment does not introduce such an atlas.
+
+Two sequential release baseline and two modified native smoke runs per example;
+Japanese workbench idle/editing scripts, Crystal Trail29 successful presentations,
+Timber Harbor59 and workbench119. Renderer warm samples exclude indices0..9
+(19/49/109 samples per run). Resources timing includes textured geometry and
+GPU resource/upload calls; encode includes geometry/resources, so do not add them.
+Modified acquisitions also enable bounded window timings for metadata; baseline
+ones do not. Separate measurements and host variation prevent a universal speedup
+claim, although eliminated repeated uploads and retained identities are exact.
+
+| Warm workload | Resource CPU p95 before / after, microseconds | GPU pass p95 before / after, microseconds |
+| --- | --- | --- |
+| Crystal Trail | 89–118 /58–61 | 7–8 /8 |
+| Timber Harbor | 4215–4359 /117–121 | 477–489 /35–36 |
+| Workbench Japanese idle | 0–1 /0 | After30 |
+| Workbench Japanese editing | 441–460 /430–438 | After29 |
+
+Native warm modified texture uploads are zero in all three examples. Timber
+Harbor upload spikes remain only when geometry changes; warmed median vertex
+upload bytes fall from75840 to0. Timber Harbor collected49 warm GPU samples
+per modified run versus27/29 before; these different sample populations are explicit.
+Decoded byte counters describe RGBA payload, not allocated VRAM, staging or driver
+memory. The renderer appends `textured_batches`, `uploaded_texture_bytes`,
+`retained_textures` and `retained_texture_bytes` to its bounded CSV diagnostics.
+The pre-existing `uploaded_vertex_bytes` now also excludes unchanged textured buffers.
+
+The ignored renderer-domain native probe exercises1/32/1024 sprites sharing a
+256x256RGBA texture,100 samples after10 warmups for unchanged and alternating-camera
+frames. It asserts one batch with6 vertices per sprite, zero warm texture uploads,
+three ordered A/B/A batches sharing two resources, fresh decoded-image replacement,
+and empty-frame eviction. Frame construction/cloning and assertions are excluded
+from timings; changed geometry generation and buffer creation are included.
+Across two runs, p95 unchanged/dirty:0.1/9.7–10.6us at1sprite,
+0.2/9.5–10.8us at32,3.6–4.5/94.4–176.3us at1024. The second1024-sprite dirty
+run has a9.0152ms worst sample; it is retained, not treated as a stable cost.
+This is CPU preparation, not GPU execution, unique-texture scaling or a game frame.
+Unit tests separately assert resource-drop ownership and cloned/equal/reloaded identity
+semantics, geometry/order/UV/tint/camera/extent invalidation, and existing batch tests
+continue to own painter-order and sprite-region output equivalence.
+
+Reproduce native resource assertions from the engine root:
+
+```console
+cargo test -p gridthorn_render --release --locked measure_native_texture_reuse_and_dirty_geometry -- --ignored --nocapture --test-threads=1
+```
+
+Evidence: `target/render-before-etw-*.log`, `target/render-after-*.log`,
+`target/render-review-summary.csv`, `target/render-resource-probe-{1,2}.log`.
+Disposition: the recorded sprite/text batching, dirty uploads and decoded-texture
+lifetime review has a focused verified fix and concrete workload limits. Unique-asset
+cache lookup is linear; populations substantially larger than the three game textures,
+exact heap/VRAM peaks and persistent buffer reuse on changing geometry need their own
+measurements if real games demonstrate a bottleneck. Native frame/display acceptance
+is a separate gate described below.
+
+## Native renderer/display disposition — 2026-10-04
+
+A signed standalone [PresentMon2.6.0](https://github.com/GameTechDev/PresentMon/releases/tag/v2.6.0)
+was downloaded to ignored target without installation. Signature: Intel Corporation,
+valid; SHA256B2A706BC6AD475749E3B7E3409263AA1E6906D45BDCF993F6DBC0F660188F1AF.
+No service, privilege-group, driver, monitor/DPI or power-plan changes. The named
+ETW session GridthornRenderReview terminates at each timed capture. An initial
+trial overlapped a compile and is excluded. Retained acquisitions run sequentially
+without concurrent builds/tests, preserve missing/dropped rows, and use nearest-rank
+percentiles. Process-name filtering missed both short Crystal Trail baseline runs;
+subsequent game captures collect all processes and filter by the exact child PID.
+Empty captures are not accepted as performance results.
+
+[PresentMon's metric contract](https://github.com/GameTechDev/PresentMon/blob/v2.6.0/README-ConsoleApplication.md#csv-columns)
+defines MsBetweenDisplayChange as the previous frame's displayed duration before
+the next displayed present. NA/zero rows remain in raw evidence and are omitted
+only from displayed-interval quantiles. MsGPUTime includes GPU waiting; MsGPUBusy
+is process GPU activity rather than this renderer's pass alone. MsCPUBusy includes
+work between presents and is not isolated engine CPU execution. Vulkan/DWM/HWS,
+VRR and driver instrumentation constraints prevent treating these as exact hardware
+scanout/heap or whole-engine timing guarantees. HWS/VRR state was not established.
+Native recordings report Composed: Flip, sync interval1, no tearing.
+
+The default presentation configuration requests maximum frame latency2 in the
+current backend. Its short final matrix contains four locales x idle/editing/
+windows/animation x two repeats,120 host frames each. It records119 renderer frames
+per run; after excluding0..9 there are109 renderer samples. Some runs have display
+p99 above33.33ms: English editing34.6872, Russian animation34.7051, Arabic windows
+97.224 and Japanese animation125.0149ms. Renderer encode/host-present times alone
+do not explain them; these observations are retained rather than silently waived.
+
+An experiment requesting latency1 ran five scenarios twice and the complete32-run
+matrix. All32 complete matrix captures have displayed p99 between8.4247 and16.1883ms.
+The initial ten-scenario trial has one missing capture; it is excluded from complete
+matrix counts. Games also pass native smoke at that setting: displayed p99
+Crystal Trail8.6847–9.7076ms, Timber Harbor9.5912–11.0953ms, after ten captured rows.
+However, reverse latency2 repeats of all four formerly problematic scenarios also
+pass (displayed p99 range8.5241–16.4227ms). The comparison therefore establishes
+neither causality nor a reliable presentation-policy benefit. The experimental
+configuration was reverted completely; no queue-depth/present-mode change remains.
+
+The workbench now offers --long-smoke with idle/editing/windows/animation workloads:
+1200 host frames instead of120; window scripts repeat their120-frame action sequence.
+The existing domain test runs two complete cycles and verifies layer order, editor
+and locale preservation. Other native smoke modes reject the flag. Diagnostics
+still cap at240 samples, so full tail analysis uses external ETW, not invented
+renderer samples. The repeated long runs use the unchanged original presentation
+configuration and all available locales across the previously problematic scenarios
+plus Japanese idle as control. Ten captures each contain1197 ETW rows. Warm display
+analysis excludes the first120 captured rows (roughly one action cycle) and filters
+only NA/zero displayed values, leaving904–1077 displayed durations per run.
+
+| Warm long workload, two runs | Display p95 range, ms | Display p99 range, ms | Worst duration, ms |
+| --- | --- | --- | --- |
+| English editing | 9.5494–13.8785 | 9.6896–16.6607 | 27.7584 |
+| Russian animation | 12.4512–12.4920 | 13.6215–16.6282 | 25.3339 |
+| Arabic windows | 9.5820–11.1177 | 9.7094–12.9056 | 16.2697 |
+| Japanese animation | 9.4882–12.3712 | 9.6917–13.7091 | 22.2651 |
+| Japanese idle | 11.1245–11.5904 | 12.6331–12.6377 | 16.6522 |
+
+No warmed long displayed duration exceeds33.33ms. The earlier short-run display
+outliers did not reproduce in these longer warmed confirmations; their cause
+remains unassigned. Do not relabel them as a proven compositor defect or claim a
+frame-pacing speedup. The renderer has no newly demonstrated persistent pacing
+bottleneck on these recorded Windows/DPI1 workloads. Cold/native startup latency,
+longer-duration environmental variation, nativeDPI2 and the complete nine-mode
+interaction/clipboard/OSIME matrix remain in the milestone-wide acceptance gate.
+This is renderer-review closure within explicit measured limits, not Milestone4.5
+or Milestone4 closure and not maintainer visual/IME acceptance.
+
+Reproduce after building the sibling release workbench against this engine:
+
+```powershell
+$env:CARGO_TARGET_DIR = (Resolve-Path './target').Path
+$env:CARGO_BUILD_JOBS = '1'
+cargo build --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_multilingual_workbench --release --locked
+$env:GRIDTHORN_RENDER_PERFORMANCE = '1'
+$env:GRIDTHORN_WINDOW_PERFORMANCE = '1'
+$capture = Start-Process -FilePath './target/PresentMon-2.6.0-x64.exe' -ArgumentList @('--process_name','gridthorn_example_multilingual_workbench.exe','--output_file','target/render-long-display.csv','--timed','14','--terminate_after_timed','--no_console_stats','--session_name','GridthornRenderReview') -WindowStyle Hidden -PassThru
+Start-Sleep -Milliseconds 800
+& ./target/release/gridthorn_example_multilingual_workbench.exe --animation-smoke --locale=ja --long-smoke
+$capture.WaitForExit()
+```
+
+Evidence: target/render-matrix-*, target/render-latency-{one,final,reverse,game}-*,
+target/render-long-* and target/render-long-summary.csv. Quantile evidence also
+contains sample counts, medians and maxima; no run was discarded for a slow result.
+
+Final validation: full ./scripts/verify.ps1 passed (target/render-review-final-verify-4.log), including all tests and dependency boundaries. Affected example tests and all-target Clippy passed; three headless/native smokes and the final long animation smoke passed. Both GPU resource probes passed. See the checkpoint for scoped execution settings, retained failed diagnostics and compiler-cache disk recovery. Final formatting/whitespace checks passed; no dependency changes or commits.

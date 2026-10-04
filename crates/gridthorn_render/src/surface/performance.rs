@@ -10,6 +10,10 @@ pub(super) struct PipelineSample {
     pub vertex_bytes: usize,
     pub uploaded_vertex_bytes: usize,
     pub colored_cache_hit: bool,
+    pub textured_batches: usize,
+    pub uploaded_texture_bytes: usize,
+    pub retained_textures: usize,
+    pub retained_texture_bytes: usize,
     pub retained_vertex_capacity_bytes: usize,
 }
 
@@ -70,11 +74,11 @@ impl Drop for SurfacePerformance {
             return;
         }
         eprintln!(
-            "render_cpu,frame,acquire_us,geometry_us,resources_us,encode_us,submit_us,present_us,vertices,vertex_bytes,uploaded_vertex_bytes,colored_cache_hit,host_present_interval_us,retained_vertex_capacity_bytes"
+            "render_cpu,frame,acquire_us,geometry_us,resources_us,encode_us,submit_us,present_us,vertices,vertex_bytes,uploaded_vertex_bytes,colored_cache_hit,host_present_interval_us,retained_vertex_capacity_bytes,textured_batches,uploaded_texture_bytes,retained_textures,retained_texture_bytes"
         );
         for (index, sample) in self.samples.iter().enumerate() {
             eprintln!(
-                "render_cpu,{index},{},{},{},{},{},{},{},{},{},{},{},{}",
+                "render_cpu,{index},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
                 sample.acquire.as_micros(),
                 sample.pipeline.geometry.as_micros(),
                 sample.pipeline.resources.as_micros(),
@@ -87,6 +91,10 @@ impl Drop for SurfacePerformance {
                 sample.pipeline.colored_cache_hit,
                 self.intervals[index].as_micros(),
                 sample.pipeline.retained_vertex_capacity_bytes,
+                sample.pipeline.textured_batches,
+                sample.pipeline.uploaded_texture_bytes,
+                sample.pipeline.retained_textures,
+                sample.pipeline.retained_texture_bytes,
             );
         }
     }

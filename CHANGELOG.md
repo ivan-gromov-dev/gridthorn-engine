@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Renderer textures are reused across frames and nonadjacent batches sharing a
+  decoded asset. Assets absent from the next rendered frame are evicted, and
+  unchanged textured geometry retains its GPU vertex buffers.
 - UI layout reuses bounded shaped text across arrangement, editing geometry and
   paint within one pass, avoiding repeated shaping under large field workloads.
 - Text raster snapshots share their construction vector without copying it;

@@ -18,6 +18,7 @@ pub(super) struct SpritePipeline {
     texture_layout: BindGroupLayout,
     performance: bool,
     colored: super::colored_frame::ColoredFrame,
+    textured: super::uploads::TexturedResources,
     gpu: Option<super::gpu_performance::GpuPerformance>,
 }
 
@@ -109,6 +110,7 @@ impl SpritePipeline {
             texture_layout,
             performance,
             colored: super::colored_frame::ColoredFrame::new(),
+            textured: super::uploads::TexturedResources::new(),
             gpu: (performance && device.features().contains(wgpu::Features::TIMESTAMP_QUERY))
                 .then(|| super::gpu_performance::GpuPerformance::new(device, queue, first_frame)),
         }
@@ -131,8 +133,9 @@ impl SpritePipeline {
         let geometry_time = geometry_start.map(|start| start.elapsed());
         let resources_start = self.performance.then(std::time::Instant::now);
         self.colored.upload(device, changed);
-        let textured =
-            super::uploads::textured_resources(device, queue, &self.texture_layout, frame, extent);
+        self.textured
+            .prepare(device, queue, &self.texture_layout, frame, extent);
+        let textured = &self.textured.batches;
         let resources_time = resources_start.map(|start| start.elapsed());
         let geometry = self.colored.geometry();
         let vertex_buffer = self.colored.buffer();
@@ -164,7 +167,7 @@ impl SpritePipeline {
             render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
             render_pass.draw(0..geometry.world_vertex_count, 0..1);
         }
-        for (buffer, bind_group, vertex_count) in &textured {
+        for (buffer, bind_group, vertex_count) in textured {
             render_pass.set_pipeline(&self.textured_pipeline);
             render_pass.set_bind_group(0, bind_group, &[]);
             render_pass.set_vertex_buffer(0, buffer.slice(..));
@@ -191,10 +194,18 @@ impl SpritePipeline {
                 resources: resources_time.unwrap_or_default(),
                 vertices,
                 vertex_bytes: vertices * std::mem::size_of::<SpriteVertex>(),
-                uploaded_vertex_bytes: (vertices
-                    - if changed { 0 } else { geometry.vertices.len() })
+                uploaded_vertex_bytes: ((if changed { geometry.vertices.len() } else { 0 })
+                    + if self.textured.changed {
+                        vertices - geometry.vertices.len()
+                    } else {
+                        0
+                    })
                     * std::mem::size_of::<SpriteVertex>(),
                 colored_cache_hit: !changed,
+                textured_batches: textured.len(),
+                uploaded_texture_bytes: self.textured.uploaded_texture_bytes,
+                retained_textures: self.textured.texture_count(),
+                retained_texture_bytes: self.textured.texture_bytes(),
                 retained_vertex_capacity_bytes: geometry.vertices.capacity()
                     * std::mem::size_of::<SpriteVertex>(),
             }
@@ -208,7 +219,7 @@ impl SpritePipeline {
     }
 }
 
-fn sampled_texture_layout(device: &Device) -> BindGroupLayout {
+pub(super) fn sampled_texture_layout(device: &Device) -> BindGroupLayout {
     device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
         label: Some("gridthorn texture layout"),
         entries: &[

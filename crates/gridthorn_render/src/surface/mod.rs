@@ -6,6 +6,8 @@ mod lifecycle;
 mod performance;
 mod pipeline;
 mod target;
+mod texture_cache;
+mod textured_frame;
 mod uploads;
 
 pub use context::SurfaceRenderer;

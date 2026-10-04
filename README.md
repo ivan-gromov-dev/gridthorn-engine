@@ -104,7 +104,12 @@ and measured optimization of implemented capabilities, starting with multilingua
 UI/text and rendering. Opt-in bounded renderer/GPU-pass and window
 preparation/redraw/extraction, runtime schedule and UI layout-phase diagnostics
 are documented in the performance review,
-with measured workload evidence and limits. Plain-tree routing now reuses
+with measured workload evidence and limits.
+Renderer textures now reuse decoded asset identities across frames and batches;
+unchanged textured frames retain their GPU vertex buffers. Texture resources
+absent from the next rendered frame are evicted. Native resource/upload and
+PresentMon display measurements are recorded in the performance review.
+Plain-tree routing now reuses
 immutable input layout scopes. UI node reads/commands use indexed child paths,
 with measured construction and retention tradeoffs in the review.
   Registered-layer input scopes omit paint copies and filter membership through
