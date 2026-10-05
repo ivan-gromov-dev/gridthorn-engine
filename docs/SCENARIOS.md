@@ -1,5 +1,13 @@
 # Provisional scenarios, snapshots, and controlled randomness
 
+The [performance review](PERFORMANCE_REVIEW.md#simulation-grid-collision-and-snapshot-domain-closure)
+measures nested roots through 16384 agents and histories of 1/8/32 snapshots.
+Independent owned clones multiply memory; releasing a large history can also
+exceed a frame budget. Games own history length and destruction scheduling.
+Draining the command queue releases payloads while retaining reusable queue
+capacity; dropping the queue releases that capacity. These measured envelopes
+do not extend determinism to different targets or engine versions.
+
 Implemented on 2026-10-02 through the public SDK. `Scenario`, `ScenarioState`,
 `ScenarioRuntime`, `SimulationSnapshot`, `RandomStreams`, and their typed errors
 are provisional. No dependencies or crate edges are added. The orchestration

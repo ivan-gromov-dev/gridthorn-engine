@@ -68,3 +68,4 @@ fn rejects_frames_after_shutdown() {
 
     assert_eq!(runtime.run_frame(0), Err(LifecycleError::AlreadyShutdown));
 }
+mod catch_up;

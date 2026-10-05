@@ -1,5 +1,72 @@
 # Milestone 4.5 checkpoint
 
+## 2026-10-05 — simulation/grid/collision/snapshot domain closure
+
+Started from clean engine HEAD 275e075a8e658a5424191abeb59288712271a27c.
+User scope: real workloads, allocation/heap peaks, snapshot histories, catch-up,
+queues, supported limits and preserved determinism. No production API/algorithm
+change or sibling edit is planned. Root/crates/simulation/app/docs instructions,
+AI_WORKFLOW, architecture ownership and simulation/grid/scenario contracts were
+loaded; implement skill applies. No delegation. Existing sibling dirty paths:
+Cargo.toml/lock/README, classic_2d README/audio/main/presentation, untracked
+classic_2d assets/audio trees and multilingual-workbench; preserve them.
+
+Added domain-local normal regressions and ignored release workloads:
+inhabited weighted TileMap/PlacementMap mazes; compact/one-cell signed chunks;
+placement rejection/overflow/remove-replace churn; caller-partitioned corner/
+containment mixed collision; ECS catch-up preserving 128 ticks through a paused
+65536-command burst; nested independently owned population roots, 64 streams,
+payload queues and histories1/8/32; long-name RNG allocations; FIFO queue drain.
+Grid/collision add existing workspace DHAT only as dev dependencies and own
+test-only allocator modules. App uses the existing saving-test global allocator.
+
+Initial compile caught ChunkSize's two dimensions, relocate's explicit footprint
+and ScheduleBuilder lacking world access; fixed the fixtures before acquisition.
+Focused app/grid/collision normal tests and targeted all-target Clippy pass.
+CPU probes use22batches minus2warmups (20observations/config), release and
+testthreads1, sequential builds/sampling. Heap uses separate one-batch profiles
+with GRIDTHORN_DOMAIN_HEAP=1 and four-frame backtrace trimming; never interpret
+profiled elapsed time as CPU acceptance. Raw observations target/domain-*-cpu.log
+and domain-*-heap.log; special CPU names domain-navigation-cpu.log and
+domain-queue-cpu.log. First printed record can share the test harness line;
+summary extraction matches the CSV tag anywhere on that line (all20 retained).
+
+Key evidence: eight full256x256 inhabited queries median280.951ms/p95292.192ms,
+searchpeak13990400bytes; budget1024 eight queries p95<=3.963ms. Placement65536
+objects/16cells each churn p956.903ms, whole-map clone p9542.228ms and two-map
+peak135041368bytes. One-cell chunks65536tiles peak45039088bytes versus5579088
+compact. Mixed393216candidate pairs p952.463ms with0newallocations. ECS65536
+agents/128ticks p9512.854ms, peak11355297bytes. Nested16384agents/32histories
+peak282728081bytes and destruction median115.372ms/p95123.526ms;4096agents/
+8histories peak24039521bytes. Payload queue65536 drains FIFO, retains1572864
+bytes capacity until drop, then0. RNG1024long names65536draws p953.288ms;
+registrypeak118576bytes, draws0allocations and drop0.
+
+App workflow profiles leave0–504bytes after cleanup in subsequent cases;
+first ECS and first population cases leave125214bytes. Owner is unassigned;
+document actual residuals and do not claim zero process retention or lifetime
+leak freedom. Grid/queue/RNG/collision phase allocations cleanly return to0.
+No new optimization is justified; caller search/candidate/history/queue budgets
+and destruction boundaries are the disposition. Normal regressions compare
+complete roots/RNG/queues, ordered path diagnostics, all placement occupancy,
+ECS state vs exact ticks and collision contacts vs all-pairs fixture.
+
+Full ./scripts/verify.ps1 exits0 with process-local CARGO_BUILD_JOBS=2 and
+RUST_TEST_THREADS=1, target/simulation-domain-full-verify.log: fmt, workspace
+check/all-target Clippy/tests, generated-project CLI checks, dependency boundaries
+and whitespace pass. README/ROADMAP/CHANGELOG/contracts/durable review updated;
+simulation domain gate closed within explicitly measured envelopes. Public
+sibling example workflows and real tycoon continuation checks are running next;
+record their final outcomes before handoff. No staging/commit.
+
+Final public evidence: all eight locked release examples exit0; tycoon_slice
+release library tests22passed/0failed. Two harbor-headless processes with
+scenarioharbor/ticks10000/seed42 match coins1049/shipped132 and canonical
+fingerprint1da9063221c09025, target/domain-tycoon-run-{1,2}.log. Normal grid/
+collision dependency trees exclude DHAT/backtrace. Final diff whitespace passes;
+sibling dirty-path list remains identical. No code changed after full verification,
+only durable Markdown evidence. Domain gate complete; Milestone4.5 remains open.
+
 Started 2026-10-03. Scope of the first increment: reproducible workbench CPU
 baseline and code review of UI/text preparation, followed by removal of discarded
 router paint and closed-layer field geometry.

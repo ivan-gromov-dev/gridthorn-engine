@@ -1,5 +1,12 @@
 # Provisional grid and tilemap contract
 
+The [performance review](PERFORMANCE_REVIEW.md#simulation-grid-collision-and-snapshot-domain-closure)
+records inhabited weighted routes, compact/one-cell chunk storage and rejected
+placement churn. `max_visited` bounds search work, not a wall-clock deadline;
+eight full 256x256 maze queries exceed a frame budget on the measured host.
+Chunk density, footprint size and retained clones materially affect heap use.
+Games must budget requests and storage using their own terrain and population.
+
 Milestone 3 starts with `gridthorn::grid`, enabled by the `grid` Cargo feature.
 The dependency-free-of-platform `gridthorn_grid` subsystem owns the implementation;
 the SDK facade is the application entry point. It is an optional standard grid

@@ -8,6 +8,9 @@ mod placement;
 mod projection;
 mod tilemap;
 
+#[cfg(test)]
+mod allocation_probe;
+
 pub use coordinates::{GridCell, GridPoint};
 pub use errors::GridError;
 pub use navigation::{NavigationBounds, NavigationError, PathSearch, PathStatus, search_path};

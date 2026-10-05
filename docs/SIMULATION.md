@@ -4,6 +4,12 @@ Implemented on 2026-10-02. The SDK exposes `SimulationControl`,
 `SimulationSpeed`, `FixedStepConfig`, `FixedTime`, and `FrameTiming`.
 These APIs remain provisional and introduce no dependencies.
 
+The [performance review](PERFORMANCE_REVIEW.md#simulation-grid-collision-and-snapshot-domain-closure)
+records capped ECS catch-up through 65536 agents and a paused 65536-command
+burst. A catch-up cap bounds ticks per frame, not system CPU time or queued
+payload memory. Games own command admission and backlog policy; the runtime
+preserves accumulated lag and does not silently discard commands or ticks.
+
 ## Frame contract
 
 `ApplicationRuntime` installs default controls (running, 1x) unless already

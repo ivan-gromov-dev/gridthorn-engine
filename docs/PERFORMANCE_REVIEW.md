@@ -4176,3 +4176,238 @@ failure diagnostics, and its saturated/idle pause-worker regressions pass (2 tes
 and audio-platform-classic-{native-smoke,headless-smoke,audio-tests}.log. No sibling
 sources or manifests were changed. Exact intermediate failures and acquisition
 details remain in the checkpoint and ignored target logs.
+
+## Simulation, grid, collision and snapshot domain closure
+
+On 2026-10-05 the simulation/grids/pathfinding/placement/collision/snapshots/RNG
+review gate closes within the following measured envelopes. This extends the
+earlier analytical terrain, scalar schedules, Vec-root and ready-pair baselines.
+Production algorithms, public APIs, RNG vectors and dependency direction are
+unchanged; no additional optimization is justified by this increment. DHAT is
+added only to grid/collision dev dependencies; app already has a test allocator.
+The remaining Milestone 4.5 gates and final whole-matrix acceptance stay open.
+
+### Acquisition and scope
+
+Windows release, same Ryzen 5 5600X host and toolchain as the preceding review.
+Each configuration has one CPU acquisition with 22 batches; the first two are
+excluded, leaving 20 samples. Median is the middle-pair mean; p95 is nearest-rank
+sample 19. CPU tables below use milliseconds. These are operation wall times,
+not a whole-game frame budget. Builds and other agent benchmarks were sequential;
+background OS activity and live clock frequencies were not recorded.
+
+Separate heap acquisitions set GRIDTHORN_DOMAIN_HEAP=1 and use one batch per
+configuration. Heap tables use bytes requested through the test allocator,
+excluding allocator metadata, profiler bookkeeping, RSS and native allocations.
+Instrumented elapsed times are not CPU acceptance figures. Navigation profiles
+start after terrain, occupancy and expected diagnostics exist: they attribute
+new search allocations and retained results only. Other storage/history/queue/
+ECS profiles include construction and cleanup; collision profiles exclude ready
+inputs. RNG profiles exclude the caller's names but include registry-owned names.
+Assertions are outside CPU timing except placement operation outcomes, tile
+lookup/removal outcomes, catch-up reports and FIFO queue drain validation.
+
+### Inhabited navigation and grid storage
+
+Each signed map has weighted u32 tiles, 16x16 chunks and exclusive single-cell
+occupants in recurring walls with gaps. Eight queries use different endpoints
+and immutable TileMap/PlacementMap lookups. Full-budget queries find routes;
+small budgets stop with owned partial diagnostics. Every timed result is checked
+against complete path/cost/status/visited/frontier vectors from an untimed search.
+
+| Side | Visited budget per query | Eight queries median / p95 | Search heap peak | Retained results |
+| --- | --- | --- | --- | --- |
+| 64 | 256 / 1024 / 4096 | 0.729 / 0.810; 3.850 / 3.962; 15.181 / 18.419 | 59152 / 225136 / 880928 | 37120 / 137728 / 533648 |
+| 128 | 256 / 1024 / 16384 | 0.690 / 0.793; 3.558 / 3.663; 63.220 / 64.379 | 59152 / 225136 / 3505920 | 37120 / 137728 / 2114704 |
+| 256 | 256 / 1024 / 65536 | 0.671 / 0.722; 3.709 / 3.754; 280.951 / 292.192 | 59152 / 225136 / 13990400 | 37120 / 137728 / 8422544 |
+
+All search allocations return to zero after results drop. The 256 full-query
+batch requests 103446064 cumulative bytes in 75914 allocations; retaining eight
+diagnostic sets is intentional. This is synchronous Dijkstra with ordered
+frontier; max_visited is not a deadline. Supported measured interactive subset:
+eight budget-256/1024 requests on these maps, with p95 below 0.85/4ms respectively.
+Schedule full searches off the critical frame or spread requests across ticks;
+even eight full 64x64 weighted queries exceed 16.67ms at p95. This does not
+introduce an asynchronous/resumable solver or a general terrain performance bound.
+
+Tile storage uses a single layer of u64 values at signed cells, comparing compact
+256-column population to one occupied cell per chunk. Construction, clone and
+lookup-plus-removal are measured separately. Removing the last tile reclaims all
+chunks, and the retained clone remains intact.
+
+| 65536 tiles | Insert median / p95 | Clone median / p95 | Lookup+remove median / p95 | Two-map heap peak | Clone retained after removal |
+| --- | --- | --- | --- | --- | --- |
+| Compact | 6.993 / 7.870 | 1.971 / 2.435 | 9.694 / 10.650 | 5579088 | 2790320 |
+| One cell per chunk | 15.198 / 15.610 | 13.857 / 14.155 | 13.008 / 13.982 | 45039088 | 22520320 |
+
+The matrix also covers 1024 and 16384 tiles; every case returns tracked heap to
+zero after both maps drop. Support is measured through 65536 scalar tiles in
+these layouts, not arbitrary payloads/layers. Sparse chunk overhead is substantial;
+large edits/clones should be explicit loading/reset work, not routine per-frame
+copies. No new chunk representation or dense-map subsystem is required here.
+
+### Placement and collision
+
+Placement populations contain 1024/16384/65536 objects with signed 4x4 footprints.
+Each batch handles 1024 occupancy rejections, 1024 overflow rejections, 1024
+relocations and 1024 remove/replace cycles. A separate full-map clone follows.
+The regression checks every occupied cell and the complete ordered object list.
+
+| Objects / occupied cells | Churn median / p95 | Clone median / p95 | Heap peak including clone |
+| --- | --- | --- | --- |
+| 1024 / 16384 | 2.945 / 3.459 | 0.449 / 0.510 | 2110888 |
+| 16384 / 262144 | 4.713 / 5.603 | 9.131 / 10.058 | 33758008 |
+| 65536 / 1048576 | 5.783 / 6.903 | 37.745 / 42.228 | 135041368 |
+
+The largest workflow requests 187126340 cumulative bytes in 630124 allocations;
+all tracked memory is released on drop. Full validation/footprint cloning makes
+rejections allocate too. Preserve atomic validation and ordered conflict semantics;
+do not clone million-cell occupancy every frame. Measured support extends to the
+above populations and 1024-operation churn batches; arbitrary footprints and
+unbounded command batches remain caller costs. Existing hash lookup optimization
+already addresses the measured hot path, with no new production fix here.
+
+Mixed collision fixtures combine corner contact, containment, separated circles
+and non-axis contact in separated four-shape clusters. The caller supplies exact
+cluster membership: six pairs per cluster, three contacts. A 256-shape regression
+compares all-pairs contact count with this candidate partition; fixed fixture
+geometry guarantees no cross-cluster contact. This is not a general broad phase.
+
+| Clusters / shapes / candidate pairs | Median / p95 | New allocations |
+| --- | --- | --- |
+| 256 / 1024 / 1536 | 0.009 / 0.012 | 0 |
+| 4096 / 16384 / 24576 | 0.144 / 0.173 | 0 |
+| 65536 / 262144 / 393216 | 2.322 / 2.463 | 0 |
+
+Ready input arrays are owned caller storage; generation is excluded. Supported
+query envelope is this prepared mixed batch, plus the earlier dense/sparse
+all-pairs baseline. All-pairs stays quadratic, caller candidate generation has its
+own cost and no general large-world collision acceptance is claimed. Existing
+contact regressions cover normal/penetration semantics; no solver is introduced.
+
+### ECS catch-up, queues and RNG
+
+One ECS system mutates integer position and eight-slot stock components. After a
+60s paused frame, 65536 queued u64 commands remain pending. Resume supplies 1280ms
+at 10ms fixed step with cap eight: sixteen frames execute exactly 128 ticks,
+preserve backlog and consume the burst once. The paused wall time adds no ticks.
+The regression compares every component with an explicit 128-tick run and checks
+the analytical command sum, empty queue and zero final lag.
+
+| Agents | Entire 128-tick catch-up median / p95 | Workflow heap peak |
+| --- | --- | --- |
+| 1024 | 0.493 / 0.594 | 900039 |
+| 16384 | 2.971 / 3.329 | 3294369 |
+| 65536 | 10.714 / 12.854 | 11355297 |
+
+This covers one homogeneous archetype/system, not costly navigation or other
+game systems. Cap eight bounds ticks, not frame CPU time. Sustained overload can
+grow retained lag indefinitely; admission/work scheduling belongs to the game.
+
+Payload queues hold 1024/65536 Vec commands of eight usize values. Drain validates
+FIFO order and releases every payload; median/p95 is 0.032/0.050 and 1.773/2.136ms.
+Heap peaks are 90112/5767168; after drain, reusable VecDeque capacity retains
+24576/1572864 bytes. Drop returns tracked bytes to zero. The queue is unbounded;
+65536 is the tested burst, not an enforced safety limit. Games must bound admission
+and avoid retaining oversized queues when they are no longer needed.
+
+Named RNG uses 1/64/1024 owned long UTF-8 names and 65536 round-robin draws.
+Median/p95 is 0.652/0.810, 1.840/1.892 and 3.199/3.288ms. Registry peaks are
+420/7104/118576 bytes; draws allocate zero blocks, and registry drop returns
+tracked bytes to zero. Name lookup remains the measured cost; no stream-handle
+API or RNG algorithm change is justified. Existing seed/stream/fingerprint fixed
+vectors remain authoritative compatibility checks.
+
+### Nested snapshots, retention and determinism
+
+Each root owns 256/4096/16384 agents with String names, sixteen-u64 inventories
+and thirty-two-cell routes, 64 RNG streams and a 1024-command owned-payload burst.
+The scenario retains its independent initial root as well as the active root.
+Histories retain 1/8/32 captures with one fixed tick after each capture; an
+additional snapshot clone is restored by borrowed snapshot, then histories and
+clone are destroyed. Thus capture+ticks includes simulation work, and release
+includes the extra clone. Restore also destroys the previous active root.
+Workflow heap peaks also include the temporary full snapshot used to verify
+restored state; that verification clone is outside CPU operation timers.
+
+| Agents / history | Capture+ticks median / p95 | Clone median / p95 | Restore median / p95 | History+clone release median / p95 | Workflow heap peak |
+| --- | --- | --- | --- | --- | --- |
+| 256 / 8 | 0.871 / 1.087 | 0.145 / 0.173 | 0.175 / 0.199 | 0.277 / 0.313 | 1974377 |
+| 4096 / 1 | 1.390 / 1.582 | 1.197 / 1.353 | 1.452 / 1.705 | 0.736 / 0.959 | 10296649 |
+| 4096 / 8 | 10.436 / 10.821 | 1.578 / 1.736 | 1.449 / 1.569 | 5.672 / 7.165 | 24039521 |
+| 4096 / 32 | 43.116 / 44.402 | 1.674 / 1.863 | 1.470 / 1.713 | 30.728 / 32.064 | 71153297 |
+| 16384 / 1 | 7.313 / 8.222 | 5.790 / 6.340 | 8.790 / 9.618 | 5.646 / 6.819 | 39787849 |
+| 16384 / 8 | 53.686 / 79.903 | 6.639 / 8.483 | 9.352 / 12.624 | 30.867 / 38.103 | 94646369 |
+| 16384 / 32 | 179.115 / 215.166 | 6.569 / 6.903 | 8.913 / 9.699 | 115.372 / 123.526 | 282728081 |
+
+The largest case requests 290949824 cumulative bytes in 1844094 allocations,
+with 274801415 still live at the retention checkpoint (both roots, history,
+clone, commands and RNG). This is independent ownership, not copy-on-write.
+Measured support includes these roots/history counts; a practical smaller
+working set is 4096 agents and eight retained snapshots, with a measured peak
+around 23MiB. Even that does not establish whole-frame acceptance. Large histories
+must have an explicit memory budget and destruction boundary; 32 large snapshots
+cannot be cleared on a latency-sensitive frame. No generic snapshot compression,
+shared-mutable root or garbage collector is added.
+
+App workflow cleanup leaves 0–504 tracked bytes in subsequent configurations;
+the first ECS and first population case each leave 125214 bytes. These acquisition
+residuals are not attributed to an individual owner, and zero process-wide
+retention or a leak-free lifetime is not claimed. They do not scale with tested
+population/history; allocator/RSS/native lifetime and long-running application
+retention require separate deployment measurements. Grid, queue, RNG and query
+profiles return their tracked allocations to zero.
+
+Nested continuation regression compares complete roots including all inventories,
+routes, names, queues and every RNG state after 64 ticks in one request versus
+1/7/16/40 ticks, restores the retained queued snapshot again and checks independence
+from subsequent mutation. Navigation repeats complete ordered diagnostics;
+placement and ECS compare full state, and caller collision partition matches the
+reference all-pairs fixture. Existing overflow/rollback/tie-order/fixed-vector
+checks remain in the normal suite. Determinism scope remains the same engine,
+target/features/configuration, rules, commands and seeds; floating collision
+output is not promoted to cross-platform deterministic authoritative state.
+
+### Repeatable workloads and disposition
+
+Run each probe separately with release and a single test thread. For example:
+
+```powershell
+cargo test --release -p gridthorn_grid --lib measure_inhabited_navigation -- --ignored --nocapture --test-threads=1
+$env:GRIDTHORN_DOMAIN_HEAP = '1'
+cargo test --release -p gridthorn_grid --lib measure_inhabited_navigation -- --ignored --nocapture --test-threads=1
+Remove-Item Env:GRIDTHORN_DOMAIN_HEAP
+```
+
+The other grid filters are measure_tile_retention and measure_placement_churn;
+collision uses measure_collision_candidates; app uses measure_ecs_catch_up,
+measure_population_retention, measure_named_rng_allocations and
+measure_command_queue_retention. App uses its existing saving-test allocator;
+grid/collision own test-only allocator modules. No profiler should run concurrently
+in one test binary. There are no unstable CI timing thresholds; normal regressions
+assert behavior and deterministic state, while ignored probes report measured cost.
+
+Raw CPU/heap observations are in ignored target/domain-*-{cpu,heap}.log; the first
+navigation CPU file is domain-navigation-cpu.log and the queue CPU file is
+domain-queue-cpu.log. CPU reports contain elapsed nanoseconds; heap reports contain
+allocation count/cumulative bytes/peak/current/released bytes (RNG additionally
+reports draw allocation count; collision has no released-input column).
+Earlier before/after hash lookup optimizations remain recorded above. This
+increment's disposition is to retain the production design and publish concrete
+search/candidate/history/queue policies and measured limits for every domain.
+
+Full ./scripts/verify.ps1 exits 0 (target/simulation-domain-full-verify.log):
+formatting, workspace check/all-target Clippy/tests, generated-project CLI
+end-to-end, dependency boundaries and whitespace. The normal dependency trees
+of grid/collision exclude DHAT and backtrace. Eight locked release public example
+workflows pass: simulation-clock, headless-simulation, scenarios-snapshots,
+deterministic-replay, tilemap-basics, pathfinding, grid-placement and collision-basics.
+Their observations are in target/domain-example-*.log.
+
+Real game integration adds Timber Harbor's 22 passing release regression tests
+(target/domain-tycoon-tests.log), including snapshot continuation, commands,
+loading rollback, routing and clock controls. Two independent release headless
+processes execute harbor/seed42/10000ticks and both report coins1049, shipped132,
+fingerprint1da9063221c09025 (target/domain-tycoon-run-{1,2}.log). These validate
+repeatability of the existing game model; they are not throughput/heap acceptance
+for an expanded settlement. No sibling sources/manifests were changed.

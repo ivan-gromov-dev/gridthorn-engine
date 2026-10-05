@@ -148,6 +148,11 @@ in the same review.
   collision scaling measurements distinguish ready pairs from all-pairs enumeration.
   Fixed-clock/schedule, typed snapshot and RNG release probes record costs and
   deterministic continuation limits in the same review.
+  The simulation/grid/collision review now includes inhabited mazes, sparse
+  chunk storage, placement churn, ECS catch-up, retained nested snapshots and
+  queue/RNG heap costs. Supported measured envelopes and caller-owned search,
+  history and queue policies are documented; full searches and large history
+  destruction can exceed a frame budget.
   Release build timings, dependency closures and CLI/generated-game/example
   executable sizes are recorded with explicit cold-cache and packaging limits.
 Milestone 4 remains open until the remaining Milestone 4.5 domain gates and

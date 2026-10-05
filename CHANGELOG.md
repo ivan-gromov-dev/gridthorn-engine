@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Simulation/grid/collision performance review adds repeatable release workloads
+  for inhabited routes, sparse tiles, placement churn, mixed candidates, ECS
+  catch-up, nested snapshot histories and owned command/RNG allocations. Domain
+  regressions preserve deterministic continuation, occupancy and contact results.
+  Heap instrumentation is test-only; production algorithms and APIs are unchanged.
 - Audio/platform performance review adds ignored native mixer/lifecycle,
   WASAPI loopback latency and deferred-release probes, repeated-output
   process-memory evidence, maintainer

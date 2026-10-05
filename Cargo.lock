@@ -1414,6 +1414,7 @@ dependencies = [
 name = "gridthorn_collision"
 version = "0.2.0"
 dependencies = [
+ "dhat",
  "thiserror 2.0.21",
 ]
 
@@ -1421,6 +1422,7 @@ dependencies = [
 name = "gridthorn_grid"
 version = "0.2.0"
 dependencies = [
+ "dhat",
  "thiserror 2.0.21",
 ]
 

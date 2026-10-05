@@ -36,5 +36,9 @@ fn runtime(name: &str, revision: u32, config: FixedStepConfig) -> ScenarioRuntim
 
 mod clock;
 mod continuation;
+mod population;
+mod queue_retention;
+mod random_allocations;
+mod retention;
 mod scaling;
 mod validation;

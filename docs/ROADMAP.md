@@ -431,19 +431,27 @@ record implemented and verified increments; measurements and limitations are in
   - [x] Record each domain's disposition and remeasure any fixes.
     - [x] Record assets/scenes/saves dispositions and repeat affected CPU/heap
           measurements; preserve rollback, publication and durable replacement.
-- [ ] Review fixed simulation, grids, pathfinding/placement, collision and
+- [x] Review fixed simulation, grids, pathfinding/placement, collision and
       snapshots for scaling, allocation costs and preserved determinism.
-  - [ ] Measure fixed ticks, grid/pathfinding/placement and collision scaling.
+  - [x] Measure fixed ticks, grid/pathfinding/placement and collision scaling.
     - [x] Measure fixed-clock normal/catch-up/paused arithmetic and exact-tick
           orchestration through 256 scalar fixed systems on Windows release.
     - [x] Measure open/weighted/unreachable/budgeted pathfinding through 512x512;
           optimize cost/predecessor lookups and verify deterministic diagnostics.
     - [x] Measure sparse placement through 65536 objects and narrow-phase/all-pairs
           collision batches; optimize cell lookups while preserving transactions.
-  - [ ] Measure snapshots/RNG and allocation costs; verify determinism after fixes.
+    - [x] Extend release loads to inhabited weighted mazes, signed sparse tile
+          storage, rejection/remove-replace placement churn, mixed collision
+          candidates and ECS catch-up with paused command bursts.
+  - [x] Measure snapshots/RNG and allocation costs; verify determinism after fixes.
     - [x] Measure typed Vec-root capture/clone/restore through 262144 values and
           named/direct RNG through 1024 streams; verify continuation and stream states.
-  - [ ] Record each domain's disposition and supported workload limits.
+    - [x] Measure nested roots with retained histories, owned payload queues,
+          named RNG registry/draw allocations and whole-workflow heap peaks;
+          verify independent snapshots and partitioned exact continuation.
+  - [x] Record each domain's disposition and supported workload limits.
+        See the 2026-10-05 domain closure in PERFORMANCE_REVIEW.md; these are
+        measured envelopes, not whole-engine frame-budget guarantees.
 - [ ] Measure cold/warm build time, dependency footprint and binary size; address
       measured regressions without introducing unrelated subsystems.
   - [ ] Run controlled cold/warm engine, examples and generated-project builds.
