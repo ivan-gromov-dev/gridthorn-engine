@@ -4,6 +4,13 @@
 //! under construction.
 
 mod runtime;
+/// Provisional on-demand monitor inventory, changes and windowed monitor selection.
+pub mod display {
+    pub use gridthorn_app::display::{
+        DisplayAvailability, DisplayChange, DisplayMode, DisplayResolution, Displays, MonitorId,
+        MonitorInfo, MonitorSelection, MonitorSelectionError,
+    };
+}
 /// Provisional retained UI composition, controls and explicit ordered input routing.
 pub mod ui {
     pub use gridthorn_app::composition::*;

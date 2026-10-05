@@ -80,7 +80,11 @@ they are explicitly marked as implemented.
 | Current source release             | `0.2.0`                                                                                                    |
 | Stable API                         | Not available; APIs remain pre-1.0 and provisional                                                         |
 
-The next target is desktop platform/device support in [Milestone 5](docs/ROADMAP.md).
+Desktop platform/device support in [Milestone 5](docs/ROADMAP.md) is in progress.
+The first increment provides provisional [monitor inventory](docs/DISPLAYS.md),
+advertised modes, resolutions, refresh rates, OS DPI scaling and on-demand
+connection/property changes through the public SDK. Explicit monitor selection
+centers the game window on the chosen display and reports native confirmation.
 [Performance limits](docs/PERFORMANCE.md) describe the measured Windows workload
 envelopes and the CPU comparison in CI. APIs remain provisional; engine-wide
 frame deadlines and cross-platform performance are not guaranteed.

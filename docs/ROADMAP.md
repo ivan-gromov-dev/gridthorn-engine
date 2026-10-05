@@ -60,13 +60,18 @@ whole-engine frame-budget compliance, native DPI-2 timings or cross-platform per
 
 ## Milestone 5 — Desktop platform, devices and presentation controls
 
-Planned; follows completed Milestones 4 and 4.5 and depends on their input and UI contracts. Platform
+In progress; follows completed Milestones 4 and 4.5 and depends on their input and UI contracts. Platform
 capabilities are explicit, optional and reported through engine-owned APIs.
 
-- [ ] Enumerate monitors, display modes, resolutions, refresh rates and DPI;
+- [x] Enumerate monitors, display modes, resolutions, refresh rates and DPI;
       report changes and disconnection with documented identifier lifetimes.
+      Provisional OS DPI scaling and explicit-query connection changes are documented in
+      [DISPLAYS.md](DISPLAYS.md); physical DPI and Linux/macOS native acceptance
+      remain explicit limitations.
 - [ ] Window controls: size, resizing policy, placement, monitor selection,
       windowed/borderless/exclusive fullscreen where supported and applied-state feedback.
+      Windowed monitor placement with native confirmation is implemented; the
+      remaining controls and fullscreen modes are pending. See [DISPLAYS.md](DISPLAYS.md).
 - [ ] Enumerate compatible graphics adapters, select an adapter at initialization
       or through an explicit restart/recreation contract, and report incompatibility.
 - [ ] Presentation controls: supported VSync/present modes and frame-rate caps,

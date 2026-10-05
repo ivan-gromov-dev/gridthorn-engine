@@ -61,6 +61,7 @@ where
 }
 
 struct WinitApplication<L> {
+    displays: crate::display::native::NativeDisplays,
     performance: super::performance::WindowPerformance,
     text: super::text::NativeTextInput,
     clipboard: super::clipboard::NativeClipboard,
@@ -81,6 +82,7 @@ where
         Self {
             config,
             error: None,
+            displays: crate::display::native::NativeDisplays::default(),
             performance: super::performance::WindowPerformance::new(),
             text: super::text::NativeTextInput::default(),
             clipboard: super::clipboard::NativeClipboard::default(),
@@ -135,6 +137,15 @@ where
         let Some(window) = self.window.as_ref() else {
             return;
         };
+
+        if control.refresh_displays || control.selected_monitor.is_some() {
+            let inventory = self.displays.refresh(event_loop, window);
+            self.lifecycle.displays_changed(inventory);
+        }
+        if let Some(monitor) = control.selected_monitor {
+            let selection = self.displays.select(window, monitor);
+            self.lifecycle.monitor_selection_changed(selection);
+        }
 
         if let Some(area) = control.text_input {
             let area = match area {
@@ -364,6 +375,11 @@ where
         }
         let start = self.performance.start();
         let mut control = WindowControl::default();
+        if let Some(window) = self.window.as_ref()
+            && let Some(selection) = self.displays.selection_feedback(window)
+        {
+            self.lifecycle.monitor_selection_changed(selection);
+        }
         if let Err(error) = self.lifecycle.idle(&mut control) {
             self.fail(event_loop, error);
             return;
