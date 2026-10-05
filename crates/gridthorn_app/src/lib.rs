@@ -1,5 +1,7 @@
 //! Provisional application lifecycle services for Gridthorn.
 
+/// Provisional on-demand monitor inventory, changes and windowed monitor selection.
+pub mod display;
 mod runtime;
 mod scenario;
 mod scene;

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Provisional `gridthorn::display` monitor inventory, advertised fullscreen modes,
+  physical resolutions, millihertz refresh and OS DPI scale. Inventory requests
+  are explicit and coalesced, with no periodic native enumeration. Windowed
+  monitor selection revalidates IDs and reports native placement confirmation or
+  typed errors. Query changes/disconnections use connection-scoped IDs and are
+  visible for one runtime frame. Includes domain coverage and a GPU-rendered
+  sibling settings menu with staged selection, Apply/Refresh and idle layout
+  reuse. Physical DPI and
+  Linux/macOS native acceptance remain deferred.
+
+## [0.5.0] - 2026-10-05
+
 ### Changed
 
 - Performance CI records current measurements with a warning when a workload is

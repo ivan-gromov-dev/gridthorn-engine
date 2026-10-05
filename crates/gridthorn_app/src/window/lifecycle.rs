@@ -5,6 +5,13 @@ use super::{ApplicationError, WindowControl};
 
 /// Provisional hooks for exercising application lifecycle behavior.
 pub trait WindowLifecycle {
+    /// Publish inventory only in response to an explicit refresh or selection request.
+    /// Queries run on the event-loop thread; the snapshot contains only owned data.
+    fn displays_changed(&mut self, _displays: crate::display::Displays) {}
+
+    /// Report pending, applied or failed placement for the latest selection request.
+    fn monitor_selection_changed(&mut self, _selection: crate::display::MonitorSelection) {}
+
     /// Publish physical pixels per logical pixel after creation and every DPI change.
     fn scale_factor_changed(&mut self, _scale_factor: f64) {}
 

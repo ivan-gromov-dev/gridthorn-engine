@@ -3,6 +3,8 @@ use std::time::Instant;
 /// Window operations available to lifecycle hooks.
 #[derive(Debug, Default)]
 pub struct WindowControl {
+    pub(super) refresh_displays: bool,
+    pub(super) selected_monitor: Option<crate::display::MonitorId>,
     pub(super) text_input: Option<gridthorn_input::TextInputRequest>,
     pub(super) clipboard: Vec<gridthorn_input::ClipboardRequest>,
     pub(super) capture: Option<gridthorn_input::PointerCaptureMode>,
@@ -13,6 +15,17 @@ pub struct WindowControl {
 }
 
 impl WindowControl {
+    /// Request one inventory snapshot; feedback arrives through `displays_changed`.
+    pub fn refresh_displays(&mut self) {
+        self.refresh_displays = true;
+    }
+
+    /// Request windowed placement on a monitor, with typed applied-state feedback.
+    /// Revalidates the inventory once; the last request before dispatch wins.
+    pub fn select_monitor(&mut self, monitor: crate::display::MonitorId) {
+        self.selected_monitor = Some(monitor);
+    }
+
     /// Open/update a text session or close it with `None`; feedback arrives as input events.
     pub fn set_text_input(&mut self, area: Option<gridthorn_input::ImeCursorArea>) {
         self.text_input = Some(area.map_or(

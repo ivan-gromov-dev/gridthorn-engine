@@ -67,9 +67,43 @@ impl RuntimeWindowLifecycle {
         self.runtime.run_timed_frame(elapsed)?;
         Ok(())
     }
+
+    fn collect_display_requests(&mut self, control: &mut WindowControl) {
+        if let Some((refresh, monitor)) =
+            self.runtime
+                .world()
+                .update_resource_with(|displays: &mut crate::display::Displays| {
+                    displays.clear_changes();
+                    displays.take_requests()
+                })
+        {
+            if refresh {
+                control.refresh_displays();
+            }
+            if let Some(monitor) = monitor {
+                control.select_monitor(monitor);
+            }
+        }
+    }
 }
 
 impl WindowLifecycle for RuntimeWindowLifecycle {
+    fn displays_changed(&mut self, displays: crate::display::Displays) {
+        self.runtime
+            .world()
+            .update_resource(|resource: &mut crate::display::Displays| {
+                resource.publish_inventory(displays);
+            });
+    }
+
+    fn monitor_selection_changed(&mut self, selection: crate::display::MonitorSelection) {
+        self.runtime
+            .world()
+            .update_resource(|displays: &mut crate::display::Displays| {
+                displays.publish_selection(selection);
+            });
+    }
+
     fn scale_factor_changed(&mut self, scale_factor: f64) {
         self.runtime
             .world()
@@ -82,7 +116,10 @@ impl WindowLifecycle for RuntimeWindowLifecycle {
             .insert_resource(super::WindowViewport { width, height });
     }
 
-    fn started(&mut self, _control: &mut WindowControl) -> Result<(), ApplicationError> {
+    fn started(&mut self, control: &mut WindowControl) -> Result<(), ApplicationError> {
+        self.runtime
+            .world()
+            .insert_resource(crate::display::Displays::default());
         self.runtime
             .world()
             .insert_resource(gridthorn_input::TextInput::default());
@@ -93,6 +130,7 @@ impl WindowLifecycle for RuntimeWindowLifecycle {
             .world()
             .insert_resource(gridthorn_input::PointerCapture::default());
         self.runtime.startup()?;
+        self.collect_display_requests(control);
         self.frame_timer.start(Instant::now());
         Ok(())
     }
@@ -100,6 +138,7 @@ impl WindowLifecycle for RuntimeWindowLifecycle {
     fn idle(&mut self, control: &mut WindowControl) -> Result<(), ApplicationError> {
         let elapsed = self.frame_timer.advance(Instant::now());
         self.run_elapsed_frame(elapsed)?;
+        self.collect_display_requests(control);
         if let Some(Some(area)) = self
             .runtime
             .world()
