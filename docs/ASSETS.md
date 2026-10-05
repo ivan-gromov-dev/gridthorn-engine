@@ -90,9 +90,7 @@ The roadmap item is complete for dependency-aware reload of raw sources and
 PNG/PNM textures. Content polling still reads all registered files per scan;
 preparation holds old and new data plus graph snapshots. Registration validates
 acyclic dependencies. Reload propagation uses reverse edges and a
-dependency-count ready queue, preserving dependency-first lexical order. Warm
-scan/publication, first-service loading, branching/error paths, codec attribution
-and phase/workflow heap peaks are recorded in [PERFORMANCE_REVIEW.md](PERFORMANCE_REVIEW.md).
+dependency-count ready queue, preserving dependency-first lexical order.
 Unchanged source bytes share their committed allocation even when invalidated;
 affected textures still re-decode before atomic publication. The measured Windows
 envelope is up to 512 x 64 KiB raw sources and sixteen 256x256 PNG/PNM textures.

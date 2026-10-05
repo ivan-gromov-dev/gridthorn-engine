@@ -77,26 +77,3 @@ results. For verbose commands, retain a log outside the reviewed change or in
 ignored build output and include its path and exit status. Do not rerun an
 unchanged failing input without new evidence or repeat a passed suite unless
 later changes invalidate it. Keep Cargo commands sharing build output sequential.
-
-## Measure improvements
-
-Before claiming token or latency savings, compare representative tasks such as
-a local bug fix, a cross-crate feature, a CLI change, a review, and a release.
-Use isolated equivalent starting states and record model/reasoning settings,
-cache/build state, scope, and correctness outcomes. Compare elapsed time, token
-usage when exposed by the host, tool calls, repeated file reads, verification
-time, and correction cycles. Mark unavailable usage data as unknown; characters
-or instruction size are proxies, not measured token savings.
-
-For build changes, compare the existing `check -> clippy -> test` sequence with
-`clippy -> test` on equivalent warm and cold build states. Check target/feature
-coverage and failure diagnostics before removing an entrypoint. Keep explicit
-MSRV coverage and the full verification gate. Independent subagents are useful
-only when authorized and their distinct work outweighs duplicated context and
-coordination. Assign bounded context, a concrete result, and disjoint edit
-ownership; measure total usage across agents as well as wall time.
-
-On 2026-10-03, one warm-cache Windows run measured workspace check at about
-0.6 seconds and Clippy at 0.8 seconds, both successful. The separate check is
-retained: this sample establishes neither a cold-build benefit nor equivalent
-failure diagnostics. End-to-end token and workflow savings remain unmeasured.

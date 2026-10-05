@@ -66,7 +66,7 @@ simulation semantics, plugins, CLI, and tools.
 Milestone 4 uses provisional `fontdb` font-asset validation and `cosmic-text`
 shaping/layout/fallback with Swash rasterization. All types remain behind the
 engine-owned API; system font discovery is disabled in service construction.
-See [the text contract](TEXT.md) and [ADR 0004](adr/0004-multilingual-text.md).
+See [the text contract](TEXT.md) and [public API policy](PUBLIC_API_POLICY.md).
 Only `std` and `swash` backend features are enabled; fontconfig is disabled.
 
 | Tool            | Status    | Use                                                             |
@@ -125,33 +125,3 @@ to a general game framework:
 `egui` is intended for developer tooling. It is not automatically the public
 game UI system because game UI has different styling, layout, animation, input,
 serialization, and performance requirements.
-
-## Required Milestone 0 spikes
-
-Before the baseline is considered stable, create and document small tests for:
-
-1. [Implemented as a Windows-validated prototype](spikes/window-surface.md): a
-   `winit` application that owns a `wgpu` surface and survives resize, minimize,
-   restore, and close events. macOS and Linux runtime validation remains open.
-2. [Implemented as a windowed prototype](spikes/ecs-schedule-loop.md): a
-   `bevy_ecs` world running explicit `Startup`, `FixedUpdate`, and `Update`
-   schedules under Gridthorn's application loop. Headless reuse, change
-   detection, and parallel-system policy remain separate validation work.
-3. [Implemented as an internal architecture prototype](spikes/headless-schedule.md):
-   a headless run of the same fixed-update schedule without application,
-   windowing, GPU, or renderer dependencies.
-4. [Implemented and process-validated](spikes/cli-project-lifecycle.md): a
-   minimal `gridthorn` CLI that creates, checks, and runs a generated project.
-5. [Implemented as a cross-layer prototype](spikes/structured-diagnostics.md):
-   structured error and tracing output spanning CLI, app, and renderer layers.
-6. [Implemented as a deterministic replay prototype](spikes/deterministic-fixed-step.md):
-   repeatable fixed-step runs that produce the same state fingerprint for the
-   same commands and seed under the determinism scope defined in
-   [ARCHITECTURE.md](ARCHITECTURE.md#determinism-contract).
-
-The Milestone 0 headless run is an internal architecture spike. It proves that
-the runtime is not structurally coupled to a window or GPU; it is not yet the
-supported public headless simulation API planned for Milestone 3.
-
-The outcome of a failed spike is an ADR changing the selection, not an adapter
-that hides an unsuitable dependency indefinitely.

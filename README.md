@@ -5,16 +5,13 @@ games. It is suitable for traditional 2D genres while providing a particularly
 strong foundation for tile-based, isometric, management, tycoon, and
 simulation-heavy games.
 
-The project has completed Milestones 1–3: the runtime vertical slice,
+The project has completed Milestones 1–4.5: the runtime vertical slice,
 general-purpose 2D SDK and Gridthorn specialization, with provisional APIs
 validated by Crystal Trail and Timber Harbor. It has a
 reproducible Cargo workspace, a working CLI, native window and input handling,
 fixed-step world updates, sprite presentation, texture loading, and runtime
 timing diagnostics. A visual editor will later be built on the same public APIs
 and development protocol.
-
-[Milestone 2 review](docs/milestone-2-review.md) records completion evidence and
-deferred platform and performance validation.
 
 ## Principles
 
@@ -38,19 +35,19 @@ deferred platform and performance validation.
 - [Public API and release policy](docs/PUBLIC_API_POLICY.md)
 - [UI composition and controls](docs/UI.md)
 - [Project terminology](docs/GLOSSARY.md)
-- [Architecture Decision Records](docs/adr/README.md)
+- [Performance and workload limits](docs/PERFORMANCE.md)
 - [Contributor guide](CONTRIBUTING.md)
 
 ## Status
 
-Milestones 1–3 are complete for their documented supported subsets. Commands and Rust snippets
+Milestones 1–4.5 are complete for their documented supported subsets. Commands and Rust snippets
 outside the section below still describe target developer experience unless
 they are explicitly marked as implemented.
 
 | Area                               | Status                                                                                                     |
 | ---------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | Product and architecture direction | Design baseline                                                                                            |
-| Milestone 0 foundation             | Complete; runtime deferrals recorded                                                                       |
+| Milestone 0 foundation             | Complete for the documented foundation                                                                       |
 | Cargo workspace and CI             | Implemented foundation                                                                                     |
 | CLI                                | Project commands, compatibility checks, source watch, release builds, scenario listing and headless launch |
 | Public SDK facade                  | Version API plus provisional lifecycle and schedule APIs                                                   |
@@ -83,90 +80,10 @@ they are explicitly marked as implemented.
 | Current source release             | `0.2.0`                                                                                                    |
 | Stable API                         | Not available; APIs remain pre-1.0 and provisional                                                         |
 
-Milestone 3 is complete: provisional square and isometric coordinates are
-implemented behind the `grid` feature; see [the grid contract](docs/GRIDS.md).
-Sparse tilemaps, layers, chunks, picking, and grid-based object placement are
-also implemented, along with bounded weighted pathfinding and SVG diagnostics.
-Simulation clock, pause, and speed control are implemented; see the
-[simulation contract](docs/SIMULATION.md). Headless simulation is implemented through `HeadlessSimulation`. Typed scenarios, in-memory snapshots, and named seeded RNG streams are implemented;
-see the [scenario contract](docs/SCENARIOS.md). World saving and loading are implemented
-for the typed authoritative-root subset; see [the save contract](docs/WORLD_SAVES.md).
-CLI scenario listing and headless simulation launch are implemented through a
-dedicated game-owned binary; see [the CLI simulation contract](docs/CLI_SIMULATION.md).
-The playable Timber Harbor `tycoon_slice` now integrates these features with
-Milestone 2 presentation, UI, audio, reflection, scene persistence and asset reload.
-Its workforce economy includes housing, multi-tick production, resource-specific
-ports and a pause/save/load menu with generated UI artwork.
-The [Milestone 3 completion review](docs/milestone-3-showcase.md) records scope,
-verification, deferrals and maintainer acceptance on 2026-10-02. The next phase
-is Milestone 4.5: an [engine performance review](docs/PERFORMANCE_REVIEW.md)
-and measured optimization of implemented capabilities, starting with multilingual
-UI/text and rendering. Opt-in bounded renderer/GPU-pass and window
-preparation/redraw/extraction, runtime schedule and UI layout-phase diagnostics
-are documented in the performance review,
-with measured workload evidence and limits.
-Renderer textures now reuse decoded asset identities across frames and batches;
-unchanged textured frames retain their GPU vertex buffers. Texture resources
-absent from the next rendered frame are evicted. Native resource/upload and
-PresentMon display measurements are recorded in the performance review.
-The runtime/world/input/localization domain review is complete within its recorded
-Windows workloads. Input snapshots transfer owned event queues instead of copying
-every event and payload; repeated mixed-component churn, large input bursts,
-runtime dispatch and localization measurements document costs and remaining limits.
-Plain-tree routing now reuses
-immutable input layout scopes. UI node reads/commands use indexed child paths,
-with measured construction and retention tradeoffs in the review.
-  Registered-layer input scopes omit paint copies and filter membership through
-  ordered ID sets, with measured text-field routing limits in the review.
-  Layout clones and input scopes share immutable prepared text geometry, releasing
-  it with the last snapshot owner.
-  Routing reuses input/pointer scopes within a batch, rebuilding on layer dismissal
-  and pointer-layer/capture changes.
-  A public example probe measures warm asset-font editing and three overlapping
-  layers across four scripts at DPI 1/2; its bounded workload and limits are recorded
-  in the performance review.
-UI preparation reuses bounded shaped layouts across one arrangement/geometry/paint
-pass. Text services reuse bounded tinted glyph spans across calls, and immutable
-raster snapshots retain their construction vector without copying it. Before/after
-evidence, retained-memory tradeoffs and workload limits are recorded
-in the performance review.
-Dependency-aware reload traverses reverse edges and an ordered ready queue;
-reload, scene and world-save reviews now include first-service/process loads,
-branching dependencies, rollback paths, I/O/codec/serialization attribution and
-heap peaks. Reload shares unchanged source allocations; save loading moves its
-decoded root into the reset boundary. Measured envelopes and limits are recorded
-in the same review.
-  Audio/platform review now records native mixer/control and software loopback latency, repeated-output
-  memory, asynchronous release, explicit manual Windows sleep/wake and native
-  window shutdown. Acoustic latency and automatic power/device integration remain
-  explicit follow-ups; the recorded envelopes do not guarantee other devices.
-  Audio output shares converted frames within bounded command batches and releases
-  completed voice handles on processing, including empty queues.
-  Pathfinding uses hash lookups with an ordered frontier; release scaling evidence
-  and synchronous-search budget limits are recorded in the performance review.
-  Placement cell queries use hash lookups with ordered objects; placement and
-  collision scaling measurements distinguish ready pairs from all-pairs enumeration.
-  Fixed-clock/schedule, typed snapshot and RNG release probes record costs and
-  deterministic continuation limits in the same review.
-  The simulation/grid/collision review now includes inhabited mazes, sparse
-  chunk storage, placement churn, ECS catch-up, retained nested snapshots and
-  queue/RNG heap costs. Supported measured envelopes and caller-owned search,
-  history and queue policies are documented; full searches and large history
-  destruction can exceed a frame budget.
-  Release build timings, dependency closures and CLI/generated-game/example
-  executable sizes are recorded with explicit cold-cache and packaging limits.
-Milestone 4 remains open until the remaining Milestone 4.5 domain gates and
-completion review close; native workbench and language/IME acceptance are recorded.
-Milestone 5 follows with desktop platform/device controls. The debugging workflow and
-editor move to Milestones 6 and 7. Desktop input, Unicode/IME/clipboard and
-multilingual font rendering and [runtime localization](docs/LOCALIZATION.md) are
-implemented provisionally. [UI composition and controls](docs/UI.md) are implemented
-with explicit value commands, ordered event routing, focus/navigation, grapheme-aware
-editing/selection and pointer capture with explicit world-input consumption.
-Ordered popup/dialog layers, modal scopes, focus restoration and configurable
-Escape/outside-click dismissal are implemented provisionally.
-Remaining runtime UI/device additions are planned;
-see [the runtime API scope](docs/RUNTIME_APIS.md) and [roadmap](docs/ROADMAP.md).
+The next target is desktop platform/device support in [Milestone 5](docs/ROADMAP.md).
+[Performance limits](docs/PERFORMANCE.md) describe the measured Windows workload
+envelopes and the CPU comparison in CI. APIs remain provisional; engine-wide
+frame deadlines and cross-platform performance are not guaranteed.
 
 Run the public composed UI example (use `--headless` for resize/DPI/control checks):
 
@@ -354,12 +271,6 @@ Markdown-only prose and instruction changes support explicit docs-only
 verification; code, configuration, scripts, and releases retain full checks.
 
 ## License
-
-Native diagnostics enabled with `GRIDTHORN_WINDOW_PERFORMANCE` include bounded
-whole-process CPU deltas and wall intervals between completed redraws. They
-include all process threads and exclude startup before the first redraw; OS
-accounting precision must be assessed before treating frame percentiles as a
-budget result. These intervals are distinct from actual displayed-frame timing.
 
 See [LICENSE](LICENSE).
 

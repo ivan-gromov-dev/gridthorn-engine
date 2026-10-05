@@ -86,72 +86,44 @@ cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_multilingual_text -- --smoke
 ```
 
-## Evidence and limitations
+## Limits and storage lifetimes
 
-Domain tests with bundled font fixtures cover Cyrillic, Japanese fallback, Arabic
-contextual forms and mixed bidi, combining clusters, ligatures, missing glyphs,
-alignment, wrapping, empty lines, DPI re-rasterization, tint alpha, cache rebuilding,
-foreign-layout rejection, invalid requests and ordered screen geometry. Tests
-also cover bidi formatting controls and raster-budget rollback. Application
-tests cover initial/change DPI publication. The headless public example exercises
-1×, 1.25×, 1.5× and 2× rasterization without a window or GPU.
+Coverage depends on authored fonts. Vertical text, rich styled spans and broad
+emoji/palette coverage are deferred. UI text editing is a separate [UI contract](UI.md).
+Windows native rendering/IME has manual acceptance; Linux/macOS rendering and
+multi-monitor DPI transitions remain unvalidated. [PERFORMANCE.md](PERFORMANCE.md)
+describes timing envelopes without an engine-wide frame guarantee.
 
-Language coverage is limited by authored fonts, not a promise that all scripts
-and font formats are validated. Vertical text, rich styled spans, text editing,
-selection, emoji coverage/palette behavior and user-configurable fallback priority
-remain deferred. Windows native rendering is exercised by the smoke example;
-real multi-monitor DPI transitions, Linux/macOS native rendering and IME-driven
-visual editing remain unvalidated. Performance, binary size, large font databases,
-cache memory and GPU atlas optimization remain under Milestone 4.5 review. Native
-CPU samples and renderer snapshot/buffer reuse are recorded in
-[the performance checkpoint](work-in-progress/milestone-4-5.md). Unchanged shared
-raster snapshots reuse colored/UI geometry and an immutable GPU vertex buffer.
-Dirty geometry reuses CPU vector capacity; one high-water vector and one input
-snapshot remain until surface reconfiguration or shutdown. Changed raster storage,
-placement, DPI, clipping/order, camera, colored sprites and overlay invalidate it.
-Opt-in GPU timestamps measure render-pass execution on supported adapters.
-Each text service retains an LRU of up to 64 shaped layouts keyed by complete
+Unchanged shared raster snapshots reuse colored/UI geometry and an immutable GPU
+vertex buffer. Dirty geometry reuses CPU vector capacity. One high-water vector
+and input snapshot remain until surface reconfiguration or shutdown. Changed
+raster storage, placement, DPI, clipping/order, camera, sprites or overlay invalidate reuse.
+
+Each text service retains an LRU of at most 64 shaped layouts keyed by complete
 text/style. Logical layout reuse is independent of raster DPI/color. Cached and
 returned layouts share immutable shaping/diagnostic storage; eviction does not
-invalidate returned layouts. The cache is isolated to that service's fonts/locale
-and disappears with it; replacing the service after font reload starts fresh.
-Limits additionally cap copied keys at 256 KiB, diagnostic glyphs at 16384 and
-lines at 4096. The line budget admits the measured pair of narrow Japanese
-composition layouts plus normal field layouts; it increased from 1024 during
-Milestone 4.5. This trades additional bounded line/backend retention for warm
-reuse. Oversized entries are not retained. These are retention limits,
-not a byte budget for opaque backend buffers, font caches or caller-held layouts.
-`clear_raster_cache` continues to clear glyph raster data, leaving shaped layouts.
-`GRIDTHORN_TEXT_PERFORMANCE` collects bounded successful shaping/layout and
-raster-snapshot CPU timings, call totals and input/output sizes; the sampling
-protocol and limits are in [the performance review](PERFORMANCE_REVIEW.md).
-Whole-frame GPU execution and actual presented intervals remain unmeasured. The span renderer
-is a correctness foundation for modest UI text, not a measured high-throughput
-text renderer. [ADR 0004](adr/0004-multilingual-text.md) records the provisional backend.
+invalidate returned layouts. The cache belongs to that service's fonts/locale;
+replacing the service after font reload starts fresh. Retention caps are 256 KiB
+of copied keys, 16384 diagnostic glyphs and 4096 lines. Oversized entries are not
+retained. Opaque backend/font buffers and caller-held layouts are outside these caps.
+`clear_raster_cache` clears raster data while retaining shaped layouts.
 
-Each service reuses glyph-relative tinted spans across raster calls, including
-short labels, capped at 128 entries/65536 retained spans. Cache keys include the
-backend font/glyph identity, physical size and fractional positioning. Changing
-tint discards the previous set; `clear_raster_cache` clears both backend images
-and these spans. Entry saturation uses direct sampling; span saturation does not
-retain the new glyph. Scratch capacity is released before snapshot construction.
-Font choice, DPI, output order and the one-million image-sample limit are unchanged.
-Retained vector capacity, map metadata and opaque font/backend caches are outside
-the span count cap. Failed raster requests discard the active span set while
-preserving previous snapshots.
+Glyph-relative tinted spans are reused across raster calls, capped at 128 entries
+and 65536 retained spans. Keys include backend font/glyph identity, physical size
+and fractional positioning. Changing tint discards the previous set;
+`clear_raster_cache` clears backend images and spans. Saturated entries use direct
+sampling; saturated spans do not retain the new glyph. Scratch storage is released
+before snapshot construction. The one-million image-sample work limit still applies.
+Map metadata, vector capacity and opaque backend caches are outside the count cap.
+Failed raster requests discard the active span set and preserve previous snapshots.
 
-Raster snapshots share their construction vector through an immutable internal
-owner, avoiding the previous vector-to-shared-slice allocation/copy. Spare vector
-capacity remains retained until the last snapshot clone releases it. Snapshot
-clones share output storage; clearing the service caches does not release live
-snapshots. Phase timings and output/span/backend-image capacities, separate-process
-memory observations and their exclusions are in PERFORMANCE_REVIEW.md.
+Raster snapshot clones share an immutable construction vector, including spare
+capacity, until the last clone drops. Clearing service caches does not release live
+snapshots. Unique long Japanese fallback shaping can exceed a frame budget; warm
+matching layouts avoid shaping. Large DPI-2 requests can reject `TooLarge`.
 
-Fresh unique long Japanese fallback requests remain expensive in backend shaping:
-the measured 256-repeat fixture takes roughly 12–13 ms, while engine diagnostic
-extraction is around 0.1 ms. Warm matching layouts avoid shaping. This is a measured
-workload limit, not a realtime guarantee for arbitrary user text. The follow-up is
-backend fallback-run attribution/optimization with unchanged shaping, coverage and
-bidi output; replacing the primary family or splitting authored paragraphs changes
-semantics and is not applied automatically. Exact allocator events and total opaque
-backend heap peaks remain unmeasured.
+The multilingual-text sibling example supplies headless shaping/rasterization
+checks and a native smoke path. Opt-in `GRIDTHORN_TEXT_PERFORMANCE` collects bounded
+successful layout/raster timings, call totals and sizes; GPU timestamps describe
+render-pass execution only. These diagnostics are not precise whole-process CPU
+or displayed-frame latency measurements.

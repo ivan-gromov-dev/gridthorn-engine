@@ -77,3 +77,15 @@ Comments document declarations and contracts: methods, structures, modules, and
 implementations. Executable blocks should remain comment-free unless they use a
 genuinely tricky technique whose invariant or portability constraint cannot be
 expressed through naming and extraction.
+
+## Performance comparison
+
+Ordinary behavior tests remain required. Ignored release probes are retained for
+scaling and resource-lifetime diagnosis. CI separately compares 14 portable CPU
+workloads with the previous revision; sustained timing regressions produce warnings.
+See [performance limits and local commands](docs/PERFORMANCE.md).
+The comparator uses Python 3.10+ and can be checked independently:
+
+```console
+python -m unittest discover -s scripts/performance/test
+```

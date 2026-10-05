@@ -121,7 +121,7 @@ provisional decimal/message contract. ICU's compiled number data and Fluent's
 plural data are dependency-versioned; untested locale behavior is not a universal
 language-coverage guarantee. Unknown backend locales may inherit fallback data.
 
-## Public usage and evidence
+## Public usage
 
 The sibling example uses the facade, real `.ftl` assets and all four languages:
 
@@ -137,21 +137,14 @@ cardinals, English ordinals, decimals, exact variants, string selection, referen
 fallback order, missing IDs/parameters, numeric type errors, bidi isolation, bounds,
 canonical IDs, duplicate/cyclic/missing references, atomic selection/replacement,
 and Send/Sync. A facade test covers locale switching and fallback without platform
-initialization. Windows execution is validated; Linux/macOS and native rendering
-of localized messages have not been exercised by this increment.
+initialization. The integrated Windows workbench exercises localized rendering; Linux/macOS
+native validation remains outside the measured subset.
 
-The provisional format/ownership decision is [ADR 0005](adr/0005-localization-catalogs.md).
+## Performance limits
 
-## Localization performance disposition
-
-The Milestone 4.5 [domain review](PERFORMANCE_REVIEW.md#runtime-world-input-localization-domain-review-2026-10-04)
-records repeated Windows release measurements for four locales, warm formatting
-and simple/complex catalogs through 4096 messages. Complex source validation and
-cyclic-candidate rejection can exceed a 16.67 ms frame; keep candidate validation
-away from latency-sensitive polling as required above. Preparing/replacing a
-validated bundle is cheaper but still consumes presentation time. The review
-preserves the implementation and its bounded explicit-publication policy. These
-measurements do not guarantee a frame budget for arbitrary message graphs,
-simultaneous multi-locale replacement or caller-retained catalogs/output. Wider
-reference fanout, heap peaks, worker handoff and cross-platform timings remain
-explicit follow-ups; no automatic localization worker is introduced.
+Catalog validation and cyclic-candidate rejection can exceed a frame budget.
+Keep candidate validation away from latency-sensitive polling. Prepared bundle
+replacement still consumes presentation time. Games budget graph/fanout size,
+simultaneous replacements and caller-retained catalogs/output. No automatic
+localization worker or cross-platform timing guarantee is supplied.
+See [PERFORMANCE.md](PERFORMANCE.md) for the measured four-locale subset.

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Add an advisory CI comparison of paired release CPU workloads against the previous
+  revision, with archived measurements and warnings for sustained regressions.
+- Complete Milestones 4/4.5 status and replace historical reviews, proposed decision
+  records, spikes and work-in-progress logs with current contracts and performance limits.
 - Simulation/grid/collision performance review adds repeatable release workloads
   for inhabited routes, sparse tiles, placement churn, mixed candidates, ECS
   catch-up, nested snapshot histories and owned command/RNG allocations. Domain

@@ -4,7 +4,7 @@ Implemented on 2026-10-02. The SDK exposes `SimulationControl`,
 `SimulationSpeed`, `FixedStepConfig`, `FixedTime`, and `FrameTiming`.
 These APIs remain provisional and introduce no dependencies.
 
-The [performance review](PERFORMANCE_REVIEW.md#simulation-grid-collision-and-snapshot-domain-closure)
+The [performance limits](PERFORMANCE.md)
 records capped ECS catch-up through 65536 agents and a paused 65536-command
 burst. A catch-up cap bounds ticks per frame, not system CPU time or queued
 payload memory. Games own command admission and backlog policy; the runtime
@@ -47,7 +47,7 @@ Clock arithmetic errors leave clock state unchanged. Startup, input, and scene
 transitions may already have executed when a runtime returns a time error;
 fixed updates and presentation do not run for that failed frame.
 
-## Usage and evidence
+## Usage and scope
 
 ```console
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_simulation_clock
@@ -61,8 +61,8 @@ lifecycle tests cover exclusion of platform suspension time independently of
 user pause.
 
 Determinism remains scoped to the same engine version, target, configuration,
-and command/control sequence. Performance, large-backlog workloads, native UI
-integration, and cross-platform measurements are deferred. Control persistence,
+and command/control sequence. Arbitrary backlog frame deadlines, native UI integration and stronger
+cross-platform guarantees remain outside this contract. Control persistence,
 replay recording, remote tooling, and world persistence belong to later increments.
 Typed headless scenarios and in-memory snapshots are now documented in
 [SCENARIOS.md](SCENARIOS.md).
@@ -102,7 +102,7 @@ a fixed boundary, exactly as in interactive execution. Requests split into
 multiple batches produce the same tick/Input sequence for the same initial
 state and commands. Wall-clock timing, cross-target bit identity, generic state
 hashing, persistence, CLI simulation
-commands, and performance/large-world measurements are deferred.
+commands, and arbitrary large-world frame deadlines remain outside this contract.
 Named RNG and typed scenario snapshots are available through
 [ScenarioRuntime](SCENARIOS.md).
 

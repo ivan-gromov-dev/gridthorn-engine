@@ -1,6 +1,6 @@
 # Provisional grid and tilemap contract
 
-The [performance review](PERFORMANCE_REVIEW.md#simulation-grid-collision-and-snapshot-domain-closure)
+The [performance limits](PERFORMANCE.md)
 records inhabited weighted routes, compact/one-cell chunk storage and rejected
 placement churn. `max_visited` bounds search work, not a wall-clock deadline;
 eight full 256x256 maze queries exceed a frame budget on the measured host.
@@ -146,7 +146,7 @@ cells. Holes are free for other objects.
 Cell occupancy uses hash lookups while object iteration remains ordered. Error
 selection follows ordered footprint offsets, independent of hash table layout.
 Measured lookup/relocation scaling and unmeasured memory tradeoffs are recorded
-in [Performance review](PERFORMANCE_REVIEW.md).
+in [performance limits](PERFORMANCE.md).
 
 `validate(id, anchor, footprint)` returns candidate cells without reserving them
 and ignores cells owned by that identity, enabling self-overlapping moves.
@@ -177,10 +177,9 @@ iteration/conflicts, and unchanged occupancy after rejected edits.
 
 Automatic ECS/scene synchronization, rotation convenience APIs, placement UI,
 reservations, multi-object transactions, occupancy masks/elevation, and placement
-persistence remain deferred. Memory, large-footprint/map performance, binary-size,
-and cross-platform measurements are explicitly deferred. No scalability or
-stronger determinism guarantee is claimed; this increment introduces no stable
-format or irreversible architecture decision.
+persistence remain deferred. Games own memory and large-footprint/map budgets; measured subsets are in
+[PERFORMANCE.md](PERFORMANCE.md). No universal scalability, stronger determinism
+or stable persistence format is promised.
 
 ## Pathfinding and diagnostic visualization
 
@@ -220,7 +219,7 @@ authoritative route consumption belongs at fixed ticks or explicit load/reset.
 Tentative cost and predecessor tables use hash lookups and are never iterated
 to choose work or generate diagnostics. An ordered frontier preserves the public
 cost/cell expansion and tie rules. Windows release measurements through 512x512
-are recorded in [Performance review](PERFORMANCE_REVIEW.md); full searches remain
+are recorded in [performance limits](PERFORMANCE.md); full searches remain
 synchronous and may exceed a frame budget. The settled-cell budget is a work cap,
 not a wall-clock deadline or a resumable-search API.
 
@@ -238,6 +237,5 @@ results, unreachable goals, budgets, invalid input, and extreme coordinates.
 
 Diagonal movement, multi-cell agents, heuristic A*, asynchronous/resumable work,
 route caching/invalidation, automatic movement and interactive overlays are
-explicitly deferred. Large-map performance/memory, binary size, and stronger
-cross-platform determinism measurements remain deferred; no scalability claim
-is made. This roadmap item is complete for the documented provisional subset.
+explicitly deferred. Performance envelopes do not establish stronger cross-platform determinism
+or arbitrary large-map scalability. This roadmap item is complete for the documented provisional subset.
