@@ -1,6 +1,7 @@
 mod errors;
 mod exit;
 mod headless;
+mod performance;
 
 use std::time::Duration;
 
@@ -21,6 +22,7 @@ pub struct ApplicationRuntime {
     schedules: ScheduleRuntime,
     fixed_clock: FixedStepClock,
     shutdown: bool,
+    performance: performance::RuntimePerformance,
 }
 
 impl ApplicationRuntime {
@@ -47,6 +49,7 @@ impl ApplicationRuntime {
             schedules,
             fixed_clock: FixedStepClock::new(fixed_step),
             shutdown: false,
+            performance: performance::RuntimePerformance::new(),
         }
     }
 
@@ -123,8 +126,12 @@ impl ApplicationRuntime {
 
     fn prepare_frame(&mut self) {
         self.schedules.run_startup();
+        let start = self.performance.start(0);
         self.schedules.run_poll_events();
+        self.performance.record(0, start);
+        let start = self.performance.start(1);
         self.prepare_simulation();
+        self.performance.record(1, start);
     }
 
     fn prepare_simulation(&mut self) {
@@ -147,10 +154,18 @@ impl ApplicationRuntime {
 
     fn execute_frame(&mut self, timing: FrameTiming) {
         self.schedules.world().insert_resource(timing);
+        let start = self.performance.start(2);
         self.execute_fixed(timing);
+        self.performance.record(2, start);
+        let start = self.performance.start(3);
         self.schedules.run_update();
+        self.performance.record(3, start);
+        let start = self.performance.start(4);
         self.schedules.run_post_update();
+        self.performance.record(4, start);
+        let start = self.performance.start(5);
         self.schedules.run_render();
+        self.performance.record(5, start);
     }
 
     fn execute_fixed(&mut self, timing: FrameTiming) {

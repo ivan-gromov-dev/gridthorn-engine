@@ -21,6 +21,7 @@ pub struct SurfaceRenderer {
     lifecycle: SurfaceLifecycle,
     frame: RenderFrame,
     sprite_pipeline: Option<SpritePipeline>,
+    performance: super::performance::SurfacePerformance,
 }
 
 impl SurfaceRenderer {
@@ -44,9 +45,17 @@ impl SurfaceRenderer {
             ..RequestAdapterOptions::default()
         }))
         .map_err(RenderSurfaceError::adapter_request)?;
-        let (device, queue) =
-            pollster::block_on(adapter.request_device(&DeviceDescriptor::default()))
-                .map_err(RenderSurfaceError::device_request)?;
+        let performance = super::performance::SurfacePerformance::new();
+        let required_features = if performance.enabled() {
+            adapter.features() & wgpu::Features::TIMESTAMP_QUERY
+        } else {
+            wgpu::Features::empty()
+        };
+        let (device, queue) = pollster::block_on(adapter.request_device(&DeviceDescriptor {
+            required_features,
+            ..DeviceDescriptor::default()
+        }))
+        .map_err(RenderSurfaceError::device_request)?;
         let adapter_info = adapter.get_info();
         info!(
             component = "renderer",
@@ -64,6 +73,7 @@ impl SurfaceRenderer {
             lifecycle: SurfaceLifecycle::default(),
             frame: RenderFrame::default(),
             sprite_pipeline: None,
+            performance,
         };
         renderer.resize(width, height)?;
         Ok(renderer)
@@ -122,6 +132,7 @@ impl SurfaceRenderer {
             self.lifecycle.mark_configured();
         }
 
+        let acquire_start = self.performance.clock();
         let (frame, suboptimal) = match self.surface.get_current_texture() {
             wgpu::CurrentSurfaceTexture::Success(frame) => (frame, false),
             wgpu::CurrentSurfaceTexture::Suboptimal(frame) => (frame, true),
@@ -137,6 +148,8 @@ impl SurfaceRenderer {
                 return Err(RenderSurfaceError::SurfaceValidation);
             }
         };
+        let acquire_time = acquire_start.map(|start| start.elapsed());
+        let encode_start = self.performance.clock();
         let view = frame.texture.create_view(&TextureViewDescriptor::default());
         let mut encoder = self
             .device
@@ -149,9 +162,9 @@ impl SurfaceRenderer {
             .ok_or(RenderSurfaceError::UnsupportedConfiguration)?;
         let pipeline = self
             .sprite_pipeline
-            .as_ref()
+            .as_mut()
             .ok_or(RenderSurfaceError::UnsupportedConfiguration)?;
-        pipeline.encode(
+        let pipeline_sample = pipeline.encode(
             &self.device,
             &self.queue,
             &mut encoder,
@@ -159,8 +172,24 @@ impl SurfaceRenderer {
             &self.frame,
             extent,
         );
+        let encode_time = encode_start.map(|start| start.elapsed());
+        let submit_start = self.performance.clock();
         self.queue.submit([encoder.finish()]);
+        pipeline.submitted();
+        let submit_time = submit_start.map(|start| start.elapsed());
+        let present_start = self.performance.clock();
         self.queue.present(frame);
+        if let Some(acquire) = acquire_time {
+            self.performance.record(super::performance::FrameSample {
+                acquire,
+                pipeline: pipeline_sample.unwrap_or_default(),
+                encode: encode_time.unwrap_or_default(),
+                submit: submit_time.unwrap_or_default(),
+                present: present_start
+                    .map(|start| start.elapsed())
+                    .unwrap_or_default(),
+            });
+        }
 
         if suboptimal {
             warn!(
@@ -178,7 +207,29 @@ impl SurfaceRenderer {
             .get_default_config(&self.adapter, extent.width, extent.height)
             .ok_or(RenderSurfaceError::UnsupportedConfiguration)?;
         self.surface.configure(&self.device, &configuration);
-        self.sprite_pipeline = Some(SpritePipeline::new(&self.device, configuration.format));
+        if self.performance.enabled() {
+            let adapter = self.adapter.get_info();
+            eprintln!(
+                "render_configuration,adapter={:?},backend={:?},driver={:?},driver_info={:?},width={},height={},present={:?},timestamp_query={}",
+                adapter.name,
+                adapter.backend,
+                adapter.driver,
+                adapter.driver_info,
+                extent.width,
+                extent.height,
+                configuration.present_mode,
+                self.device
+                    .features()
+                    .contains(wgpu::Features::TIMESTAMP_QUERY),
+            );
+        }
+        self.sprite_pipeline = Some(SpritePipeline::new(
+            &self.device,
+            configuration.format,
+            self.performance.enabled(),
+            &self.queue,
+            self.performance.next_frame(),
+        ));
         self.configuration = Some(configuration);
         debug!(
             component = "renderer",

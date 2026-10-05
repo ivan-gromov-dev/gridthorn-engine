@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 
 use super::{GridFootprint, PlacementError};
 use crate::GridCell;
@@ -34,7 +34,7 @@ impl GridPlacement {
 #[derive(Clone, Debug, Default)]
 pub struct PlacementMap {
     objects: BTreeMap<GridObjectId, GridPlacement>,
-    cells: BTreeMap<GridCell, GridObjectId>,
+    cells: HashMap<GridCell, GridObjectId>,
 }
 
 impl PlacementMap {

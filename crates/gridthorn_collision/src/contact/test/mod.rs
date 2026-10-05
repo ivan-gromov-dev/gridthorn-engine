@@ -1,5 +1,8 @@
 use crate::{Aabb2d, Circle2d, Collider2d, Vec2, contact, overlaps};
 
+mod candidates;
+mod scaling;
+
 fn aabb(center: [f32; 2], half_extents: [f32; 2]) -> Collider2d {
     Aabb2d::new(
         Vec2::new(center[0], center[1]),

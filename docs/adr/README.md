@@ -43,12 +43,8 @@ The decision section must be specific enough to test. If the selected option
 has not passed its stated validation, it remains provisional even when it is the
 preferred direction.
 
-## Index
+## Records
 
-No project decisions have been accepted yet.
-
-- [0001: Explicit scalar scene persistence with prepared loading](0001-scene-persistence.md) — Proposed.
-- [0002: Typed authoritative roots for provisional simulation snapshots](0002-typed-simulation-snapshots.md) — Proposed.
-- [0003: Versioned world saves over typed authoritative roots](0003-world-save-envelope.md) — Proposed.
-- [0004: Font assets and isolated multilingual presentation](0004-multilingual-text.md) — Proposed.
-- [0005: Explicit presentation localization with validated Fluent catalogs](0005-localization-catalogs.md) — Proposed.
+No project decisions are accepted. Historical proposed records have been removed;
+current provisional contracts live in their domain documents. Keep this process
+and template for future stabilization and invariant exceptions.

@@ -110,11 +110,7 @@ user saves, nested collections, enums, entity/asset reference resolution, and
 automatic app-loop load integration are deferred. This increment implements the
 scalar scene document and transactional data application boundary, not a world
 save system. Application code supplies I/O and rebuilds presentation resources.
-Large-scene latency, allocations, binary size, input budgets, and cross-platform
-performance measurements are explicitly deferred until a concrete game workload.
-Registry lookup and capture currently scan registered metadata for each entity;
-do not assume inspector-scale or large-world performance.
-
-The format/boundary rationale remains a [proposed ADR](adr/0001-scene-persistence.md)
-pending game and cross-platform validation; no stable compatibility guarantee is
-declared by this increment.
+Large TOML scenes can exceed a frame budget and amplify allocation peaks;
+prepare/commit belongs at an explicit load boundary. Registry capture scans
+registered metadata for each entity. No inspector-scale, stable compatibility or
+cross-platform performance guarantee is made. See [PERFORMANCE.md](PERFORMANCE.md).

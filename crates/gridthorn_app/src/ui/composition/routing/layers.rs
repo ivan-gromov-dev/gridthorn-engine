@@ -1,5 +1,6 @@
 use super::{UiCompositionError, UiControl, UiLayout, UiNodeId, UiRoute, UiRouter, UiTree};
 use gridthorn_input::{ButtonState, InputEvent, KeyCode, LogicalKey, NamedKey, PhysicalKey};
+use std::{borrow::Cow, collections::BTreeSet};
 
 /// Policy for a context menu, popup or dialog rooted in a direct child panel.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -116,8 +117,9 @@ impl UiRouter {
             x: f64::from(point[0]) * f64::from(layout.scale),
             y: f64::from(point[1]) * f64::from(layout.scale),
         });
-        let scoped = router.event_layout(tree, layout, &event);
-        Self::hit_test(tree, &scoped, point)
+        let mut prepared = super::scopes::RoutingScopes::new(&router, tree, layout);
+        let scoped = prepared.event_layout(&mut router, tree, layout, &event);
+        Self::hit_test(tree, scoped, point)
     }
 
     pub(super) fn pop_layer(&mut self, tree: &UiTree, layout: &UiLayout, result: &mut UiRoute) {
@@ -135,7 +137,7 @@ impl UiRouter {
 
     pub(super) fn order_layers(&self, tree: &UiTree, layout: &mut UiLayout) {
         let original = layout.placements.clone();
-        let managed: Vec<_> = self
+        let managed: BTreeSet<_> = self
             .layer_roots
             .iter()
             .filter_map(|id| tree.node(*id))
@@ -144,7 +146,7 @@ impl UiRouter {
         layout.placements.retain(|p| !managed.contains(&p.id));
         for layer in &self.layers {
             if let Some(node) = tree.node(layer.root) {
-                let ids = Self::all_ids(node);
+                let ids: BTreeSet<_> = Self::all_ids(node).into_iter().collect();
                 layout
                     .placements
                     .extend(original.iter().filter(|p| ids.contains(&p.id)).copied());
@@ -152,18 +154,30 @@ impl UiRouter {
         }
     }
 
-    pub(super) fn input_layout(&self, tree: &UiTree, layout: &UiLayout) -> UiLayout {
-        let mut scoped = layout.clone();
+    pub(super) fn input_layout<'layout>(
+        &self,
+        tree: &UiTree,
+        layout: &'layout UiLayout,
+    ) -> Cow<'layout, UiLayout> {
+        if self.layer_roots.is_empty() {
+            return Cow::Borrowed(layout);
+        }
+        let mut scoped = UiLayout {
+            scale: layout.scale,
+            text_geometry: layout.text_geometry.clone(),
+            placements: layout.placements.clone(),
+            primitives: Vec::new(),
+        };
         self.order_layers(tree, &mut scoped);
         if let Some(index) = self.layers.iter().rposition(|layer| layer.options.modal) {
-            let ids: Vec<_> = self.layers[index..]
+            let ids: BTreeSet<_> = self.layers[index..]
                 .iter()
                 .filter_map(|layer| tree.node(layer.root))
                 .flat_map(Self::all_ids)
                 .collect();
             scoped.placements.retain(|p| ids.contains(&p.id));
         }
-        scoped
+        Cow::Owned(scoped)
     }
 
     pub(super) fn layer_at_cursor(&self, tree: &UiTree, layout: &UiLayout) -> Option<usize> {
@@ -175,38 +189,6 @@ impl UiRouter {
                         .is_some_and(|p| p.bounds.contains(point) && p.clip.contains(point))
             })
         })
-    }
-
-    pub(super) fn event_layout(
-        &mut self,
-        tree: &UiTree,
-        layout: &UiLayout,
-        event: &InputEvent,
-    ) -> UiLayout {
-        let mut scoped = self.input_layout(tree, layout);
-        if let InputEvent::CursorMoved(position) = event {
-            self.cursor_physical = Some([position.x, position.y]);
-            self.refresh_cursor(tree, &scoped);
-        }
-        if matches!(
-            event,
-            InputEvent::CursorMoved(_)
-                | InputEvent::MouseButton { .. }
-                | InputEvent::MouseWheel { .. }
-                | InputEvent::PointerMotion { .. }
-        ) && let Some(index) = self.layer_at_cursor(tree, layout)
-        {
-            let ids: Vec<_> = self.layers[index..]
-                .iter()
-                .filter_map(|layer| tree.node(layer.root))
-                .flat_map(Self::all_ids)
-                .collect();
-            scoped
-                .placements
-                .retain(|p| ids.contains(&p.id) || self.capture == Some(p.id));
-        }
-        self.layer_hovered = self.layer_at_cursor(tree, layout).is_some();
-        scoped
     }
 
     pub(super) fn layer_event(

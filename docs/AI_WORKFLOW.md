@@ -61,6 +61,24 @@ Git status and revisions against the checkpoint before relying on its results.
 Preserve unrelated changes. Remove the temporary checkpoint at completion after
 moving durable decisions and deferrals into their owning documentation or ADR.
 
+## Build artifact cleanup
+
+After completing the required checks and recording their results, remove
+generated build output and temporary task files from both this repository and
+`../gridthorn-examples`. This includes Cargo `target` directories (also nested
+or task-specific build directories), Python `__pycache__` directories, generated
+test projects, disposable verification logs, and rustfmt backup files. Retain
+diagnostics for unresolved failures until they are resolved or handed off.
+
+Before recursive deletion, resolve each absolute path and verify that it stays
+inside the intended repository. Inspect ignored and untracked paths; Git ignore
+status alone does not establish that a file is disposable. Preserve source,
+assets, manifests, lockfiles, documentation, Git history, editor configuration,
+user saves, and unrelated work. Do not delete global Cargo caches or files
+outside these repositories. Report removed paths and reclaimed space when
+measured. Cleanup follows verification so checks do not immediately recreate
+the artifacts before handoff.
+
 ## Verification and output
 
 Use full verify for code, configuration, scripts, and release candidates.
@@ -77,26 +95,3 @@ results. For verbose commands, retain a log outside the reviewed change or in
 ignored build output and include its path and exit status. Do not rerun an
 unchanged failing input without new evidence or repeat a passed suite unless
 later changes invalidate it. Keep Cargo commands sharing build output sequential.
-
-## Measure improvements
-
-Before claiming token or latency savings, compare representative tasks such as
-a local bug fix, a cross-crate feature, a CLI change, a review, and a release.
-Use isolated equivalent starting states and record model/reasoning settings,
-cache/build state, scope, and correctness outcomes. Compare elapsed time, token
-usage when exposed by the host, tool calls, repeated file reads, verification
-time, and correction cycles. Mark unavailable usage data as unknown; characters
-or instruction size are proxies, not measured token savings.
-
-For build changes, compare the existing `check -> clippy -> test` sequence with
-`clippy -> test` on equivalent warm and cold build states. Check target/feature
-coverage and failure diagnostics before removing an entrypoint. Keep explicit
-MSRV coverage and the full verification gate. Independent subagents are useful
-only when authorized and their distinct work outweighs duplicated context and
-coordination. Assign bounded context, a concrete result, and disjoint edit
-ownership; measure total usage across agents as well as wall time.
-
-On 2026-10-03, one warm-cache Windows run measured workspace check at about
-0.6 seconds and Clippy at 0.8 seconds, both successful. The separate check is
-retained: this sample establishes neither a cold-build benefit nor equivalent
-failure diagnostics. End-to-end token and workflow savings remain unmeasured.

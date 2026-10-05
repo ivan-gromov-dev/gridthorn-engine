@@ -43,10 +43,23 @@ pixels. It is not an ink bounding box; overhangs are retained when drawing.
 Submit `snapshot.at([x, y])?.into()` in `RenderFrame::with_ui`; placement is logical,
 then converted to physical pixels using the snapshot's DPI. Text follows ordered
 UI primitives above world sprites. Pixels outside the surface are culled; custom
-UI clipping/scissors belong to the later layout milestone. Adjacent identical
+UI clipping is supplied by composition or ordered `UiPrimitive::Clipped` groups.
+Adjacent identical
 raster samples merge into horizontal spans through the existing colored pipeline.
 Alpha coverage multiplies the caller's color alpha. Logical layout is independent
 of raster scale: do not multiply the layout width or font size by DPI.
+
+`rasterize_clipped(layout, scale_factor, color, clip)` avoids constructing draw
+spans for glyph images wholly outside a physical-pixel `UiRect` relative to the
+layout origin. Its rectangle color is ignored. Measurement remains unchanged;
+partially intersecting glyphs and a conservative two-pixel edge margin remain
+intact. Submit the result within the same clip for exact edges; this operation
+does not crop the snapshot to the rectangle. UI labels and focused preedit use
+their effective ancestor/content clip through this path. All glyph images still
+count toward the same one-million-sample guard, including invisible glyphs.
+Foreign layouts, invalid DPI, glyph failures and oversized requests retain the
+normal errors and last-good snapshot behavior. Glyph image lookup/raster cache
+population, full shaping and editing geometry are still performed.
 
 `WindowScaleFactor` is published before `Startup` and on native DPI changes,
 separately from physical `WindowViewport`. Re-rasterize when it changes. If logical
@@ -73,22 +86,44 @@ cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_multilingual_text -- --smoke
 ```
 
-## Evidence and limitations
+## Limits and storage lifetimes
 
-Domain tests with bundled font fixtures cover Cyrillic, Japanese fallback, Arabic
-contextual forms and mixed bidi, combining clusters, ligatures, missing glyphs,
-alignment, wrapping, empty lines, DPI re-rasterization, tint alpha, cache rebuilding,
-foreign-layout rejection, invalid requests and ordered screen geometry. Tests
-also cover bidi formatting controls and raster-budget rollback. Application
-tests cover initial/change DPI publication. The headless public example exercises
-1×, 1.25×, 1.5× and 2× rasterization without a window or GPU.
+Coverage depends on authored fonts. Vertical text, rich styled spans and broad
+emoji/palette coverage are deferred. UI text editing is a separate [UI contract](UI.md).
+Windows native rendering/IME has manual acceptance; Linux/macOS rendering and
+multi-monitor DPI transitions remain unvalidated. [PERFORMANCE.md](PERFORMANCE.md)
+describes timing envelopes without an engine-wide frame guarantee.
 
-Language coverage is limited by authored fonts, not a promise that all scripts
-and font formats are validated. Vertical text, rich styled spans, text editing,
-selection, emoji coverage/palette behavior and user-configurable fallback priority
-remain deferred. Windows native rendering is exercised by the smoke example;
-real multi-monitor DPI transitions, Linux/macOS native rendering and IME-driven
-visual editing remain unvalidated. Performance, binary size, large font databases,
-cache memory and GPU atlas optimization are explicitly deferred. The span renderer
-is a correctness foundation for modest UI text, not a measured high-throughput
-text renderer. [ADR 0004](adr/0004-multilingual-text.md) records the provisional backend.
+Unchanged shared raster snapshots reuse colored/UI geometry and an immutable GPU
+vertex buffer. Dirty geometry reuses CPU vector capacity. One high-water vector
+and input snapshot remain until surface reconfiguration or shutdown. Changed
+raster storage, placement, DPI, clipping/order, camera, sprites or overlay invalidate reuse.
+
+Each text service retains an LRU of at most 64 shaped layouts keyed by complete
+text/style. Logical layout reuse is independent of raster DPI/color. Cached and
+returned layouts share immutable shaping/diagnostic storage; eviction does not
+invalidate returned layouts. The cache belongs to that service's fonts/locale;
+replacing the service after font reload starts fresh. Retention caps are 256 KiB
+of copied keys, 16384 diagnostic glyphs and 4096 lines. Oversized entries are not
+retained. Opaque backend/font buffers and caller-held layouts are outside these caps.
+`clear_raster_cache` clears raster data while retaining shaped layouts.
+
+Glyph-relative tinted spans are reused across raster calls, capped at 128 entries
+and 65536 retained spans. Keys include backend font/glyph identity, physical size
+and fractional positioning. Changing tint discards the previous set;
+`clear_raster_cache` clears backend images and spans. Saturated entries use direct
+sampling; saturated spans do not retain the new glyph. Scratch storage is released
+before snapshot construction. The one-million image-sample work limit still applies.
+Map metadata, vector capacity and opaque backend caches are outside the count cap.
+Failed raster requests discard the active span set and preserve previous snapshots.
+
+Raster snapshot clones share an immutable construction vector, including spare
+capacity, until the last clone drops. Clearing service caches does not release live
+snapshots. Unique long Japanese fallback shaping can exceed a frame budget; warm
+matching layouts avoid shaping. Large DPI-2 requests can reject `TooLarge`.
+
+The multilingual-text sibling example supplies headless shaping/rasterization
+checks and a native smoke path. Opt-in `GRIDTHORN_TEXT_PERFORMANCE` collects bounded
+successful layout/raster timings, call totals and sizes; GPU timestamps describe
+render-pass execution only. These diagnostics are not precise whole-process CPU
+or displayed-frame latency measurements.

@@ -1,5 +1,5 @@
 use super::{UiBounds, UiCompositionError, UiControl, UiNodeId, UiPlacement, UiTree};
-use gridthorn_render::{TextLayout, TextSystem};
+use gridthorn_render::TextLine;
 use std::{collections::BTreeMap, ops::Range};
 
 #[derive(Clone, Debug)]
@@ -15,10 +15,10 @@ impl TextGeometry {
         clippy::cast_precision_loss,
         reason = "bounded grapheme counts become cluster positions"
     )]
-    fn shaped(&mut self, shaped: &TextLayout, origin: [f32; 2]) {
+    fn shaped(&mut self, lines: &[TextLine], origin: [f32; 2]) {
         let boundaries = super::editing::boundaries(&self.value);
         let offsets = paragraph_offsets(&self.value);
-        for line in shaped.lines() {
+        for line in lines {
             let offset = offsets[line.paragraph];
             if line.glyphs.is_empty() {
                 self.stops.push((offset, [origin[0], origin[1] + line.top]));
@@ -26,11 +26,7 @@ impl TextGeometry {
             for glyph in &line.glyphs {
                 let start = offset + glyph.cluster.start;
                 let end = offset + glyph.cluster.end;
-                let stops: Vec<_> = boundaries
-                    .iter()
-                    .copied()
-                    .filter(|byte| *byte >= start && *byte <= end)
-                    .collect();
+                let stops = cluster_boundaries(&boundaries, start..end);
                 let width = glyph.advance / stops.len().saturating_sub(1).max(1) as f32;
                 for (index, byte) in stops.iter().enumerate() {
                     let index = if glyph.right_to_left {
@@ -141,6 +137,17 @@ impl TextGeometry {
     }
 }
 
+/// Include both cluster endpoints without scanning unrelated graphemes.
+fn cluster_boundaries(boundaries: &[usize], cluster: Range<usize>) -> &[usize] {
+    let start = boundaries.partition_point(|byte| *byte < cluster.start);
+    let end = boundaries.partition_point(|byte| *byte <= cluster.end);
+    &boundaries[start..end]
+}
+
+#[cfg(test)]
+#[path = "test/text_geometry.rs"]
+mod test;
+
 /// Preserve byte offsets across LF, CR, CRLF and LFCR shaped paragraphs.
 fn paragraph_offsets(value: &str) -> Vec<usize> {
     let bytes = value.as_bytes();
@@ -165,7 +172,7 @@ fn paragraph_offsets(value: &str) -> Vec<usize> {
 pub(super) fn prepare(
     tree: &UiTree,
     placements: &[UiPlacement],
-    text: &mut Option<&mut TextSystem>,
+    text: &mut super::prepared_text::PreparedText<'_>,
 ) -> Result<BTreeMap<UiNodeId, TextGeometry>, UiCompositionError> {
     let mut result = BTreeMap::new();
     for placement in placements {
@@ -185,7 +192,7 @@ pub(super) fn prepare_field(
     tree: &UiTree,
     value: &str,
     placement: &UiPlacement,
-    text: &mut Option<&mut TextSystem>,
+    text: &mut super::prepared_text::PreparedText<'_>,
 ) -> Result<TextGeometry, UiCompositionError> {
     let origin = std::array::from_fn(|axis| {
         placement.content.position[axis] - placement.scroll_offset[axis]
@@ -200,13 +207,8 @@ pub(super) fn prepare_field(
         let mut style = style.clone();
         style.width = Some(placement.content.size[0].max(1.0));
         geometry.height = style.line_height;
-        let service = text
-            .as_deref_mut()
-            .ok_or(UiCompositionError::InvalidMetrics(
-                "asset font theme requires TextSystem",
-            ))?;
-        let shaped = service.layout(value, &style)?;
-        geometry.shaped(&shaped, origin);
+        let shaped = text.layout(value, &style)?;
+        geometry.shaped(shaped.lines(), origin);
         geometry.complete_boundaries(origin);
     } else {
         geometry.bitmap(origin, tree.theme.bitmap_scale);

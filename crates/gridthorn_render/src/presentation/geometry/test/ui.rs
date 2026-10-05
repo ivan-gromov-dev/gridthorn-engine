@@ -2,6 +2,31 @@ use super::super::FrameGeometry;
 use crate::{Camera2d, Color, RenderFrame, Sprite, TextLabel, UiPrimitive, UiRect};
 
 #[test]
+fn nested_clip_does_not_change_preceding_or_following_siblings() {
+    let rect = UiRect::new([0.0; 2], [100.0; 2], Color::rgb(1.0, 0.0, 0.0)).unwrap();
+    let bounds = UiRect::new([20.0; 2], [40.0; 2], Color::default()).unwrap();
+    let frame = RenderFrame::default().with_ui(vec![
+        rect.into(),
+        UiPrimitive::Clipped {
+            bounds,
+            children: vec![UiPrimitive::Clipped {
+                bounds,
+                children: vec![rect.into()],
+            }],
+        },
+        rect.into(),
+    ]);
+    let geometry = FrameGeometry::new(&frame, 100, 100);
+    assert_eq!(geometry.vertices.len(), 18);
+    for offset in [0, 12] {
+        assert_slice_close(&geometry.vertices[offset].position, &[-1.0, 1.0]);
+        assert_slice_close(&geometry.vertices[offset + 2].position, &[1.0, -1.0]);
+    }
+    assert_slice_close(&geometry.vertices[6].position, &[-0.6, 0.6]);
+    assert_slice_close(&geometry.vertices[8].position, &[0.2, -0.2]);
+}
+
+#[test]
 fn nested_clips_intersect_rectangles_and_bitmap_ink_in_painter_order() {
     let bounds = UiRect::new([20.0, 20.0], [40.0, 40.0], Color::default()).unwrap();
     let inner = UiRect::new([40.0, 0.0], [40.0, 100.0], Color::default()).unwrap();

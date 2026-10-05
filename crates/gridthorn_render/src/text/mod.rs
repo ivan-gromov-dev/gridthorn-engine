@@ -1,7 +1,10 @@
 //! Provisional multilingual layout and DPI-specific presentation snapshots.
 mod errors;
 mod layout;
+mod layout_cache;
+mod performance;
 mod raster;
+mod raster_spans;
 mod service;
 mod style;
 

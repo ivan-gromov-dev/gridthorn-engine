@@ -111,3 +111,32 @@ fn store_and_snapshots_are_send_and_sync() {
     assert_send_sync::<AssetStore>();
     assert_send_sync::<crate::TextureAsset>();
 }
+
+#[test]
+fn invalidated_raw_dependents_reuse_unchanged_source_allocations() {
+    let fixture = Fixture::new();
+    fixture.write("leaf", b"old");
+    fixture.write("dependent", b"unchanged");
+    let mut store = AssetStore::new(&fixture.0);
+    store.load_source(id("leaf")).unwrap();
+    store.load_source(id("dependent")).unwrap();
+    store
+        .set_dependencies(&id("dependent"), &[id("leaf")])
+        .unwrap();
+    let dependent = store.source(&id("dependent")).unwrap();
+    let leaf = store.source(&id("leaf")).unwrap();
+    fixture.write("leaf", b"new");
+    assert_eq!(
+        store.reload_changed().unwrap(),
+        vec![id("leaf"), id("dependent")]
+    );
+    assert!(std::sync::Arc::ptr_eq(
+        &dependent,
+        &store.source(&id("dependent")).unwrap()
+    ));
+    assert!(!std::sync::Arc::ptr_eq(
+        &leaf,
+        &store.source(&id("leaf")).unwrap()
+    ));
+    assert_eq!(&*leaf, b"old");
+}

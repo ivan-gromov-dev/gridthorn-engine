@@ -224,10 +224,11 @@ window than user saves, but that window must be stated in their metadata and
 public documentation.
 
 The provisional scalar implementation and its deferred user-save/identity work
-are described in [SCENES.md](SCENES.md). Its persistence boundary remains a
-[proposed decision](adr/0001-scene-persistence.md) pending game validation.
+are described in [SCENES.md](SCENES.md). Its persistence boundary remains
+provisional under
+[PUBLIC_API_POLICY.md](PUBLIC_API_POLICY.md).
 Typed-root world saves and their atomic filesystem/load boundary are described
-in [WORLD_SAVES.md](WORLD_SAVES.md) and [ADR 0003](adr/0003-world-save-envelope.md).
+in [WORLD_SAVES.md](WORLD_SAVES.md).
 
 ### Command API
 

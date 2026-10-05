@@ -14,6 +14,7 @@ mod layers;
 mod navigation;
 mod pointer;
 mod presentation;
+mod scopes;
 pub use layers::UiLayer;
 
 /// Device-independent hooks. Controller adapters map buttons/axes to these commands.
@@ -84,6 +85,7 @@ struct PendingClipboard {
 /// confinement/locking. Reserve unique clipboard IDs for this router.
 #[derive(Clone, Debug)]
 pub struct UiRouter {
+    performance: Option<std::sync::Arc<super::layout_performance::LayoutPerformance>>,
     layers: Vec<layers::OpenLayer>,
     layer_roots: BTreeSet<UiNodeId>,
     layer_hovered: bool,
@@ -108,6 +110,7 @@ impl UiRouter {
     #[must_use]
     pub fn new(first_clipboard_id: u64) -> Self {
         Self {
+            performance: super::layout_performance::LayoutPerformance::new(),
             layers: Vec::new(),
             layer_roots: BTreeSet::new(),
             layer_hovered: false,
@@ -230,12 +233,12 @@ impl UiRouter {
         {
             router.pop_layer(&next, layout, &mut result);
         }
-        let scoped = router.input_layout(&next, layout);
-        router.reconcile(&next, &scoped, &mut result);
+        let mut prepared = scopes::RoutingScopes::new(&router, &next, layout);
+        router.reconcile(&next, prepared.base(), &mut result);
         for (index, event) in events.iter().enumerate() {
-            let scoped = router.event_layout(&next, layout, event);
+            let scoped = prepared.event_layout(&mut router, &next, layout, event);
             if router.layer_event(&next, layout, event, &mut result)
-                || router.event(&mut next, &scoped, event, &mut result)?
+                || router.event(&mut next, scoped, event, &mut result)?
                 || router.block_modal_event(event)
             {
                 result.consumed.push(index);

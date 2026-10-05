@@ -1,11 +1,14 @@
 use super::{TextError, TextLayout, TextMeasurement, TextSystem};
-use crate::presentation::Color;
+use crate::presentation::{Color, UiRect};
 use std::sync::Arc;
+
+/// Keep boundary ink when callers convert bounded logical origins and clips separately.
+const CLIP_ROUNDING_MARGIN: f64 = 2.0;
 
 /// DPI-specific immutable text draw data, independent of the font service and GPU.
 #[derive(Clone, Debug, PartialEq)]
 pub struct RasterText {
-    pub(crate) pixels: Arc<[TextPixel]>,
+    pub(crate) pixels: Arc<Vec<TextPixel>>,
     position: [f32; 2],
     scale: f32,
     measurement: TextMeasurement,
@@ -19,6 +22,17 @@ pub(crate) struct TextPixel {
 }
 
 impl RasterText {
+    #[expect(
+        clippy::float_cmp,
+        reason = "cached draw data requires exactly matching placement and DPI"
+    )]
+    pub(crate) fn same_draw_data(&self, other: &Self) -> bool {
+        self.position == other.position
+            && self.scale == other.scale
+            && self.measurement == other.measurement
+            && Arc::ptr_eq(&self.pixels, &other.pixels)
+    }
+
     /// Place the snapshot at a logical-pixel top-left origin. Ink overhang is retained.
     ///
     /// # Errors
@@ -66,29 +80,62 @@ impl TextSystem {
     ///
     /// # Errors
     /// Rejects foreign layouts, invalid DPI, excessive output or failed glyph rasterization.
-    #[expect(
-        clippy::cast_precision_loss,
-        reason = "bounded raster pixel coordinates become GPU f32 positions"
-    )]
-    #[expect(
-        clippy::float_cmp,
-        reason = "merge only exactly identical raster colors and integer pixel positions"
-    )]
     pub fn rasterize(
         &mut self,
         layout: &TextLayout,
         scale: f32,
         color: Color,
     ) -> Result<RasterText, TextError> {
+        self.rasterize_region(layout, scale, color, None)
+    }
+
+    /// Omit glyph ink wholly outside a physical-pixel clip relative to layout origin.
+    ///
+    /// The rectangle color is ignored. Partially intersecting glyphs remain intact;
+    /// submit with the same clip for exact edge clipping. Measurement is unchanged.
+    /// All glyph images still count toward the normal raster work safety limit.
+    ///
+    /// # Errors
+    /// Returns the same layout, DPI, rasterization and work-limit errors as `rasterize`.
+    pub fn rasterize_clipped(
+        &mut self,
+        layout: &TextLayout,
+        scale: f32,
+        color: Color,
+        clip: UiRect,
+    ) -> Result<RasterText, TextError> {
+        self.rasterize_region(layout, scale, color, Some(clip))
+    }
+
+    fn rasterize_region(
+        &mut self,
+        layout: &TextLayout,
+        scale: f32,
+        color: Color,
+        clip: Option<UiRect>,
+    ) -> Result<RasterText, TextError> {
+        let start = self
+            .performance
+            .as_ref()
+            .and_then(|performance| performance.start(1));
         if !scale.is_finite() || scale <= 0.0 || scale > 8.0 {
             return Err(TextError::InvalidMetrics);
         }
         if !Arc::ptr_eq(&layout.owner, &self.owner) {
             return Err(TextError::ForeignLayout);
         }
+        let loop_start = self
+            .performance
+            .as_ref()
+            .and_then(|performance| performance.start(4));
         let mut pixels: Vec<TextPixel> = Vec::new();
         let mut samples = 0_usize;
-        let tint = color.components();
+
+        let mut spans = self
+            .spans
+            .take()
+            .unwrap_or_else(|| super::raster_spans::GlyphSpans::new(color.components()));
+        spans.begin(color.components());
         for run in layout.buffer.layout_runs() {
             for glyph in run.glyphs {
                 let physical = glyph.physical((0.0, run.line_y * scale), scale);
@@ -114,43 +161,65 @@ impl TextSystem {
                 if samples > 1_000_000 {
                     return Err(TextError::TooLarge);
                 }
-                self.cache.with_pixels(
+                if let Some(clip) = clip {
+                    let origin = [
+                        f64::from(physical.x) + f64::from(image.placement.left),
+                        f64::from(physical.y) - f64::from(image.placement.top),
+                    ];
+                    let extent = [image.placement.width, image.placement.height];
+                    if !ink_intersects_clip(origin, extent, clip) {
+                        continue;
+                    }
+                }
+                spans.append(
+                    &mut pixels,
+                    &mut self.cache,
                     &mut self.fonts,
                     physical.cache_key,
-                    cosmic_text::Color::rgb(255, 255, 255),
-                    |x, y, sample| {
-                        let [red, green, blue, alpha] = sample.as_rgba();
-                        if alpha != 0 {
-                            let pixel = TextPixel {
-                                position: [(physical.x + x) as f32, (physical.y + y) as f32],
-                                color: [
-                                    f32::from(red) / 255.0 * tint[0],
-                                    f32::from(green) / 255.0 * tint[1],
-                                    f32::from(blue) / 255.0 * tint[2],
-                                    f32::from(alpha) / 255.0 * tint[3],
-                                ],
-                                width: 1,
-                            };
-                            if let Some(previous) = pixels.last_mut().filter(|previous| {
-                                previous.position[1] == pixel.position[1]
-                                    && previous.position[0] + previous.width as f32
-                                        == pixel.position[0]
-                                    && previous.color == pixel.color
-                            }) {
-                                previous.width += 1;
-                            } else {
-                                pixels.push(pixel);
-                            }
-                        }
-                    },
+                    [physical.x, physical.y],
                 );
             }
         }
-        Ok(RasterText {
-            pixels: pixels.into(),
+        let units = pixels.len();
+        if let Some(performance) = &mut self.performance {
+            performance.record(4, loop_start, units);
+        }
+        #[cfg(test)]
+        if std::env::var_os("GRIDTHORN_RASTER_STORAGE_PROBE").is_some() {
+            let output_capacity_bytes = pixels.capacity() * std::mem::size_of::<TextPixel>();
+            let snapshot_bytes = std::mem::size_of_val(pixels.as_slice());
+            let glyph_storage_bytes = spans.diagnostic_storage_bytes();
+            println!(
+                "raster_storage,clipped={},output_capacity_bytes={output_capacity_bytes},snapshot_bytes={snapshot_bytes},glyph_storage_bytes={glyph_storage_bytes}",
+                clip.is_some()
+            );
+        }
+        spans.finish();
+        self.spans = Some(spans);
+        let snapshot_start = self
+            .performance
+            .as_ref()
+            .and_then(|performance| performance.start(5));
+        let raster = RasterText {
+            pixels: Arc::new(pixels),
             position: [0.0, 0.0],
             scale,
             measurement: layout.measurement,
-        })
+        };
+        if let Some(performance) = &mut self.performance {
+            performance.record(5, snapshot_start, units);
+            performance.record(1, start, units);
+        }
+        Ok(raster)
     }
+}
+
+/// Retain boundary ink across independent logical-origin and physical-clip rounding.
+fn ink_intersects_clip(origin: [f64; 2], extent: [u32; 2], clip: UiRect) -> bool {
+    (0..2).all(|axis| {
+        let minimum = f64::from(clip.position()[axis]) - CLIP_ROUNDING_MARGIN;
+        let maximum =
+            f64::from(clip.position()[axis]) + f64::from(clip.size()[axis]) + CLIP_ROUNDING_MARGIN;
+        origin[axis] < maximum && origin[axis] + f64::from(extent[axis]) > minimum
+    })
 }

@@ -2,7 +2,9 @@ use gridthorn_world::{ScheduleBuilder, ScheduleStage};
 
 use super::{ApplicationRuntime, LifecycleError};
 
+mod overhead;
 mod time;
+mod world_scaling;
 
 #[derive(Default)]
 struct StageTrace(Vec<&'static str>);
@@ -66,3 +68,4 @@ fn rejects_frames_after_shutdown() {
 
     assert_eq!(runtime.run_frame(0), Err(LifecycleError::AlreadyShutdown));
 }
+mod catch_up;

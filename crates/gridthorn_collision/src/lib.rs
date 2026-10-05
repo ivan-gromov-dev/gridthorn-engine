@@ -5,6 +5,9 @@ mod errors;
 mod math;
 mod shape;
 
+#[cfg(test)]
+mod allocation_probe;
+
 pub use contact::{Contact2d, contact, overlaps};
 pub use errors::ColliderError;
 pub use math::Vec2;

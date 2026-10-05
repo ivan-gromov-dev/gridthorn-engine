@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeSet, HashMap};
 
 use super::{NavigationBounds, NavigationError};
 use crate::GridCell;
@@ -56,8 +56,8 @@ pub fn search_path(
         }
     }
     let mut queue = BTreeSet::from([(0_u64, start)]);
-    let mut costs = BTreeMap::from([(start, 0_u64)]);
-    let mut parents = BTreeMap::new();
+    let mut costs = HashMap::from([(start, 0_u64)]);
+    let mut parents = HashMap::new();
     let mut result = PathSearch {
         status: PathStatus::Unreachable,
         path: Vec::new(),

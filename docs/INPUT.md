@@ -146,18 +146,10 @@ Domain/runtime tests additionally cover IME disable, explicit stop, delayed
 commits, repeats, shortcut/synthetic suppression, cursor validation, request
 draining, clipboard correlation/errors and suspend/resume.
 
-Windows native clipboard Unicode round-trip and restoration passed on 2026-10-03
-through the opt-in `native_unicode_clipboard_round_trip_restores_original_text`
-test. The full native `--smoke` window did not receive focus in the available
-execution session (both sandboxed and unsandboxed runs reported `Unfocused`
-then timed out); session activation and candidate-window positioning therefore
-remain unverified natively here. The strict focus guard was retained.
-
-Interactive Cyrillic/dead-key layouts and installed CJK input methods require
-manual Windows device testing. Linux/macOS native IME and clipboard execution,
-large text/event bursts and platform-specific candidate-window geometry are
-explicitly deferred; automated injected IME tests are not native language testing.
-Backend semantics follow [winit IME](https://docs.rs/winit/0.30.13/winit/event/enum.Ime.html)
+Windows native clipboard and IME behavior has maintainer manual acceptance for
+this subset. Automated injected text events do not prove OS language behavior;
+Linux/macOS native IME/clipboard and platform candidate-window geometry remain
+unvalidated. Backend semantics follow [winit IME](https://docs.rs/winit/0.30.13/winit/event/enum.Ime.html)
 and [arboard clipboard](https://docs.rs/arboard/3.6.1/arboard/struct.Clipboard.html).
 
 ## Desktop pointer example and validation scope
@@ -180,12 +172,15 @@ frame boundaries and wheel units/phases.
 Windows compilation, automated contract tests and native capture smoke are local
 validation. Windows native smoke applied confinement, locking and release successfully. Interactive
 keyboard layouts and hardware wheel gestures require manual device testing. Linux/macOS native execution,
-large event burst performance, allocation/memory and binary-size measurements
-are explicitly deferred; no universal platform or device validation is claimed.
+native delivery latency and cross-platform measurements
+remain unvalidated; no universal platform or device validation is claimed.
 
-The public monitor supports `--gpu`; `--gpu --smoke-immediate` is the regression
-case that exits at the first frame boundary without presenting. Five consecutive
-runs passed after the fix; native GPU capture smoke, textured-sprite smoke and
-window resize/minimize/restore smoke also passed. The backend's internal reason
-for raising the native exception is not established; the engine no longer creates
-the unused swapchains that triggered the reproduced failure.
+## Input burst performance envelope
+
+`InputBuffer` queues owned events without a full event clone and transfers the event queue into each
+snapshot; held/preedit state remains independent. A replacement queue reserves
+space for the preceding frame's event count. Empty frames do not retain a historical
+queue-capacity high-water mark. Snapshots and their clones remain caller-owned;
+retaining them can grow application memory. No event truncation or coalescing is
+introduced. Larger sustained queues, heap peaks, many distinct held keys and native
+OS/clipboard delivery latency remain unmeasured. See [PERFORMANCE.md](PERFORMANCE.md) for the measured burst envelope.

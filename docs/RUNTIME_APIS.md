@@ -1,11 +1,9 @@
-# Planned runtime API scope — Milestones 4 and 5
+# Runtime API ownership and scope
 
-This is a planning document approved on 2026-10-02, not an implemented API
-contract or a stable compatibility promise. Milestones 1–3 remain complete for
-their documented subsets. The [roadmap](ROADMAP.md) now schedules runtime input,
-text/UI and desktop integration before professional debugging and the editor.
-Concrete public types, backend choices and irreversible decisions require
-focused validation and the existing ADR process during implementation.
+This document separates engine mechanisms from game policy. Domain documents
+define current provisional contracts; the [roadmap](ROADMAP.md) tracks future
+platform/device controls and debugging tools. Planned items below are not
+implemented APIs or stable compatibility promises.
 
 ## Ownership rule
 
@@ -89,3 +87,17 @@ ECS state or profiles. File I/O is synchronous, parent directories must exist,
 and file documents are limited to 16 MiB; compatibility and deferrals remain in
 [WORLD_SAVES.md](WORLD_SAVES.md). These milestones do not implicitly add cloud
 saves, asynchronous saves, arbitrary ECS capture or cross-release migrations.
+
+Audio output processing releases completed voice handles even when the command
+queue is empty. Active voice counts exclude completed voices and include paused
+voices. Shared clip clones reuse converted frames within a single command batch,
+with retention capped at 16 entries and 1 MiB of converted frames; per-voice
+volume and looping settings remain independent. Cleanup requires continued
+output processing. Native output release signals
+shutdown asynchronously without a synchronous thread join; backend data may
+remain alive after drop. [PERFORMANCE.md](PERFORMANCE.md) records the measured
+release/latency envelope. Software loopback is not acoustic latency.
+Automatic Windows power-event routing to runtime/audio hooks is not implemented;
+sleep must not be assumed to reset runtime elapsed time through those hooks.
+Device switching/error recovery, acoustic latency, hours-long sessions and
+cross-platform validation remain Milestone 5/deployment follow-ups.

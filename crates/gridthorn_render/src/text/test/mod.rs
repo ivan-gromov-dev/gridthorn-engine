@@ -1,6 +1,9 @@
+mod cold_japanese;
 mod geometry;
 mod layout;
 mod raster;
+mod raster_clip;
+mod raster_memory;
 
 use super::{TextStyle, TextSystem};
 use gridthorn_assets::FontAsset;
@@ -16,9 +19,11 @@ fn assets() -> Vec<FontAsset> {
     .collect()
 }
 
-fn system() -> TextSystem {
+pub(super) fn system() -> TextSystem {
     TextSystem::new("en-US", &assets()).expect("font service")
 }
-fn style() -> TextStyle {
+pub(super) fn style() -> TextStyle {
     TextStyle::new("Noto Sans", 24.0)
 }
+mod pressure;
+mod raster_equivalence;

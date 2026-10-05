@@ -62,3 +62,4 @@ fn reports_overload_and_preserves_backlog_for_later_frames() {
 }
 
 mod control;
+mod scaling;

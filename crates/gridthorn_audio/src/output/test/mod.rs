@@ -3,6 +3,11 @@ use kira::{AudioManager, AudioManagerSettings, backend::mock::MockBackend};
 use super::{AudioOutputError, OutputBackend, linear_gain, sound_data};
 use crate::{AudioClip, AudioCommandQueue, PlaybackSettings};
 
+#[cfg(all(feature = "native-output", not(target_arch = "wasm32")))]
+mod native;
+mod retention;
+mod scaling;
+
 #[test]
 fn processes_voice_controls_without_an_output_device() {
     let manager = AudioManager::<MockBackend>::new(AudioManagerSettings::default())

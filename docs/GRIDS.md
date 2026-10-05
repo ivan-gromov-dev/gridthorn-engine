@@ -1,5 +1,12 @@
 # Provisional grid and tilemap contract
 
+The [performance limits](PERFORMANCE.md)
+records inhabited weighted routes, compact/one-cell chunk storage and rejected
+placement churn. `max_visited` bounds search work, not a wall-clock deadline;
+eight full 256x256 maze queries exceed a frame budget on the measured host.
+Chunk density, footprint size and retained clones materially affect heap use.
+Games must budget requests and storage using their own terrain and population.
+
 Milestone 3 starts with `gridthorn::grid`, enabled by the `grid` Cargo feature.
 The dependency-free-of-platform `gridthorn_grid` subsystem owns the implementation;
 the SDK facade is the application entry point. It is an optional standard grid
@@ -128,13 +135,18 @@ shape using checked integer addition and returns ordered cells or a contextual
 overflow error. Games can construct rectangles or rotated shapes as offsets;
 there is no projection-specific authoritative geometry.
 
-`PlacementMap` stores exclusive sparse occupancy in ordered trees. Each instance
+`PlacementMap` stores exclusive sparse occupancy with ordered objects. Each instance
 is an independent occupancy space, unrelated to tilemap layer IDs. Caller-owned
 `GridObjectId(u64)` values identify objects without binding them to ECS entity
 lifetimes. Games own identity allocation, associated entity data, and cleanup.
 `objects` iterates by identity; `placement` reads an immutable anchor/footprint;
 `object_at` selects through any occupied footprint cell, including non-anchor
 cells. Holes are free for other objects.
+
+Cell occupancy uses hash lookups while object iteration remains ordered. Error
+selection follows ordered footprint offsets, independent of hash table layout.
+Measured lookup/relocation scaling and unmeasured memory tradeoffs are recorded
+in [performance limits](PERFORMANCE.md).
 
 `validate(id, anchor, footprint)` returns candidate cells without reserving them
 and ignores cells owned by that identity, enabling self-overlapping moves.
@@ -165,10 +177,9 @@ iteration/conflicts, and unchanged occupancy after rejected edits.
 
 Automatic ECS/scene synchronization, rotation convenience APIs, placement UI,
 reservations, multi-object transactions, occupancy masks/elevation, and placement
-persistence remain deferred. Memory, large-footprint/map performance, binary-size,
-and cross-platform measurements are explicitly deferred. No scalability or
-stronger determinism guarantee is claimed; this increment introduces no stable
-format or irreversible architecture decision.
+persistence remain deferred. Games own memory and large-footprint/map budgets; measured subsets are in
+[PERFORMANCE.md](PERFORMANCE.md). No universal scalability, stronger determinism
+or stable persistence format is promised.
 
 ## Pathfinding and diagnostic visualization
 
@@ -205,6 +216,13 @@ These read-only diagnostics can be projected into existing sprites/UI or custom
 tools without linking navigation to rendering. Queries mutate no world data;
 authoritative route consumption belongs at fixed ticks or explicit load/reset.
 
+Tentative cost and predecessor tables use hash lookups and are never iterated
+to choose work or generate diagnostics. An ordered frontier preserves the public
+cost/cell expansion and tie rules. Windows release measurements through 512x512
+are recorded in [performance limits](PERFORMANCE.md); full searches remain
+synchronous and may exceed a frame budget. The settled-cell budget is a work cap,
+not a wall-clock deadline or a resumable-search API.
+
 Run the public facade example:
 
 ```console
@@ -219,6 +237,5 @@ results, unreachable goals, budgets, invalid input, and extreme coordinates.
 
 Diagonal movement, multi-cell agents, heuristic A*, asynchronous/resumable work,
 route caching/invalidation, automatic movement and interactive overlays are
-explicitly deferred. Large-map performance/memory, binary size, and stronger
-cross-platform determinism measurements remain deferred; no scalability claim
-is made. This roadmap item is complete for the documented provisional subset.
+explicitly deferred. Performance envelopes do not establish stronger cross-platform determinism
+or arbitrary large-map scalability. This roadmap item is complete for the documented provisional subset.

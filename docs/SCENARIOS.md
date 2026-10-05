@@ -1,5 +1,13 @@
 # Provisional scenarios, snapshots, and controlled randomness
 
+The [performance limits](PERFORMANCE.md)
+measures nested roots through 16384 agents and histories of 1/8/32 snapshots.
+Independent owned clones multiply memory; releasing a large history can also
+exceed a frame budget. Games own history length and destruction scheduling.
+Draining the command queue releases payloads while retaining reusable queue
+capacity; dropping the queue releases that capacity. These measured envelopes
+do not extend determinism to different targets or engine versions.
+
 Implemented on 2026-10-02 through the public SDK. `Scenario`, `ScenarioState`,
 `ScenarioRuntime`, `SimulationSnapshot`, `RandomStreams`, and their typed errors
 are provisional. No dependencies or crate edges are added. The orchestration
@@ -86,31 +94,16 @@ canonical byte/integer encodings and iteration order for authoritative hashes.
 No generic hash for arbitrary S or ECS entities is inferred. FNV fingerprints
 are diagnostic comparisons, not security/integrity proofs.
 
-## Evidence and scope
+## Scope and example
+
+Reproducibility requires the same engine, target, features, game rules,
+configuration, initial state, command sequence and seeds. No cross-target
+bit-identical guarantee is made. In-memory snapshots have the same compiled S/C
+types and process/target; persisted envelopes use [WORLD_SAVES.md](WORLD_SAVES.md).
+Arbitrary ECS capture, engine migrations, interactive-clock snapshots and tooling
+restoration remain deferred. Games budget clone costs, retained histories and release.
+CLI listing/launch uses the separate [CLI contract](CLI_SIMULATION.md).
 
 ```console
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_scenarios_snapshots
 ```
-
-The example compares full integer state and RNG after 100 ticks, snapshot
-continuation in a fresh runner, and replay from the initial snapshot. A queued
-command captured at tick 25 is consumed exactly once. It prints a game-encoded
-fingerprint (`d255a15d9a986482` for this example's initial version).
-Domain tests cover fixed vectors, registration order, independent streams,
-clone continuation, invalid names/access, compatibility rollback, commands,
-controls, exit, zero ticks, missing roots, Shutdown, and tick overflow.
-
-Reproducibility requires the same engine, target, features, game rules,
-configuration, initial state, command sequence, and seeds. No stronger
-cross-target bit-identical guarantee is made. In-memory snapshots have the same
-compiled S/C types and process/target; persisted envelopes use the separate save API.
-This completes the Milestone 3 item for the typed authoritative-root subset.
-Typed-root world saving/loading is now implemented through the separate
-[world save contract](WORLD_SAVES.md). Arbitrary ECS capture, engine migrations,
-interactive-clock snapshots, tooling restoration,
-large-state clone costs/memory limits, binary size, and cross-platform/performance
-measurements are deferred. The rationale is recorded in the
-[proposed snapshot ADR](adr/0002-typed-simulation-snapshots.md).
-
-Project-declared scenario listing and headless game-process launch are now
-available through the [provisional CLI contract](CLI_SIMULATION.md).

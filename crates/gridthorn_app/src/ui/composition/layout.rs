@@ -55,7 +55,7 @@ pub struct UiPlacement {
 pub struct UiLayout {
     pub(super) scale: f32,
     pub(super) text_geometry:
-        std::collections::BTreeMap<UiNodeId, super::text_geometry::TextGeometry>,
+        std::sync::Arc<std::collections::BTreeMap<UiNodeId, super::text_geometry::TextGeometry>>,
     pub(super) placements: Vec<UiPlacement>,
     pub(super) primitives: Vec<gridthorn_render::UiPrimitive>,
 }
@@ -101,7 +101,22 @@ impl UiTree {
         &self,
         viewport: [f32; 2],
         scale: f32,
-        mut text: Option<&mut TextSystem>,
+        text: Option<&mut TextSystem>,
+    ) -> Result<UiLayout, UiCompositionError> {
+        let mut text = super::prepared_text::PreparedText::new(text);
+        let mut layout = self.arrange_layout(viewport, scale, &mut text)?;
+        layout.primitives =
+            super::paint::paint(self, &layout.placements, scale, &mut text, None, None, None)?;
+        layout.text_geometry =
+            super::text_geometry::prepare(self, &layout.placements, &mut text)?.into();
+        Ok(layout)
+    }
+
+    pub(super) fn arrange_layout(
+        &self,
+        viewport: [f32; 2],
+        scale: f32,
+        text: &mut super::prepared_text::PreparedText<'_>,
     ) -> Result<UiLayout, UiCompositionError> {
         if !viewport.into_iter().all(super::tree::metric)
             || !scale.is_finite()
@@ -111,8 +126,9 @@ impl UiTree {
             return Err(UiCompositionError::InvalidMetrics("viewport/DPI"));
         }
         let mut placements = Vec::new();
+        let mut measurements = super::text_measurement::TextMeasurements::new(&self.theme, text);
         arrange(
-            &self.root,
+            self.root(),
             UiBounds {
                 position: [0.0; 2],
                 size: viewport,
@@ -121,18 +137,15 @@ impl UiTree {
                 position: [0.0; 2],
                 size: viewport,
             },
-            &self.theme,
-            &mut text,
+            &mut measurements,
             &mut placements,
             None,
         )?;
-        let primitives = super::paint::paint(self, &placements, scale, &mut text, None)?;
-        let text_geometry = super::text_geometry::prepare(self, &placements, &mut text)?;
         Ok(UiLayout {
             scale,
-            text_geometry,
+            text_geometry: std::sync::Arc::default(),
             placements,
-            primitives,
+            primitives: Vec::new(),
         })
     }
 }
@@ -157,17 +170,12 @@ pub(super) fn text_size(
     value: &str,
     width: f32,
     theme: &UiTheme,
-    text: &mut Option<&mut TextSystem>,
+    text: &mut super::prepared_text::PreparedText<'_>,
 ) -> Result<[f32; 2], UiCompositionError> {
     if let Some(style) = &theme.text {
-        let service = text
-            .as_deref_mut()
-            .ok_or(UiCompositionError::InvalidMetrics(
-                "asset font theme requires TextSystem",
-            ))?;
         let mut style = style.clone();
         style.width = Some(width.max(1.0));
-        let measurement = service.layout(value, &style)?.measurement();
+        let measurement = text.layout(value, &style)?.measurement();
         Ok([measurement.width, measurement.height])
     } else {
         let lines: Vec<_> = value.split('\n').collect();
@@ -208,9 +216,9 @@ fn insets(node: &UiNode) -> [f32; 2] {
 fn measure(
     node: &UiNode,
     available: [f32; 2],
-    theme: &UiTheme,
-    text: &mut Option<&mut TextSystem>,
+    measurements: &mut super::text_measurement::TextMeasurements<'_, '_>,
 ) -> Result<[f32; 2], UiCompositionError> {
+    let theme = measurements.theme;
     let padding = insets(node);
     let width = match node.style.size[0] {
         UiLength::Pixels(value) => value,
@@ -224,7 +232,7 @@ fn measure(
     ];
     let mut natural = [0.0; 2];
     if let Some(value) = caption(&node.control) {
-        natural = text_size(value, inner[0], theme, text)?;
+        natural = measurements.size(value, inner[0])?;
         if matches!(node.control, UiControl::Toggle { .. }) {
             natural[0] += theme.row_height;
         }
@@ -233,14 +241,14 @@ fn measure(
         UiControl::Slider { .. } => natural = [120.0, theme.row_height],
         UiControl::List { items, .. } => {
             for value in items {
-                natural[0] = natural[0].max(text_size(value, inner[0], theme, text)?[0]);
+                natural[0] = natural[0].max(measurements.size(value, inner[0])?[0]);
             }
             natural[1] = items.len() as f32 * theme.row_height;
         }
         _ => {}
     }
     for (index, child) in node.children.iter().enumerate() {
-        let size = measure(child, inner, theme, text)?;
+        let size = measure(child, inner, measurements)?;
         match node.style.flow {
             UiFlow::Overlay => {
                 for axis in 0..2 {
@@ -275,7 +283,7 @@ fn measure(
             0.0
         };
         let actual_width = (size[0] - padding[0] - indicator).max(0.0);
-        size[1] = (text_size(value, actual_width, theme, text)?[1] + padding[1])
+        size[1] = (measurements.size(value, actual_width)?[1] + padding[1])
             .clamp(node.style.min_size[1], node.style.max_size[1]);
     }
     Ok(size)
@@ -293,15 +301,14 @@ fn arrange(
     node: &UiNode,
     parent: UiBounds,
     ancestor_clip: UiBounds,
-    theme: &UiTheme,
-    text: &mut Option<&mut TextSystem>,
+    measurements: &mut super::text_measurement::TextMeasurements<'_, '_>,
     placements: &mut Vec<UiPlacement>,
     forced: Option<UiBounds>,
 ) -> Result<(), UiCompositionError> {
     let bounds = if let Some(bounds) = forced {
         bounds
     } else {
-        let size = measure(node, parent.size, theme, text)?;
+        let size = measure(node, parent.size, measurements)?;
         UiBounds {
             size,
             position: std::array::from_fn(|axis| {
@@ -321,6 +328,7 @@ fn arrange(
             "computed layout exceeds geometry budget",
         ));
     }
+    let theme = measurements.theme;
     let padding = insets(node);
     let content = UiBounds {
         position: [
@@ -337,7 +345,7 @@ fn arrange(
     let mut sizes = node
         .children
         .iter()
-        .map(|child| measure(child, content.size, theme, text))
+        .map(|child| measure(child, content.size, measurements))
         .collect::<Result<Vec<_>, _>>()?;
     let main = match node.style.flow {
         UiFlow::Overlay => None,
@@ -365,7 +373,7 @@ fn arrange(
                         share.clamp(child.style.min_size[axis], child.style.max_size[axis]);
                 }
                 if axis == 0 && child.style.size[1] == UiLength::Auto {
-                    size[1] = measure(child, [size[0], content.size[1]], theme, text)?[1];
+                    size[1] = measure(child, [size[0], content.size[1]], measurements)?[1];
                 }
             }
         }
@@ -391,7 +399,7 @@ fn arrange(
         extent[1] = extent[1].max(items.len() as f32 * theme.row_height);
     }
     if let Some(value) = caption(&node.control) {
-        let natural = text_size(value, content.size[0], theme, text)?;
+        let natural = measurements.size(value, content.size[0])?;
         for axis in 0..2 {
             extent[axis] = extent[axis].max(natural[axis]);
         }
@@ -422,8 +430,7 @@ fn arrange(
             child,
             content,
             child_clip,
-            theme,
-            text,
+            measurements,
             placements,
             Some(bounds),
         )?;

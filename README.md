@@ -5,16 +5,13 @@ games. It is suitable for traditional 2D genres while providing a particularly
 strong foundation for tile-based, isometric, management, tycoon, and
 simulation-heavy games.
 
-The project has completed Milestones 1–3: the runtime vertical slice,
+The project has completed Milestones 1–4.5: the runtime vertical slice,
 general-purpose 2D SDK and Gridthorn specialization, with provisional APIs
 validated by Crystal Trail and Timber Harbor. It has a
 reproducible Cargo workspace, a working CLI, native window and input handling,
 fixed-step world updates, sprite presentation, texture loading, and runtime
 timing diagnostics. A visual editor will later be built on the same public APIs
 and development protocol.
-
-[Milestone 2 review](docs/milestone-2-review.md) records completion evidence and
-deferred platform and performance validation.
 
 ## Principles
 
@@ -38,19 +35,19 @@ deferred platform and performance validation.
 - [Public API and release policy](docs/PUBLIC_API_POLICY.md)
 - [UI composition and controls](docs/UI.md)
 - [Project terminology](docs/GLOSSARY.md)
-- [Architecture Decision Records](docs/adr/README.md)
+- [Performance and workload limits](docs/PERFORMANCE.md)
 - [Contributor guide](CONTRIBUTING.md)
 
 ## Status
 
-Milestones 1–3 are complete for their documented supported subsets. Commands and Rust snippets
+Milestones 1–4.5 are complete for their documented supported subsets. Commands and Rust snippets
 outside the section below still describe target developer experience unless
 they are explicitly marked as implemented.
 
 | Area                               | Status                                                                                                     |
 | ---------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | Product and architecture direction | Design baseline                                                                                            |
-| Milestone 0 foundation             | Complete; runtime deferrals recorded                                                                       |
+| Milestone 0 foundation             | Complete for the documented foundation                                                                       |
 | Cargo workspace and CI             | Implemented foundation                                                                                     |
 | CLI                                | Project commands, compatibility checks, source watch, release builds, scenario listing and headless launch |
 | Public SDK facade                  | Version API plus provisional lifecycle and schedule APIs                                                   |
@@ -83,33 +80,10 @@ they are explicitly marked as implemented.
 | Current source release             | `0.2.0`                                                                                                    |
 | Stable API                         | Not available; APIs remain pre-1.0 and provisional                                                         |
 
-Milestone 3 is complete: provisional square and isometric coordinates are
-implemented behind the `grid` feature; see [the grid contract](docs/GRIDS.md).
-Sparse tilemaps, layers, chunks, picking, and grid-based object placement are
-also implemented, along with bounded weighted pathfinding and SVG diagnostics.
-Simulation clock, pause, and speed control are implemented; see the
-[simulation contract](docs/SIMULATION.md). Headless simulation is implemented through `HeadlessSimulation`. Typed scenarios, in-memory snapshots, and named seeded RNG streams are implemented;
-see the [scenario contract](docs/SCENARIOS.md). World saving and loading are implemented
-for the typed authoritative-root subset; see [the save contract](docs/WORLD_SAVES.md).
-CLI scenario listing and headless simulation launch are implemented through a
-dedicated game-owned binary; see [the CLI simulation contract](docs/CLI_SIMULATION.md).
-The playable Timber Harbor `tycoon_slice` now integrates these features with
-Milestone 2 presentation, UI, audio, reflection, scene persistence and asset reload.
-Its workforce economy includes housing, multi-tick production, resource-specific
-ports and a pause/save/load menu with generated UI artwork.
-The [Milestone 3 completion review](docs/milestone-3-showcase.md) records scope,
-verification, deferrals and maintainer acceptance on 2026-10-02. The next phase
-is Milestone 4: complete input, multilingual text and runtime UI APIs, followed
-by Milestone 5 desktop platform/device controls. The debugging workflow and
-editor move to Milestones 6 and 7. Desktop input, Unicode/IME/clipboard and
-multilingual font rendering and [runtime localization](docs/LOCALIZATION.md) are
-implemented provisionally. [UI composition and controls](docs/UI.md) are implemented
-with explicit value commands, ordered event routing, focus/navigation, grapheme-aware
-editing/selection and pointer capture with explicit world-input consumption.
-Ordered popup/dialog layers, modal scopes, focus restoration and configurable
-Escape/outside-click dismissal are implemented provisionally.
-Remaining runtime UI/device additions are planned;
-see [the runtime API scope](docs/RUNTIME_APIS.md) and [roadmap](docs/ROADMAP.md).
+The next target is desktop platform/device support in [Milestone 5](docs/ROADMAP.md).
+[Performance limits](docs/PERFORMANCE.md) describe the measured Windows workload
+envelopes and the CPU comparison in CI. APIs remain provisional; engine-wide
+frame deadlines and cross-platform performance are not guaranteed.
 
 Run the public composed UI example (use `--headless` for resize/DPI/control checks):
 

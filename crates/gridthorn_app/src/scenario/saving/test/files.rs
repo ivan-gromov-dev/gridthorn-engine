@@ -15,10 +15,10 @@ impl WorldSaveCodec<Vec<u64>, u64> for Rejected {
     }
 }
 
-struct Directory(std::path::PathBuf);
+pub(super) struct Directory(pub(super) std::path::PathBuf);
 
 impl Directory {
-    fn new() -> Self {
+    pub(super) fn new() -> Self {
         let path = std::env::temp_dir().join(format!(
             "gridthorn-save-test-{}-{}",
             std::process::id(),

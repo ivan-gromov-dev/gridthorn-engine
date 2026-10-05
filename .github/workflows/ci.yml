@@ -51,6 +51,46 @@ jobs:
       - name: Check all targets at the MSRV
         run: cargo check --workspace --all-targets --locked
 
+  performance:
+    name: Performance comparison (advisory)
+    if: github.event_name == 'pull_request' || github.event.before != '0000000000000000000000000000000000000000'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      RUSTUP_TOOLCHAIN: 1.99.0
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: current
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha || github.event.before }}
+          path: previous
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@1.99.0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            current -> ../performance/target-head
+            previous -> ../performance/target-base
+      - name: Test performance comparison policy
+        run: python3 -m unittest discover -s current/scripts/performance/test
+      - name: Compare previous and current release workloads
+        run: sh current/scripts/performance.sh --baseline previous --current current --output performance
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-comparison
+          path: |
+            performance/*.json
+            performance/*.log
+          retention-days: 14
+
   ci-success:
     name: CI Success
     if: always()

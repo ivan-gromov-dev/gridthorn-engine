@@ -9,7 +9,7 @@ use crate::{ExitRequest, ScenarioError, ScenarioRuntime, ScenarioState, Simulati
 /// Strict engine envelope; full-width counters use decimal strings because TOML integers are signed.
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct Document {
+pub(super) struct Document {
     format: String,
     schema: u32,
     engine: String,
@@ -112,11 +112,11 @@ where
                 "unsupported format or schema (expected gridthorn-world-save schema 1)",
             ));
         }
-        let current = self.snapshot()?;
-        if document.engine != current.engine {
+        let (scenario, revision, current_config) = self.save_identity()?;
+        if document.engine != env!("CARGO_PKG_VERSION") {
             return Err(ScenarioError::Incompatible("engine release").into());
         }
-        if document.scenario != current.scenario || document.revision != current.revision {
+        if document.scenario != scenario || document.revision != revision {
             return Err(ScenarioError::Incompatible("scenario identity or revision").into());
         }
         if document.step_nanos >= 1_000_000_000 {
@@ -130,7 +130,7 @@ where
             document.catch_up,
         )
         .map_err(|error| invalid(error.to_string()))?;
-        if config != current.config {
+        if config != current_config {
             return Err(ScenarioError::Incompatible("fixed-step configuration").into());
         }
         let completed_ticks = number(&document.completed_ticks, "completed_ticks")?;
@@ -156,10 +156,10 @@ where
         let (data, commands) = codec
             .decode(&document.payload)
             .map_err(WorldSaveError::Codec)?;
-        self.restore(&SimulationSnapshot {
+        self.restore_owned(SimulationSnapshot {
             scenario: document.scenario,
             revision: document.revision,
-            engine: current.engine,
+            engine: env!("CARGO_PKG_VERSION"),
             config,
             completed_ticks,
             state: ScenarioState {

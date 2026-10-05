@@ -122,8 +122,8 @@ impl InputBuffer {
 
     /// Apply one engine-owned platform event in arrival order.
     pub fn push(&mut self, event: InputEvent) {
-        self.state.events.push(event.clone());
-        match event {
+        let focus_lost = matches!(event, InputEvent::FocusLost);
+        match &event {
             InputEvent::Text(crate::TextInputEvent::Composition { text, cursor }) => {
                 let cursor = cursor.filter(|(start, end)| {
                     text.is_char_boundary(*start) && text.is_char_boundary(*end)
@@ -131,7 +131,7 @@ impl InputBuffer {
                 self.state.composition = if text.is_empty() {
                     None
                 } else {
-                    Some((text, cursor))
+                    Some((text.clone(), cursor))
                 };
             }
             InputEvent::Text(
@@ -142,10 +142,11 @@ impl InputBuffer {
             InputEvent::Text(crate::TextInputEvent::ImeEnabled)
             | InputEvent::Clipboard(_)
             | InputEvent::MouseWheel { .. }
-            | InputEvent::PointerMotion { .. } => {}
+            | InputEvent::PointerMotion { .. }
+            | InputEvent::FocusLost => {}
             InputEvent::TextInputChanged { active, .. } => {
-                self.state.text_input_active = active;
-                if !active {
+                self.state.text_input_active = *active;
+                if !*active {
                     self.state.composition = None;
                 }
             }
@@ -159,33 +160,40 @@ impl InputBuffer {
                 }
                 match key.state {
                     ButtonState::Pressed => {
-                        self.state.physical_keys_down.insert(key.physical_key);
+                        self.state
+                            .physical_keys_down
+                            .insert(key.physical_key.clone());
                     }
                     ButtonState::Released => {
                         self.state.physical_keys_down.remove(&key.physical_key);
                     }
                 }
             }
-            InputEvent::ModifiersChanged(modifiers) => self.state.modifiers = modifiers,
+            InputEvent::ModifiersChanged(modifiers) => self.state.modifiers = *modifiers,
             InputEvent::FocusGained => self.state.focused = true,
             InputEvent::PointerCaptureChanged(status) => self.state.capture = status.effective,
-            InputEvent::Keyboard { key, state } => self.apply_key(key, state),
-            InputEvent::MouseButton { button, state } => self.apply_mouse_button(button, state),
-            InputEvent::CursorMoved(position) => self.state.cursor_position = Some(position),
+            InputEvent::Keyboard { key, state } => self.apply_key(*key, *state),
+            InputEvent::MouseButton { button, state } => self.apply_mouse_button(*button, *state),
+            InputEvent::CursorMoved(position) => self.state.cursor_position = Some(*position),
             InputEvent::CursorLeft => {
                 if self.state.capture == crate::PointerCaptureMode::None {
                     self.state.cursor_position = None;
                 }
             }
-            InputEvent::FocusLost => self.release_all(),
+        }
+        self.state.events.push(event);
+        if focus_lost {
+            self.release_all();
         }
     }
 
-    /// Return the current frame state and clear only edge transitions.
+    /// Return an independent frame snapshot, draining events and edge transitions.
     #[must_use]
     pub fn snapshot(&mut self) -> InputState {
-        let snapshot = self.state.clone();
-        self.state.events.clear();
+        let next_events = Vec::with_capacity(self.state.events.len());
+        let events = std::mem::replace(&mut self.state.events, next_events);
+        let mut snapshot = self.state.clone();
+        snapshot.events = events;
         self.state.keys_pressed.clear();
         self.state.keys_released.clear();
         self.state.mouse_buttons_pressed.clear();

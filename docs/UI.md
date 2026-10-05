@@ -11,6 +11,9 @@ requested scroll offset and ordered children. Only panels own child nodes.
 `UiTree::new` validates the complete tree; `replace` atomically replaces it.
 Invalid IDs, sizes, control data and commands return `UiCompositionError`.
 `set_style(id, style)` atomically replaces one node's validated style.
+Node reads use an immutable index of child paths built after validation and
+rebuilt on successful replacement. Tree clones share the index while retaining
+independent node values. Style/value/visual commands preserve topology.
 Node reads are immutable. Change values with explicit commands or replace the
 composition; layouts never silently follow subsequent edits.
 
@@ -20,6 +23,38 @@ effective ancestor clips, content extents and clamped scroll offsets. Submit
 `layout.into_primitives()` through `RenderFrame::with_ui`. Recompute after a
 viewport, theme, content, control or DPI change. A zero viewport produces no
 paint; no window, GPU, world or simulation is required for layout.
+
+Arrangement reuses asset-font measurements for identical text and effective
+wrapping width within that pass. One immutable theme/font service owns the pass;
+the cache is discarded before layout returns and stores at most 1024 entries
+with at most 1 MiB of copied UTF-8 keys (excluding map metadata).
+Further measurements still execute normally after the limit. Bitmap measurement,
+paint and editing geometry retain their existing behavior.
+
+One font service and immutable theme additionally share prepared text across the
+whole arrangement/field-geometry/paint pass, including preedit. This temporary
+cache caps retention at 1024 entries, 256 KiB of UTF-8 text/family keys, 16384 diagnostic glyphs
+and 4096 lines; complete styles and wrapping widths must match. It stops retaining
+when any budget is exhausted and continues through the normal text service.
+It is released before returning `UiLayout`, including error paths; snapshots and
+input-scope clones do not retain these backend buffers. The permanent service LRU
+limits remain unchanged.
+
+Router layout prepares field geometry once for hit testing, native text anchors
+and focused caret/selection decoration. It looks up glyph cluster endpoints in
+sorted grapheme boundaries without a
+full-text scan or temporary vector for each glyph. This preserves byte offsets,
+ligature subdivision and visual RTL caret/selection positions. Layout still owns
+the complete field geometry, including offscreen text.
+
+Active preedit still prepares its separate
+composition text; changed field content, placement or theme requires fresh layout.
+
+Asset-font paint passes the effective ancestor/content clip to
+`TextSystem::rasterize_clipped`, omitting draw spans for glyph ink wholly outside
+that region. Partially intersecting ink retains exact downstream clipping and
+painter order. Values, full layout/field geometry and raster work safety limits
+are preserved; this does not introduce automatic text truncation or caret scrolling.
 
 `UiLength` supports intrinsic `Auto`, fixed `Pixels`, parent-relative `Fraction`
 (0–1) and `Fill`. Minimum/maximum sizes include padding. Fractions resolve
@@ -97,7 +132,21 @@ Implemented provisionally on 2026-10-03. `UiRouter::new(first_clipboard_id)` own
 presentation focus, pointer capture, key/button ownership, modifiers and a focused
 field editor. Call `route(tree, layout, input)` during `Input`, before mapping world
 commands; `route_events` provides the same contract for injected ordered events.
-Both leave the raw snapshot unchanged. A rejected batch preserves the tree/router
+Both leave the raw snapshot unchanged. With no registered layer roots, routing
+borrows the supplied immutable layout for its input scopes. Registered roots use
+filtered owned scopes, including when every registered layer is closed.
+These scopes copy placements and share immutable prepared text geometry without copying render
+primitives; ordered ID sets filter layer membership without changing painter order.
+Cloned layouts also share the geometry snapshot. A fresh layout prepares a new
+snapshot; it cannot modify an older layout. Geometry is released with its last
+layout/scope owner, including when primitives are transferred out of a layout.
+Within a routed batch, the base input scope and the most recent pointer scope are
+reused. Closing a layer rebuilds the base scope before the next event; changing
+the layer under the pointer or capture rebuilds the pointer scope. Tree topology
+and registered roots cannot change through routed commands. Scopes are released
+at the end of the batch, including rejected batches; the router does not retain
+them across calls. Hit testing uses the same scope preparation for a single query.
+A rejected batch preserves the tree/router
 and returns no platform side effects. Successful effects retain event order.
 
 `UiRoute::world_events` contains only unconsumed events; `consumed` contains their
@@ -241,16 +290,9 @@ delayed close or animation-driven focus changes occur. Keyframe timelines,
 repeat/yoyo playback, springs, transforms, subtree opacity and automatic
 style-state transitions remain deferred.
 
-Domain tests cover easing, time partitioning, zero/large deltas, finite extremes,
-pause, interruption, property application, validation and atomic failure. The
-public facade lifecycle test animates during simulation pause and speed changes
-and prepares a render frame. `composed-controls --animations --headless` covers
-control and panel transitions, background alpha, interruption and DPI 1/2;
-`--animations --smoke` and `--layers --animations --smoke` exercise native rendering.
-Both Windows workflows passed 120-frame lifecycle smoke on 2026-10-03. This proves
-native submission/shutdown, not visual acceptance, interactive device behavior or
-Linux/macOS support. Per-frame layout allocation and animation performance remain
-unmeasured.
+The `composed-controls` example offers `--animations --headless` and
+`--layers --animations --smoke` paths for control/panel transitions and modal layers.
+Linux/macOS native behavior remains unvalidated.
 
 ## Text editing and platform integration
 
@@ -296,45 +338,33 @@ Asset fonts use shaped clusters, wrapping and directional glyph coordinates;
 ligature-internal graphemes divide the cluster advance evenly. The bitmap fallback
 uses its existing scalar advances. Selection paint follows each visual segment.
 
-## Evidence and limits
+## Limits and examples
 
-Domain tests cover row fill/padding/gaps, fraction sizing, anchors, resize,
-intrinsic content, nested clip/scroll, list extents, zero viewport, atomic
-replacement/commands, disabled controls and invalid metrics/ranges/IDs/depth.
-Facade tests compose a render frame and validate multilingual wrapping and DPI
-invariance with Cyrillic, Arabic, Japanese and combining text. Renderer tests
-check clipping geometry and paint order. The sibling
-`composed-controls` example presents all six controls through the public facade,
-with routed pointer/keyboard input, text/clipboard forwarding and a headless
-resize/DPI/scroll/routing/Unicode-editing workflow. Facade tests execute routing
-before fixed work and rendering, and exercise Cyrillic/Arabic/Japanese fields,
-combining marks, ligatures and multiline text at DPI 2. Domain tests cover short
-clicks, outside/window-exit release, capture, disabled overlays, wheel accumulation,
-focus traversal/cancellation, owned key releases, selection replacement, grapheme
-merging, IME cancellation/commit, clipboard failures/stale replies and atomic rollback.
+Routing clones bounded presentation state for atomic failure handling. Managed
+closed layers participate in sizing but produce neither paint nor editing geometry.
+Direct tree layout prepares every authored layer. Reuse unchanged caller-owned
+layouts for large trees. No virtualization or automatic occlusion culling is supplied.
+The 1024-field Japanese fixture exceeds a 16.67 ms frame budget; large long-field
+DPI-2 raster requests can reject `TooLarge` while preserving previous snapshots.
+See [PERFORMANCE.md](PERFORMANCE.md) for workload limits.
 
-The `--smoke` workflow passed on the available Windows host on 2026-10-03,
-creating a native window, submitting 120 frames and shutting down successfully.
-The routing version also passed the Windows 120-frame native smoke on 2026-10-03.
-The nested layer version passed the Windows 120-frame native smoke on 2026-10-03.
-This verifies lifecycle execution, not visual or interactive input acceptance.
-Linux/macOS rendering, native interactive
-language/IME behavior, accessibility, large-tree performance,
-layout caching, virtualization, flex/grid constraint solving, border/radius/shadow
-styling and live font reload integration remain unvalidated or deferred.
-Full editor extensions (undo/redo, word/double-click navigation, bidi visual-arrow
-affinity, exact font-provided ligature carets, automatic caret/list reveal and caret
-blinking) remain deferred. Ordered modal layers and focus restoration are
-implemented provisionally, along with explicit presentation-property transitions.
-Routing clones bounded presentation state for atomic failure handling; allocation,
-large-field latency and repeated shaping costs have not been measured.
+Accessibility, flex/grid constraint solving, border/radius/shadow styling and live
+font reload integration remain deferred. Editor extensions such as undo/redo,
+word/double-click navigation, bidi visual-arrow affinity, exact font-provided
+ligature carets, automatic caret/list reveal and caret blinking are deferred.
+Linux/macOS native rendering and broader platform behavior remain unvalidated.
+Windows native IME/clipboard and manual DPI acceptance is complete for the
+workbench subset; complete quantitative frame-budget compliance is unverified.
+
+The sibling `composed-controls` example exercises controls, routing, Unicode
+editing, clipping, resize and synthetic DPI through the public facade. The
+[multilingual-workbench](../../gridthorn-examples/multilingual-workbench/README.md)
+combines four Fluent catalogs, editing, controls, modal/context actions and
+unscaled transitions. Each provides headless checks and a native smoke workflow.
 
 ```console
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_composed_controls --locked -- --headless
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_composed_controls --locked -- --smoke
-cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_composed_controls --locked -- --layers --headless
-cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_composed_controls --locked -- --layers --smoke
-cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_composed_controls --locked -- --animations --headless
-cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_composed_controls --locked -- --animations --smoke
-cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_composed_controls --locked -- --layers --animations --smoke
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_multilingual_workbench --locked -- --headless
+cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_multilingual_workbench --locked -- --smoke
 ```

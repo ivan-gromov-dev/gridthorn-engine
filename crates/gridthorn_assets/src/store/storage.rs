@@ -120,27 +120,22 @@ impl AssetStore {
         let mut affected = BTreeSet::new();
         for (id, entry) in &self.entries {
             let bytes = self.read(id)?;
-            if bytes.as_slice() != entry.bytes.as_ref() {
+            if bytes.as_slice() == entry.bytes.as_ref() {
+                snapshots.insert(id.clone(), Arc::clone(&entry.bytes));
+            } else {
                 affected.insert(id.clone());
-            }
-            snapshots.insert(id.clone(), bytes);
-        }
-        loop {
-            let previous_len = affected.len();
-            for (id, entry) in &self.entries {
-                if entry
-                    .dependencies
-                    .iter()
-                    .any(|dependency| affected.contains(dependency))
-                {
-                    affected.insert(id.clone());
-                }
-            }
-            if previous_len == affected.len() {
-                break;
+                snapshots.insert(id.clone(), Arc::<[u8]>::from(bytes));
             }
         }
-        let order = self.dependency_order(affected);
+        if affected.is_empty() {
+            return Ok(Vec::new());
+        }
+        let order = super::dependency_graph::DependencyGraph::new(
+            self.entries
+                .iter()
+                .map(|(id, entry)| (id, &entry.dependencies)),
+        )
+        .reload_order(affected);
         let mut prepared = BTreeMap::new();
         for id in &order {
             let bytes = &snapshots[id];
@@ -149,7 +144,7 @@ impl AssetStore {
             } else {
                 None
             };
-            prepared.insert(id.clone(), (Arc::from(bytes.as_slice()), texture));
+            prepared.insert(id.clone(), (Arc::clone(bytes), texture));
         }
         for (id, (bytes, texture)) in prepared {
             if let Some(entry) = self.entries.get_mut(&id) {
@@ -217,23 +212,5 @@ impl AssetStore {
             }
         }
         false
-    }
-
-    fn dependency_order(&self, mut pending: BTreeSet<AssetId>) -> Vec<AssetId> {
-        let mut ordered = Vec::with_capacity(pending.len());
-        while let Some(id) = pending
-            .iter()
-            .find(|id| {
-                self.entries[*id]
-                    .dependencies
-                    .iter()
-                    .all(|dependency| !pending.contains(dependency))
-            })
-            .cloned()
-        {
-            pending.remove(&id);
-            ordered.push(id);
-        }
-        ordered
     }
 }

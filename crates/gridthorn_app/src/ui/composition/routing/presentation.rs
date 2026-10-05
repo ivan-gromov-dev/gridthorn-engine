@@ -15,12 +15,33 @@ impl UiRouter {
         tree: &UiTree,
         viewport: [f32; 2],
         scale: f32,
-        mut text: Option<&mut TextSystem>,
+        text: Option<&mut TextSystem>,
     ) -> Result<UiLayout, UiCompositionError> {
-        let mut layout = tree.layout(viewport, scale, text.as_deref_mut())?;
+        let mut text = super::super::prepared_text::PreparedText::new(text);
+        let mut sample =
+            super::super::layout_performance::LayoutSample::new(self.performance.is_some());
+        let start = sample.start();
+        let mut layout = tree.arrange_layout(viewport, scale, &mut text)?;
         self.order_layers(tree, &mut layout);
-        layout.primitives =
-            super::super::paint::paint(tree, &layout.placements, scale, &mut text, Some(self))?;
+        sample.record(0, start);
+        let start = sample.start();
+        layout.text_geometry =
+            super::super::text_geometry::prepare(tree, &layout.placements, &mut text)?.into();
+        sample.record(1, start);
+        let start = sample.start();
+        layout.primitives = super::super::paint::paint(
+            tree,
+            &layout.placements,
+            scale,
+            &mut text,
+            Some(self),
+            Some(&mut sample),
+            Some(&layout.text_geometry),
+        )?;
+        sample.record(2, start);
+        if let Some(performance) = &self.performance {
+            performance.record(&sample);
+        }
         Ok(layout)
     }
 
@@ -68,8 +89,9 @@ impl UiRouter {
         &self,
         tree: &UiTree,
         placement: &UiPlacement,
+        geometry: &super::super::text_geometry::TextGeometry,
         scale: f32,
-        text: &mut Option<&mut TextSystem>,
+        text: &mut super::super::prepared_text::PreparedText<'_>,
         output: &mut Vec<UiPrimitive>,
     ) -> Result<(), UiCompositionError> {
         if self.focus != Some(placement.id) {
@@ -81,7 +103,6 @@ impl UiRouter {
         let UiControl::TextField { value, .. } = &node.control else {
             return Ok(());
         };
-        let geometry = super::super::text_geometry::prepare_field(tree, value, placement, text)?;
         let selection = if value == &self.editor.value {
             self.editor.selection
         } else {
@@ -119,7 +140,7 @@ impl UiRouter {
         placement: &UiPlacement,
         caret: UiBounds,
         scale: f32,
-        text: &mut Option<&mut TextSystem>,
+        text: &mut super::super::prepared_text::PreparedText<'_>,
         paint: &mut Vec<UiPrimitive>,
     ) -> Result<(), UiCompositionError> {
         if !self.editor.preedit.is_empty() {
@@ -135,7 +156,10 @@ impl UiRouter {
             super::super::paint::label(
                 tree,
                 &self.editor.preedit,
-                bounds,
+                super::super::paint::LabelBounds {
+                    bounds,
+                    clip: placement.clip.intersection(placement.content),
+                },
                 tree.theme.foreground,
                 scale,
                 text,

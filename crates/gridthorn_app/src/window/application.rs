@@ -61,6 +61,7 @@ where
 }
 
 struct WinitApplication<L> {
+    performance: super::performance::WindowPerformance,
     text: super::text::NativeTextInput,
     clipboard: super::clipboard::NativeClipboard,
     rendering_enabled: bool,
@@ -80,6 +81,7 @@ where
         Self {
             config,
             error: None,
+            performance: super::performance::WindowPerformance::new(),
             text: super::text::NativeTextInput::default(),
             clipboard: super::clipboard::NativeClipboard::default(),
             rendering_enabled: true,
@@ -109,6 +111,7 @@ where
                 .map_err(ApplicationError::window_creation)?,
         );
         let size = window.inner_size();
+        self.performance.report_configuration(&window);
         if self.rendering_enabled {
             let target = WindowSurfaceTarget::new(window.clone());
             self.renderer = Some(SurfaceRenderer::new(target, size.width, size.height)?);
@@ -320,11 +323,13 @@ where
                 }
             }
             WindowEvent::RedrawRequested => {
+                let start = self.performance.start();
                 if let Some(renderer) = self.renderer.as_mut()
                     && let Err(error) = renderer.render()
                 {
                     self.fail(event_loop, error.into());
                 }
+                self.performance.redraw(start);
             }
             _ => {}
         }
@@ -357,18 +362,23 @@ where
         if self.error.is_some() {
             return;
         }
+        let start = self.performance.start();
         let mut control = WindowControl::default();
         if let Err(error) = self.lifecycle.idle(&mut control) {
             self.fail(event_loop, error);
             return;
         }
         if let Some(renderer) = self.renderer.as_mut() {
-            renderer.set_frame(self.lifecycle.render_frame());
+            let extraction_start = self.performance.extraction_start();
+            let frame = self.lifecycle.render_frame();
+            self.performance.extraction(extraction_start);
+            renderer.set_frame(frame);
         }
         self.apply_control(event_loop, &control);
         if let Some(window) = self.window.as_ref() {
             window.request_redraw();
         }
+        self.performance.preparation(start);
     }
 }
 

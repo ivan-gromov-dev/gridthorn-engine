@@ -88,9 +88,15 @@ on `poll`, and cover retry, panic diagnostics, idle/busy shutdown, and drop.
 
 The roadmap item is complete for dependency-aware reload of raw sources and
 PNG/PNM textures. Content polling still reads all registered files per scan;
-preparation holds old and new data plus graph snapshots. Graph traversal uses
-ordered scans. Large-project latency, memory, and cross-platform performance
-measurements are explicitly deferred. Native file watching, debounce, dynamic
+preparation holds old and new data plus graph snapshots. Registration validates
+acyclic dependencies. Reload propagation uses reverse edges and a
+dependency-count ready queue, preserving dependency-first lexical order.
+Unchanged source bytes share their committed allocation even when invalidated;
+affected textures still re-decode before atomic publication. The measured Windows
+envelope is up to 512 x 64 KiB raw sources and sixteen 256x256 PNG/PNM textures.
+All-file polling remains unsuitable for large live-frame scans. Physical cold
+storage, larger projects and cross-platform performance need game-specific validation.
+Native file watching, debounce, dynamic
 registration, unloading, custom derived-asset loaders, and audio reload remain
 future extensions. No stable API or authoritative data-reload guarantee is made.
 

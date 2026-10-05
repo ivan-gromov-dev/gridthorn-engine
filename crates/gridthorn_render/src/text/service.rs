@@ -11,8 +11,11 @@ use super::{
 /// Supply all fallback assets at construction; create a new service after a font reload.
 /// Mutable access serializes cache work; immutable layouts/snapshots can cross threads.
 pub struct TextSystem {
+    pub(super) layouts: super::layout_cache::LayoutCache,
+    pub(super) performance: Option<super::performance::TextPerformance>,
     pub(super) fonts: FontSystem,
     pub(super) cache: SwashCache,
+    pub(super) spans: Option<super::raster_spans::GlyphSpans>,
     pub(super) owner: Arc<()>,
     families: Vec<String>,
 }
@@ -35,9 +38,13 @@ impl TextSystem {
         families.sort();
         families.dedup();
         database.set_sans_serif_family(&families[0]);
+        let performance = super::performance::TextPerformance::new();
         Ok(Self {
+            layouts: super::layout_cache::LayoutCache::new(performance.is_some()),
+            performance,
             fonts: FontSystem::new_with_locale_and_db(locale.into(), database),
             cache: SwashCache::new(),
+            spans: None,
             owner: Arc::new(()),
             families,
         })
@@ -48,6 +55,10 @@ impl TextSystem {
     /// # Errors
     /// Rejects unknown primary families, invalid metrics and oversized input/layout.
     pub fn layout(&mut self, text: &str, style: &TextStyle) -> Result<TextLayout, TextError> {
+        let start = self
+            .performance
+            .as_ref()
+            .and_then(|performance| performance.start(0));
         style.validate()?;
         if text.len() > 65536 {
             return Err(TextError::TooLarge);
@@ -55,6 +66,16 @@ impl TextSystem {
         if !self.families.contains(&style.family) {
             return Err(TextError::UnknownFamily(style.family.clone()));
         }
+        if let Some(layout) = self.layouts.get(text, style) {
+            if let Some(performance) = &mut self.performance {
+                performance.record(0, start, text.len());
+            }
+            return Ok(layout);
+        }
+        let shape_start = self
+            .performance
+            .as_ref()
+            .and_then(|performance| performance.start(2));
         let mut buffer = Buffer::new(
             &mut self.fonts,
             Metrics::new(style.font_size, style.line_height),
@@ -79,6 +100,11 @@ impl TextSystem {
             alignment,
         );
         buffer.shape_until_scroll(&mut self.fonts, false);
+        let shape_elapsed = shape_start.map(|start| start.elapsed());
+        let extract_start = self
+            .performance
+            .as_ref()
+            .and_then(|performance| performance.start(3));
         let mut lines = Vec::new();
         let mut measurement = TextMeasurement::default();
         for run in buffer.layout_runs() {
@@ -115,16 +141,24 @@ impl TextSystem {
                 glyphs,
             });
         }
-        Ok(TextLayout {
+        let layout = TextLayout {
             owner: self.owner.clone(),
-            buffer,
-            lines,
+            buffer: Arc::new(buffer),
+            lines: lines.into(),
             measurement,
-        })
+        };
+        self.layouts.insert(text, style, &layout);
+        if let Some(performance) = &mut self.performance {
+            performance.record_elapsed(2, shape_elapsed, text.len());
+            performance.record(3, extract_start, text.len());
+            performance.record(0, start, text.len());
+        }
+        Ok(layout)
     }
 
     /// Drop raster cache allocations. Existing immutable snapshots remain usable.
     pub fn clear_raster_cache(&mut self) {
         self.cache = SwashCache::new();
+        self.spans = None;
     }
 }

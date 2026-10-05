@@ -47,8 +47,8 @@ pub struct TextLine {
 #[derive(Clone, Debug)]
 pub struct TextLayout {
     pub(super) owner: Arc<()>,
-    pub(super) buffer: cosmic_text::Buffer,
-    pub(super) lines: Vec<TextLine>,
+    pub(super) buffer: Arc<cosmic_text::Buffer>,
+    pub(super) lines: Arc<[TextLine]>,
     pub(super) measurement: TextMeasurement,
 }
 

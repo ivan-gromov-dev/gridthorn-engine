@@ -4,10 +4,14 @@ mod controls;
 mod editing;
 mod errors;
 mod layout;
+mod layout_performance;
+mod node_index;
 mod paint;
+mod prepared_text;
 mod routing;
 mod style;
 mod text_geometry;
+mod text_measurement;
 mod tree;
 
 pub use animation::{UiAnimationError, UiEasing, UiProperty, UiTransition, UiTween};

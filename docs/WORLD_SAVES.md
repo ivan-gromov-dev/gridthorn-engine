@@ -67,21 +67,16 @@ enforces the same limit. In-memory document APIs have no size limit.
 Directory synchronization and power-loss durability, filesystem permissions
 preservation, backups, multi-process locking, async I/O, hostile-input sandboxing,
 checksums/authentication, compression, arbitrary ECS adapters, interactive-clock
-restoration, and cross-release migrations remain deferred. Save/load is synchronous
-and clones the root; large-world latency/memory and binary-size measurements,
-network filesystems, and non-Windows replacement behavior need future validation.
+restoration, and cross-release migrations remain deferred. Save/load is synchronous.
+Saving clones the root for a coherent capture; loading validates metadata without
+cloning live data and moves the validated decoded root into the reset boundary.
+The 16 MiB read limit bounds consumed bytes, not allocator capacity or parsed
+memory. Root cloning/serialization and file replacement are synchronous load/save
+boundary work. Physical-cold/network storage, complex roots and non-Windows
+replacement behavior need deployment validation. See [PERFORMANCE.md](PERFORMANCE.md).
 
-## Evidence
+## Example
 
 ```console
 cargo run --manifest-path ../gridthorn-examples/Cargo.toml -p gridthorn_example_world_saving
 ```
-
-The headless example replaces an existing save at tick 25 with one queued command,
-loads into a fresh runtime, and compares full canonical saves at tick 100.
-Domain tests cover exact continuation, full-width seed/RNG state, controls/exit,
-deterministic output, invalid schemas/metadata/payloads, duplicate RNG names,
-shutdown rollback, file replacement/cleanup, codec failure preserving an old save,
-read failure, invalid UTF-8, and the file limit. Windows replacement is exercised
-through the real filesystem. The rationale is recorded in
-[ADR 0003](adr/0003-world-save-envelope.md).

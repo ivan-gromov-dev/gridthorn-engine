@@ -1,5 +1,8 @@
 use super::{UiCommand, UiCompositionError, UiControl, UiEffect, UiStyle, UiTheme, UiVisualState};
 use std::collections::BTreeSet;
+use std::sync::Arc;
+
+use super::node_index::NodeIndex;
 
 /// Caller-chosen identity, unique within one tree and stable across layouts.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -38,10 +41,25 @@ impl UiNode {
 }
 
 /// Validated presentation tree. No world state, native handles or event-loop policy.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct UiTree {
-    pub(super) root: UiNode,
+    root: UiNode,
     pub(super) theme: UiTheme,
+    index: Arc<NodeIndex>,
+}
+
+#[allow(
+    clippy::missing_fields_in_debug,
+    reason = "Preserve the existing public Debug output without internal lookup metadata"
+)]
+impl std::fmt::Debug for UiTree {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("UiTree")
+            .field("root", &self.root)
+            .field("theme", &self.theme)
+            .finish()
+    }
 }
 
 impl UiTree {
@@ -52,7 +70,8 @@ impl UiTree {
     pub fn new(root: UiNode, theme: UiTheme) -> Result<Self, UiCompositionError> {
         validate_theme(&theme)?;
         validate_node(&root, 0, &mut BTreeSet::new())?;
-        Ok(Self { root, theme })
+        let index = Arc::new(NodeIndex::new(&root));
+        Ok(Self { root, theme, index })
     }
 
     /// Read the immutable composition root.
@@ -64,7 +83,11 @@ impl UiTree {
     /// Read an identified control and its presentation state.
     #[must_use]
     pub fn node(&self, id: UiNodeId) -> Option<&UiNode> {
-        find(&self.root, id)
+        let mut node = &self.root;
+        for &position in self.index.path(id)? {
+            node = node.children.get(position)?;
+        }
+        Some(node)
     }
 
     /// Replace composition atomically, preserving the theme.
@@ -73,7 +96,9 @@ impl UiTree {
     /// Invalid replacement leaves the original tree intact.
     pub fn replace(&mut self, root: UiNode) -> Result<(), UiCompositionError> {
         validate_node(&root, 0, &mut BTreeSet::new())?;
+        let index = Arc::new(NodeIndex::new(&root));
         self.root = root;
+        self.index = index;
         Ok(())
     }
 
@@ -93,7 +118,9 @@ impl UiTree {
     /// Rejects unknown nodes and invalid geometry without changing the tree.
     pub fn set_style(&mut self, id: UiNodeId, style: UiStyle) -> Result<(), UiCompositionError> {
         validate_style(&style)?;
-        let node = find_mut(&mut self.root, id).ok_or(UiCompositionError::UnknownNode(id))?;
+        let node = self
+            .node_mut(id)
+            .ok_or(UiCompositionError::UnknownNode(id))?;
         node.style = style;
         Ok(())
     }
@@ -110,7 +137,9 @@ impl UiTree {
         id: UiNodeId,
         command: UiCommand,
     ) -> Result<UiEffect, UiCompositionError> {
-        let node = find_mut(&mut self.root, id).ok_or(UiCompositionError::UnknownNode(id))?;
+        let node = self
+            .node_mut(id)
+            .ok_or(UiCompositionError::UnknownNode(id))?;
         match command {
             UiCommand::Visual(state) => {
                 node.visual = state;
@@ -169,23 +198,12 @@ impl UiTree {
             UiEffect::Changed
         })
     }
-}
-
-fn find(node: &UiNode, id: UiNodeId) -> Option<&UiNode> {
-    if node.id == id {
+    fn node_mut(&mut self, id: UiNodeId) -> Option<&mut UiNode> {
+        let mut node = &mut self.root;
+        for &position in self.index.path(id)? {
+            node = node.children.get_mut(position)?;
+        }
         Some(node)
-    } else {
-        node.children.iter().find_map(|child| find(child, id))
-    }
-}
-
-fn find_mut(node: &mut UiNode, id: UiNodeId) -> Option<&mut UiNode> {
-    if node.id == id {
-        Some(node)
-    } else {
-        node.children
-            .iter_mut()
-            .find_map(|child| find_mut(child, id))
     }
 }
 
