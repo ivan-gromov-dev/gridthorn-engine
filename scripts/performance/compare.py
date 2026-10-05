@@ -98,6 +98,16 @@ def annotate(kind, message):
     print(f"::{kind}::{escaped}", flush=True)
 
 
+def resolve_probe(names, test, label):
+    """Allow a newly introduced workload to have no previous measurement."""
+    matches = [name for name in names if name.endswith("::" + test)]
+    if not matches and label == "base":
+        return None
+    if len(matches) != 1:
+        raise ValueError(f"{label}: {'missing' if not matches else 'ambiguous'} probe {test}")
+    return matches[0]
+
+
 def build(root, label, workloads, output, env):
     """Compile library tests once, then resolve each exact ignored test name."""
     packages = sorted({item["package"] for item in workloads})
@@ -120,10 +130,9 @@ def build(root, label, workloads, output, env):
                           output / f"{label}-{package}-list.log")
         names = [line.removesuffix(": test") for line in listing.splitlines() if line.endswith(": test")]
         for item in (item for item in workloads if item["package"] == package):
-            matches = [name for name in names if name.endswith("::" + item["test"])]
-            if len(matches) != 1:
-                raise ValueError(f"{label}: missing or ambiguous probe {item['test']}")
-            probes[item["test"]] = (executable, matches[0])
+            name = resolve_probe(names, item["test"], label)
+            if name is not None:
+                probes[item["test"]] = (executable, name)
     return probes
 
 
@@ -136,7 +145,7 @@ def main():
     parser.add_argument("--threshold", type=float, default=.20)
     parser.add_argument("--floor-ns", type=float, default=1000)
     parser.add_argument("--workload", action="append", help="Select probe by function name")
-    parser.add_argument("--build-target", type=Path, help="Reuse a local Cargo target; binaries are copied before the other revision builds")
+    parser.add_argument("--build-target", type=Path, help="Parent directory for separate base/head Cargo caches")
     args = parser.parse_args()
     if not math.isfinite(args.threshold) or args.threshold < 0 or not math.isfinite(args.floor_ns) or args.floor_ns < 0:
         parser.error("Threshold and floor must be finite and nonnegative")
@@ -152,7 +161,7 @@ def main():
     roots = {"base": args.baseline.resolve(), "head": args.current.resolve()}
     report = {"platform": platform.platform(), "threshold": args.threshold,
               "floor_ns": args.floor_ns, "order": ["base", "head", "head", "base"],
-              "revisions": {}, "results": [], "status": "incomplete"}
+              "revisions": {}, "results": [], "uncompared": [], "status": "incomplete"}
     try:
         if "RUSTUP_TOOLCHAIN" not in env:
             active = command(["rustup", "show", "active-toolchain"], roots["head"], env,
@@ -164,19 +173,25 @@ def main():
         report["toolchain"] = command(["rustc", "-vV"], roots["head"], env, output / "toolchain.log")
         probes = {}
         for label, root in roots.items():
-            target = args.build_target.resolve() if args.build_target else output / f"target-{label}"
+            target = (args.build_target.resolve() if args.build_target else output) / f"target-{label}"
             build_env = dict(env, CARGO_TARGET_DIR=str(target))
             probes[label] = build(root, label, workloads, output, build_env)
         for item in workloads:
             print(f"Measuring {item['test']}", flush=True)
             runs = {"base": [], "head": []}
             for label in report["order"]:
+                if label == "base" and item["test"] not in probes["base"]:
+                    continue
                 executable, name = probes[label][item["test"]]
                 raw = command([executable, name, "--exact", "--ignored", "--nocapture", "--test-threads=1"],
                               roots[label], env, output / f"{item['test']}-{label}-{len(runs[label])}.log")
                 if "1 passed; 0 failed" not in raw:
                     raise ValueError(f"{label}: exact probe did not run")
                 runs[label].append(summarize(parse_samples(raw, item)))
+            if not runs["base"]:
+                report["uncompared"].append({"workload": item, "head_runs": runs["head"],
+                                            "reason": "probe absent in baseline revision"})
+                continue
             rows = compare(runs["base"], runs["head"], args.threshold, args.floor_ns)
             report["results"].append({"workload": item, "runs": runs, "comparison": rows})
             warnings = [row for row in rows if row["warning"]]
@@ -185,7 +200,13 @@ def main():
                 annotate("warning", f"{item['test']}: {len(warnings)} metrics slower in both pairs; "
                          f"largest sustained change {worst['case']}/{worst['metric']} "
                          f"({worst['ratios'][0]:.2f}x, {worst['ratios'][1]:.2f}x). See comparison.json.")
-        report["status"] = "complete"
+        if report["uncompared"]:
+            report["status"] = "partial" if report["results"] else "baseline_only"
+            names = ", ".join(item["workload"]["test"] for item in report["uncompared"])
+            annotate("warning", f"No previous measurement for {len(report['uncompared'])} workloads: {names}. "
+                     "Current measurements saved; these workloads were not compared. See comparison.json.")
+        else:
+            report["status"] = "complete"
     except (OSError, subprocess.SubprocessError, ValueError, KeyError, RuntimeError) as error:
         report["error"] = str(error)
         annotate("error", f"Performance comparison incomplete: {error}")
@@ -193,7 +214,8 @@ def main():
     finally:
         (output / "comparison.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
         warnings = sum(row["warning"] for result in report["results"] for row in result["comparison"])
-        summary = f"Performance comparison: {report['status']}; {len(report['results'])}/{len(workloads)} workloads; {warnings} warnings.\n"
+        summary = (f"Performance comparison: {report['status']}; {len(report['results'])}/{len(workloads)} compared; "
+                   f"{len(report['uncompared'])} current-only; {warnings} regression warnings.\n")
         print(summary, flush=True)
         if os.environ.get("GITHUB_STEP_SUMMARY"):
             with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as stream:

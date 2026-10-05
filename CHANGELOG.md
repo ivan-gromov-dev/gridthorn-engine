@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Performance CI records current measurements with a warning when a workload is
+  absent from the previous revision, while still comparing shared workloads.
 - Add an advisory CI comparison of paired release CPU workloads against the previous
   revision, with archived measurements and warnings for sustained regressions.
 - Complete Milestones 4/4.5 status and replace historical reviews, proposed decision

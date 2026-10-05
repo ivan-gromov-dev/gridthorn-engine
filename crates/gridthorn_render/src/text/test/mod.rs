@@ -1,7 +1,6 @@
 mod cold_japanese;
 mod geometry;
 mod layout;
-mod narrow_layout;
 mod raster;
 mod raster_clip;
 mod raster_memory;

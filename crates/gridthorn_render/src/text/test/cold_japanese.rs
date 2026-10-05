@@ -4,24 +4,15 @@ use super::assets;
 use crate::{Color, TextStyle, TextSystem, UiRect};
 
 /// Separate fresh-service shaping, warm-font misses, hits and raster output storage.
+/// Set `GRIDTHORN_TEXT_PERFORMANCE` to attribute the same workload's internal phases.
 #[test]
-#[ignore = "manual cold Japanese probe; run alone in release without diagnostics"]
+#[ignore = "manual cold Japanese probe; run alone in release; diagnostics are optional"]
 fn measure_cold_japanese_phases() {
     assert!(!black_box(cfg!(debug_assertions)), "run with --release");
-    assert_eq!(std::env::var_os("GRIDTHORN_TEXT_PERFORMANCE"), None);
-    cases();
-}
-
-/// Attribute backend shaping, diagnostic extraction and raster snapshot construction.
-#[test]
-#[ignore = "manual Japanese phase probe; enable text diagnostics and run alone in release"]
-fn attribute_japanese_phases() {
-    assert!(!black_box(cfg!(debug_assertions)), "run with --release");
-    assert!(std::env::var_os("GRIDTHORN_TEXT_PERFORMANCE").is_some());
-    cases();
-}
-
-fn cases() {
+    println!(
+        "cold_japanese_diagnostics,enabled={}",
+        std::env::var_os("GRIDTHORN_TEXT_PERFORMANCE").is_some()
+    );
     let assets = assets();
     println!("cold_japanese,family,repeats,width,sample,operation,elapsed_ns,output_bytes");
     for family in ["Noto Sans", "Noto Sans JP"] {
