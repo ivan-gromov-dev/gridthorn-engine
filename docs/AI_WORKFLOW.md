@@ -61,6 +61,24 @@ Git status and revisions against the checkpoint before relying on its results.
 Preserve unrelated changes. Remove the temporary checkpoint at completion after
 moving durable decisions and deferrals into their owning documentation or ADR.
 
+## Build artifact cleanup
+
+After completing the required checks and recording their results, remove
+generated build output and temporary task files from both this repository and
+`../gridthorn-examples`. This includes Cargo `target` directories (also nested
+or task-specific build directories), Python `__pycache__` directories, generated
+test projects, disposable verification logs, and rustfmt backup files. Retain
+diagnostics for unresolved failures until they are resolved or handed off.
+
+Before recursive deletion, resolve each absolute path and verify that it stays
+inside the intended repository. Inspect ignored and untracked paths; Git ignore
+status alone does not establish that a file is disposable. Preserve source,
+assets, manifests, lockfiles, documentation, Git history, editor configuration,
+user saves, and unrelated work. Do not delete global Cargo caches or files
+outside these repositories. Report removed paths and reclaimed space when
+measured. Cleanup follows verification so checks do not immediately recreate
+the artifacts before handoff.
+
 ## Verification and output
 
 Use full verify for code, configuration, scripts, and release candidates.
