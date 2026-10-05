@@ -11,6 +11,9 @@ pub enum WindowMode {
         monitor: MonitorId,
     },
     /// Exclusive fullscreen using one of the target monitor's advertised modes.
+    ///
+    /// Currently supports the happy path: Windows native mode-switch rejection
+    /// may panic in upstream winit. Recovery is deferred to Milestone 5.
     Exclusive {
         /// Target connected monitor.
         monitor: MonitorId,
