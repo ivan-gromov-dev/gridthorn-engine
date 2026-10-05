@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Provisional `gridthorn::window` requests for physical size, resizing constraints,
+  placement and capability-gated fullscreen, with native state/operation feedback
+  and windowed geometry restoration. The sibling settings example stages these
+  choices and checks GPU-window transitions. Windows exclusive resolution/refresh
+  selection and monitor transfer use upstream winit on the happy path; native
+  rejection may panic and recovery is deferred to Milestone 5. Reported refresh is read from Windows
+  current settings, including its 59/60 Hz alias. Linux/macOS native acceptance
+  remains deferred.
+
 - Provisional `gridthorn::display` monitor inventory, advertised fullscreen modes,
   physical resolutions, millihertz refresh and OS DPI scale. Inventory requests
   are explicit and coalesced, with no periodic native enumeration. Windowed

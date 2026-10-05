@@ -30,3 +30,9 @@ fn shuts_down_lifecycle_when_event_loop_execution_fails() {
     assert!(shutdown.load(Ordering::SeqCst));
     assert!(matches!(result, Err(ApplicationError::EventLoop { .. })));
 }
+
+#[cfg(target_os = "windows")]
+mod window_controls;
+
+#[cfg(target_os = "windows")]
+mod exclusive_monitors;

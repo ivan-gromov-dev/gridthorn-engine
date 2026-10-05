@@ -14,6 +14,15 @@ pub(crate) struct NativeDisplays {
 }
 
 impl NativeDisplays {
+    pub(crate) fn monitor_id(&self, handle: &MonitorHandle) -> Option<MonitorId> {
+        self.catalog.as_ref()?.id(handle)
+    }
+    pub(crate) fn monitor_handle(&self, id: MonitorId) -> Option<MonitorHandle> {
+        self.catalog.as_ref()?.key(id).cloned()
+    }
+    pub(crate) fn cancel(&mut self) -> Option<MonitorSelection> {
+        self.pending.take().map(|pending| pending.cancelled())
+    }
     pub(crate) fn refresh(&mut self, event_loop: &ActiveEventLoop, window: &Window) -> Displays {
         let observations = event_loop
             .available_monitors()

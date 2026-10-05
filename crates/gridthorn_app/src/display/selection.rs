@@ -7,6 +7,12 @@ pub(super) struct PendingSelection {
 }
 
 impl PendingSelection {
+    pub(super) fn cancelled(&self) -> MonitorSelection {
+        MonitorSelection::Failed {
+            monitor: self.monitor,
+            error: MonitorSelectionError::Superseded,
+        }
+    }
     pub(super) fn new(monitor: MonitorId, started: Instant) -> Self {
         Self { monitor, started }
     }
@@ -30,7 +36,7 @@ impl PendingSelection {
     }
 }
 
-pub(super) fn centered_origin(
+pub(crate) fn centered_origin(
     origin: (i32, i32),
     extent: (u32, u32),
     window: (u32, u32),

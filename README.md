@@ -85,6 +85,11 @@ The first increment provides provisional [monitor inventory](docs/DISPLAYS.md),
 advertised modes, resolutions, refresh rates, OS DPI scaling and on-demand
 connection/property changes through the public SDK. Explicit monitor selection
 centers the game window on the chosen display and reports native confirmation.
+[Explicit window controls](docs/WINDOWS.md) add physical sizing, resizing policy,
+placement, supported fullscreen modes and correlated applied-state feedback.
+Windows supports windowed, borderless and exclusive fullscreen with resolution/
+refresh selection and applied-state feedback on the happy path. Windows native
+mode-switch rejection may panic; recovery is deferred in the roadmap.
 [Performance limits](docs/PERFORMANCE.md) describe the measured Windows workload
 envelopes and the CPU comparison in CI. APIs remain provisional; engine-wide
 frame deadlines and cross-platform performance are not guaranteed.

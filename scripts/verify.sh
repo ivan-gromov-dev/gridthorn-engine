@@ -37,7 +37,7 @@ case "${1-}" in
 esac
 
 printf '%s\n' '==> Formatting'
-cargo fmt --all -- --check
+cargo fmt -- --check
 
 printf '%s\n' '==> Workspace check'
 cargo check --workspace --all-targets --locked

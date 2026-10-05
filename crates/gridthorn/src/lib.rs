@@ -4,6 +4,10 @@
 //! under construction.
 
 mod runtime;
+/// Provisional explicit window configuration, capabilities and applied-state feedback.
+pub mod window {
+    pub use gridthorn_app::settings::*;
+}
 /// Provisional on-demand monitor inventory, changes and windowed monitor selection.
 pub mod display {
     pub use gridthorn_app::display::{

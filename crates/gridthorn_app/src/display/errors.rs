@@ -4,6 +4,9 @@ use thiserror::Error;
 /// Recoverable monitor-selection failure; the application keeps running.
 #[derive(Clone, Debug, PartialEq, Eq, Error)]
 pub enum MonitorSelectionError {
+    /// An explicit window operation superseded legacy monitor-only placement.
+    #[error("monitor selection was superseded by window configuration")]
+    Superseded,
     /// The identity is foreign, retired or absent from the latest native query.
     #[error("monitor {monitor:?} is no longer available in this runner")]
     Unavailable {

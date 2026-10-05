@@ -2,7 +2,7 @@
 mod catalog;
 mod errors;
 pub(crate) mod native;
-mod selection;
+pub(crate) mod selection;
 mod snapshot;
 mod types;
 pub use errors::MonitorSelectionError;

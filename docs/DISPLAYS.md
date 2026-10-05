@@ -33,6 +33,9 @@ Queries run on the native event-loop thread. Snapshot data is owned and
 `Send + Sync` and contains no backend handles. Display data is presentation state,
 not authoritative simulation state or serialized world-save content.
 
+For size, policy and supported fullscreen requests, use [WINDOWS.md](WINDOWS.md).
+The legacy selection below remains a windowed-placement operation.
+
 ## Monitor selection
 
 After enumeration, call `Displays::select_monitor(id)` with a returned ID. The
@@ -119,8 +122,7 @@ requests, persistent feedback, one-frame changes, identity retention/retirement,
 primary changes, mode normalization, placement confirmation/deadline and bounded
 centering math. The Windows native test checks no unsolicited inventory before
 or during idle, one query on demand, one selection revalidation and confirmed
-placement. The GPU settings smoke clicks the list, Apply and Close through the
-UI router and requires exactly two completed queries, including selection.
+placement. The expanded GPU settings smoke uses the UI router for supported window controls and verifies that idle does not trigger new queries. See [WINDOWS.md](WINDOWS.md).
 
 | Platform | Acceptance and limits |
 | --- | --- |
