@@ -136,8 +136,10 @@ branching dependencies, rollback paths, I/O/codec/serialization attribution and
 heap peaks. Reload shares unchanged source allocations; save loading moves its
 decoded root into the reset boundary. Measured envelopes and limits are recorded
 in the same review.
-  Audio control-side mock and platform lifecycle callback probes also record
-  scaling evidence; native device and operating-system latency remain unmeasured.
+  Audio/platform review now records native mixer/control and software loopback latency, repeated-output
+  memory, asynchronous release, explicit manual Windows sleep/wake and native
+  window shutdown. Acoustic latency and automatic power/device integration remain
+  explicit follow-ups; the recorded envelopes do not guarantee other devices.
   Audio output shares converted frames within bounded command batches and releases
   completed voice handles on processing, including empty queues.
   Pathfinding uses hash lookups with an ordered frontier; release scaling evidence

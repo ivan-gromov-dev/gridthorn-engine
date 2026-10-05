@@ -3959,3 +3959,220 @@ verifies file replacement and exact continuation to tick 100. Logs are
 target/io-closure-{asset-smoke,scene-example,save-example}.log. Normal facade
 cargo tree --edges normal excludes DHAT/backtrace/serde_json. Sibling changes
 present at start are preserved; no example sources or locks are modified here.
+
+## Native audio and Windows lifecycle disposition — 2026-10-05
+
+Baseline: engine 80e131cab31791c827136b24c2bd42818c194010. This closes the remaining
+audio/platform review for the implemented subset with the limits below; it does
+not implement Milestone 5 device/power integration. New ignored probes belong to
+audio/output/test and app/window/application/test. No dependencies or production
+behavior change. The output rustdoc now distinguishes shutdown signalling from
+asynchronous native stream release.
+
+### Reproduction and measured ownership
+
+Run alone, without other benchmarks/builds:
+
+```powershell
+cargo test -p gridthorn_audio --features native-output --release --locked measure_native_output_lifecycle -- --ignored --nocapture
+cargo test -p gridthorn_audio --features native-output --release --locked measure_native_output_release -- --ignored --nocapture
+cargo test -p gridthorn_audio --features native-output --release --locked measure_native_loopback_latency -- --ignored --nocapture
+cargo test -p gridthorn_app --release --locked measure_native_window_shutdown -- --ignored --nocapture
+```
+
+The audio lifecycle probe defaults to 120 cycles and 1 voice. Set process-local
+GRIDTHORN_AUDIO_PROBE_CYCLES and GRIDTHORN_AUDIO_PROBE_VOICES to reproduce the
+recorded 1/16-voice, 22-cycle and 64-voice, 360-cycle acquisitions, twice per configuration
+in fresh processes. Native window probe is Windows-only; audio native probes
+require an available device and are excluded from ordinary automated tests.
+Failures are explicit, not silently classified as successful headless playback.
+
+Reference: existing Windows/Rust release host; default Speakers (HyperX Cloud
+Stinger Core Wireless + 7.1), stereo F32, 48000 Hz, supported buffer 480 frames.
+480 frames / 48000 Hz gives a nominal 10 ms buffer duration, not measured acoustic
+latency. Kira's existing default backend/configuration and 10 ms control tweens are
+unchanged. CPAL output callback timestamps are not exposed by this adapter.
+
+One 80000-frame stereo PCM16 clip at 8000 Hz is decoded outside timings; looping
+voices clone that same 10-second clip. Each cycle measures batch process/convert/
+submit, then polls until every voice publishes positive playback position,
+Paused and Playing respectively. Polls sleep1ms, so these are observed control
+completion delays including scheduling/publication, not exact callback timestamps.
+Progress timing includes the process call and its diagnostic print. After pause,
+two25ms observations require stable position; state and position are not published
+atomically. Every cycle stops its looping voices, waits for a separate800frame
+natural completion and processes an empty batch to assert no controlled handles
+or commands remain. A 100 ms rest and diagnostic drain follow. All PCM/gain values
+are zero: real stream/mixer/resampling run, but sound quality and audible output
+are not assessed. Final drop holds one actively progressing looping voice.
+
+Two excluded warm-up cycles per process; retained phase counts20 at1/16voices,
+358 at64voices. Upper-middle median and nearest-rank p95/p99. Per-cycle stdout
+and backend diagnostics affect scheduling; there is no before/after speedup claim.
+Six processes exit 0: short runs6.88–6.89s,64voice runs108.42–108.47s test time
+(108.54–108.59s launcher observations). No reported or discarded stream errors
+in these acquisitions. Logs target/audio-native-{1,16,64}-{1,2}.stdout/stderr.log;
+raw/summary CSVs target/audio-native-{summary,memory,memory-summary}.csv.
+The ignored target/audio-native-acquire.ps1 samples OS process private/resident
+memory every250ms; it is an acquisition helper, not committed automation.
+
+| Phase | 1 voice median / p95 range | 16 voices median / p95 range | 64 voices median / p95 range |
+| --- | --- | --- | --- |
+| Batch process/submit | 0.300–0.302 / 0.331–0.340ms | 0.359–0.361 / 0.419–0.423ms | 0.578–0.632 / 0.735–0.807ms |
+| Observed mixer progress | 16.744–17.026 / 18.271–19.448ms | 16.832–17.276 / 17.413–18.693ms | 16.527–16.675 / 18.533–18.570ms |
+| Pause completion | 9.189–9.910 / 10.678–10.695ms | 10.392–10.511 / 10.693–10.753ms | 10.673–10.685 / 10.859–10.994ms |
+| Resume completion | 9.151–9.179 / 10.199–10.254ms | 9.187–9.201 / 10.153–10.728ms | 9.182–9.188 / 10.725–10.731ms |
+
+Fresh output initialization21.466–38.416ms across six observations. At64voices
+submit p99 is0.816–0.910ms, worst1.148ms; observed progress worst20.208ms,
+pause12.265ms, resume11.739ms. These recorded envelopes are not universal device
+guarantees or simulation/frame-thread budgets; output should remain outside the
+frame's synchronous large-clip decoding/conversion path as in classic_2d.
+
+Backend callback CPU fractions measure renderer.process wall time divided by
+the audio buffer duration, excluding on_start_processing and other driver work.
+Collected counts601–605 at1/16voices and10776–10778 at64voices mix active,
+transition and idle callbacks; they are not a steady64voice percentile.
+At64voices p95 fractions0.05772–0.05774, p990.07170–0.07232, maxima
+0.09499–0.10146: all retained measurements below the available buffer duration.
+The 100-entry CPU ring may omit samples and has no drop counter, so no full-stream
+deadline, underrun, scheduling or acoustic guarantee follows from this observation.
+
+After excluding the first1s, each64voice process has406 memory observations.
+Private peaks6340608/6287360bytes, resident15147008/15130624bytes. First versus
+last10% sample means: private5255373→5324595 and5218304→5203149bytes;
+resident14941594→15108710 and14904730→15069184bytes. Private memory is near a
+plateau despite23040 looping submissions per process; handle cleanup is asserted
+each cycle. Small resident increases are not attributed to a leak or savings.
+This is repeated-output process memory over108seconds, including allocator,
+test harness, native mixer and driver mappings. It does not isolate heap peaks,
+kernel/device buffers or prove stability over hours, unique large clips or device
+replacement. The prior mock conversion/retention regressions remain applicable.
+
+### WASAPI software loopback latency
+
+The additional Windows-only probe uses the existing CPAL backend's output-device
+input mode (WASAPI loopback), not a microphone or new engine capture API. It emits
+a 100 ms, 1000 Hz stereo PCM tone at 8000 Hz, peak3000/32768 and gain0.05. The native
+48 kHz stereo F32 loopback callback searches 96-frame windows for coherent 1000 Hz
+energy, with magnitude above 0.000025 and above 0.65 times window RMS. Callback
+processing stores only the first monotonic detection time; no captured samples,
+recordings or other output content are saved. Quiet-output preconditions check
+250ms before every Play; the maintainer stopped other output for acquisition.
+Silence, DC, another tone and non-finite detector regression cases are tested.
+
+Origin timestamps surround the actual engine batch process/submit and loopback
+detection callback. Thus latency includes mixer scheduling, resampling, Windows
+output/loopback buffering, callback dispatch and the detector itself. It is an
+observed software-loopback delivery delay, not sample-accurate playback timestamps,
+an isolated hardware latency or acoustic/headset wireless delay. An overlapping
+1000Hz source could contaminate a timed window; the probe requires quiet output
+and does not claim to identify arbitrary media. No master volume/device settings
+were changed, and no captured audio is retained.
+
+Pilot recordings failed the pre-play guard; the initial absolute-only detector
+also accepted broad interference, so a coherence/RMS condition was added instead
+of treating false detections as near-zero latency. Both retained processes report
+one capture startup underrun/overrun before the one-second warmup finishes; this
+is printed, then cleared before measurement. No capture errors occur in measured
+cycles. This startup discontinuity is an explicit capture limitation, not a
+silent zero-error claim or an error in the earlier output-only acquisitions.
+
+Two processes exit 0 with22iterations each, first two excluded. Twenty retained
+observations per run: median28.4126/28.5029ms, p9528.7674/29.6629ms,
+worst29.5991/30.2202ms. Each iteration observes natural completion/handle cleanup
+and waits100ms after completion before the next pre-play quiet check. Logs
+target/audio-loopback-filtered-{1,2}.log and audio-loopback-summary.csv; failed
+pilots remain in audio-loopback-1.log and audio-loopback-quiet-1.log. This provides
+native software-path latency evidence without claiming acoustic or unique-device
+universality. Final guard/feature/regression confirmation is in the checkpoint.
+
+One subsequent confirmation timed out before first tone detection; its log is
+target/audio-loopback-final-1.log. No output failure or physical latency can be
+deduced from that detector timeout. Added failure diagnostics distinguish voice
+state/position and captured tone magnitude from missing detection. Two final
+confirmations pass: median 28.6840/28.8856 ms, p95 29.3851/29.3356 ms, worst
+30.1191/29.3521 ms. Logs target/audio-loopback-diagnostic{,-2}.log and
+audio-loopback-final-summary.csv. The final detector scans every complete window
+to retain peak magnitude for errors rather than stopping on the first match.
+The intermittent timeout's cause is not established; capture reproducibility is
+an explicit follow-up, and successful samples do not establish a universal or
+failure-free latency budget. All final capture processes still report the
+excluded startup discontinuity; it is not hidden by their successful exit codes.
+
+### Deferred release, manual sleep and native window shutdown
+
+The release probe submits a silent looping sound through the same manager and
+keeps only a Weak reference to converted frames. After real mixer progress it
+drops OutputBackend and polls until frames are no longer owned by the native
+renderer. A surviving sound handle cannot retain those frames. Two fresh-process
+runs of22iterations, two excluded, give drop-signal median2us (p953.4/2.4us),
+frame-release median487.528/486.465ms, p95490.785/491.189ms, worst491.966ms.
+Logs target/audio-native-release-{1,2}.log and release-summary.csv. Source
+attribution: backend stop sets a flag; its detached stream-manager thread checks
+every500ms. Drop returning does not join that thread. Frame ownership release
+is observable cleanup evidence, not an exclusive-device-release timestamp or
+upper bound under stalled scheduling. Calling stop immediately before dropping
+likewise does not synchronously acknowledge audible silence. Do not promise
+instant device switching or bounded synchronous native teardown.
+
+The maintainer performed and confirmed a Windows sleep/wake cycle while the same
+probe process held one Paused voice. The manual gate is optional: set
+GRIDTHORN_AUDIO_RESUME_GATE to an absent file path, wait for manual_sleep_ready,
+sleep/wake Windows, then create that file. No timer is interpreted as approval or
+proof of a power event. The recorded process retained the exact paused position,
+resumed Playing in4.536ms, confirmed subsequent position progress and exited0.
+Its44.09s total includes manual waiting; it is not OS resume latency. Logs
+target/audio-manual-sleep.{stdout,stderr}.log. The OS event query did not
+corroborate the precise interval; sleep is maintainer-reported manual evidence.
+This tests explicit audio suspend/resume across that cycle, not automatic hooks,
+device removal/replacement, audio quality or recovery from a broken stream.
+
+Three fresh-process native window probes create a 1000×800 physical-pixel window with real GPU
+presentation, run 120 idle callbacks, request normal event-loop exit, execute 1024
+shutdown systems exactly once despite a second shutdown call, then release the
+window/renderer/runtime. Event-loop/window/GPU initialization476.488–571.693ms;
+shutdown schedule including idempotence check50.3–56.3us; finish plus resource
+drop38.583–42.347ms. Logs target/platform-native-{1,2,3}.log, all exit 0. Drop
+includes native window/GPU/driver operations, not physical GPU-memory reclamation;
+event-loop consumption occurs before the finish timer. This extends the earlier
+synthetic callback timings without claiming a percentile from three samples.
+
+### Domain conclusions and concrete follow-ups
+
+Audio: measured and acceptable for the recorded bounded silent-output workload;
+no new production fix is justified. Existing repeated-clip conversion reuse and
+completed-handle cleanup have regression/before-after evidence. The example's
+32-slot lossy effect queue and reliable coalesced pause mailbox remain bounded,
+with progress required and no delivery-latency guarantee. Prior headless worker
+timings must not be added to these native timings to invent end-to-end latency.
+Follow-up with suitable hardware: acoustic/loopback request-to-output latency,
+audible multi-voice quality, hours-long unique-clip playback, memory during device
+loss/change and output switching. Those are explicit deployment limits.
+
+Software loopback provides native request-to-detection latency for this endpoint;
+hardware/acoustic latency remains a distinct follow-up. The capture startup
+discontinuity does not justify adding a general capture/recovery subsystem here.
+
+Platform lifecycle: native orderly shutdown and maintainer-reported explicit
+audio sleep/wake are measured; automatic Windows power-to-runtime/audio integration
+is not implemented. The locked winit Windows backend emits Resumed at initialization
+but does not map power broadcasts to Suspended/Resumed. Runtime hooks reset time
+and cancel input only when invoked; audio is caller-owned. Sleep elapsed time
+must not be assumed to reset automatically through those hooks. Milestone 5 owns
+power-event integration, timer/input coordination, device-error reporting and
+recovery, repeated sleep/device-change tests and cross-platform coverage. The
+500ms asynchronous native teardown is a recorded backend limit for that work,
+not a requirement to add an unrelated worker/backend subsystem in Milestone 4.5.
+
+The review disposition is closed within these envelopes and explicit follow-ups;
+Milestone 4.5 and its other gates remain open. Final ./scripts/verify.ps1 exits 0
+(target/audio-platform-full-verify-final.log): formatting, workspace check/Clippy/
+tests, generated-project CLI end-to-end, dependency boundaries and whitespace.
+Explicit native-feature Clippy passes; audio tests: 13 passed, 5 manual probes
+ignored, 0 failed. Public classic_2d native/headless smokes exit 0 without audio
+failure diagnostics, and its saturated/idle pause-worker regressions pass (2 tests,
+1 manual probe ignored). Logs target/audio-platform-feature-{clippy,tests}-final.log
+and audio-platform-classic-{native-smoke,headless-smoke,audio-tests}.log. No sibling
+sources or manifests were changed. Exact intermediate failures and acquisition
+details remain in the checkpoint and ignored target logs.

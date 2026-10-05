@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Audio/platform performance review adds ignored native mixer/lifecycle,
+  WASAPI loopback latency and deferred-release probes, repeated-output
+  process-memory evidence, maintainer
+  sleep/wake confirmation and real Windows window/GPU shutdown measurements.
+  Output documentation distinguishes drop signalling from asynchronous release;
+  acoustic latency and automatic power/device integration remain explicit limits.
 - Asset reload reuses committed source allocations for unchanged dependents,
   retaining dependency-first invalidation and atomic decode/publication rollback.
 - World-save loading checks compatibility without cloning the live root and moves

@@ -20,6 +20,8 @@ use crate::{AudioClip, AudioCommand, AudioCommandQueue, AudioVoiceId};
 ///
 /// Constructing this service is the only audio operation that requires an
 /// output device. Decoding clips and queueing commands remain headless-safe.
+/// Dropping the service signals backend shutdown; it does not synchronously
+/// wait for the native stream thread or device resources to finish releasing.
 #[cfg(feature = "native-output")]
 pub struct AudioOutput {
     backend: OutputBackend<DefaultBackend>,

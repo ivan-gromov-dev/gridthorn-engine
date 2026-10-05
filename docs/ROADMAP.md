@@ -405,25 +405,30 @@ record implemented and verified increments; measurements and limitations are in
           verify output/lifetimes and record measured limits.
     - [x] Measure broader mixed ECS/component churn and attribute larger input bursts.
   - [x] Record runtime, world, input and localization dispositions and remeasure fixes.
-- [ ] Review assets/reload, scenes/saves, audio and platform lifecycle for I/O,
+- [x] Review assets/reload, scenes/saves, audio and platform lifecycle for I/O,
       memory peaks, worker/publication costs and frame stalls.
   - [x] Measure asset reload, scene/world-save I/O, publication and memory peaks.
     - [x] Measure warm Windows reload/scalar-scene/typed-save scaling and separate process-resident peaks; optimize reverse-chain invalidation/order and repeat affected samples.
     - [x] Complete first-service/fresh-process, branching/error-path workloads,
           phase/workflow heap peaks and codec/serializer attribution; fix source/root
           copies, remeasure and record Windows envelopes and physical-cold-storage limits.
-  - [ ] Measure audio command/worker costs and platform suspend/resume/shutdown.
+  - [x] Measure audio command/worker costs and platform suspend/resume/shutdown.
     - [x] Measure mock audio queue/output control and synthetic runtime lifecycle
           callbacks across clip, voice and shutdown-system counts on Windows.
     - [x] Attribute repeated PCM conversion; bound batch-local frame reuse, release
           completed handles and remeasure the affected mock workloads.
-    - [ ] Measure example worker handoff, native device/mixer latency, long-lived
+    - [x] Measure example worker handoff, native device/mixer latency, long-lived
           output memory and platform lifecycle costs.
       - [x] Measure classic_2d headless worker submission/shutdown and bounded
             transport overload; record lost pause requests as a reliability follow-up.
       - [x] Preserve the latest pause/resume state under full example queues;
             verify saturation, idle wake and stale notifications, and remeasure.
-  - [ ] Record each domain's disposition and remeasure any fixes.
+      - [x] Measure native mixer/control and software loopback latency, repeated-output memory and
+            deferred release; verify explicit audio sleep/wake and native window
+            shutdown on Windows (2026-10-05). Acoustic latency, hours-long sessions
+            and automatic power/device integration have concrete follow-ups in
+            [the review](PERFORMANCE_REVIEW.md#native-audio-and-windows-lifecycle-disposition--2026-10-05).
+  - [x] Record each domain's disposition and remeasure any fixes.
     - [x] Record assets/scenes/saves dispositions and repeat affected CPU/heap
           measurements; preserve rollback, publication and durable replacement.
 - [ ] Review fixed simulation, grids, pathfinding/placement, collision and
@@ -633,8 +638,11 @@ The integrated sibling multilingual-workbench example combines localization, edi
 controls and nested windows; native interactive IME behavior has maintainer manual acceptance.
 The immediate target remains Milestone 4.5. Native workbench acceptance, text/UI,
 rendering, runtime/world/input/localization and assets/scenes/saves reviews are
-complete within their recorded limits. Next are the remaining audio and platform
-lifecycle workloads and dispositions, followed by the other domain gates
+complete within their recorded limits. Audio/platform lifecycle review is also
+complete on 2026-10-05 for native control/mixer progress, repeated-output memory,
+deferred release, explicit manual sleep/wake and orderly native shutdown;
+acoustic latency and automatic power/device integration remain explicit follow-ups.
+Next are simulation/grid/collision/snapshot domain closure and the other domain gates
 in the order above. Milestone 4 remains open until the full performance review
 closes; native language/IME acceptance is already recorded. See
 [PERFORMANCE_REVIEW.md](PERFORMANCE_REVIEW.md).

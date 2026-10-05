@@ -8,6 +8,9 @@ use crate::{ApplicationError, WindowConfig, WindowLifecycle};
 
 use super::WinitApplication;
 
+#[cfg(target_os = "windows")]
+mod native;
+
 struct ShutdownProbe(Arc<AtomicBool>);
 
 impl WindowLifecycle for ShutdownProbe {

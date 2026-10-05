@@ -95,5 +95,15 @@ queue is empty. Active voice counts exclude completed voices and include paused
 voices. Shared clip clones reuse converted frames within a single command batch,
 with retention capped at 16 entries and 1 MiB of converted frames; per-voice
 volume and looping settings remain independent. Cleanup requires continued
-output processing. Native device latency and automatic platform audio
-suspend/resume remain deferred.
+output processing. The [audio/platform performance review](PERFORMANCE_REVIEW.md#native-audio-and-windows-lifecycle-disposition--2026-10-05)
+records real mixer/control progress, Windows software loopback delivery latency,
+repeated-output process memory, explicit
+audio suspend/resume across a maintainer-reported Windows sleep cycle and native
+window shutdown. Silent-output and quiet-tone loopback observations do not measure
+acoustic latency or the headset's wireless delay.
+Dropping output signals native shutdown asynchronously; the measured backend
+releases mixer data about half a second later, without a synchronous thread join.
+Automatic Windows power-event routing to runtime/audio hooks is not implemented;
+sleep must not be assumed to reset runtime elapsed time through those hooks.
+Device switching/error recovery, acoustic latency, hours-long sessions and
+cross-platform validation remain Milestone 5/deployment follow-ups.

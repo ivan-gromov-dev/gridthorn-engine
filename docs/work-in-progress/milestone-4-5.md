@@ -2356,3 +2356,85 @@ initial dirty files and untracked workbench remain preserved. Exact acquisition
 logs and summary CSV paths are in the durable review. The milestone checkpoint
 remains because Milestone4.5 is still active. Next domain: remaining audio/native
 device and platform lifecycle costs/disposition, then other open roadmap gates.
+
+## 2026-10-05 Audio/native lifecycle closure increment
+
+Scope: remaining native output/mixer control latency, repeated-output process
+memory and Windows lifecycle disposition. Engine starts at
+80e131cab31791c827136b24c2bd42818c194010 with a clean worktree. Sibling changes
+are preserved; no example edits are planned. Added ignored domain probes using
+the existing native-output feature and backend APIs, without dependencies or
+production API changes. Native acquisition uses silent PCM and zero gain.
+
+Pilot caught asynchronous publication of paused state versus playback position;
+the probe now allows two 25ms settled observations before requiring position
+stability. Native stream is HyperX Cloud Stinger Core Wireless + 7.1, stereo F32
+48kHz, supported buffer480 frames. Manual sleep was performed by the maintainer
+while the same process held a paused stream. Maintainer reported waking; releasing
+the file gate preserved position, resumed Playing in4.536ms, confirmed subsequent
+position progress and completed shutdown in15us. This is explicit audio lifecycle
+and maintainer-confirmed sleep, not automatically delivered runtime power hooks.
+System-event query does not corroborate the exact sleep interval and is not used
+as proof. Logs target/audio-manual-sleep.{stdout,stderr}.log; pilot failures and
+compilation diagnostics remain in target/audio-native-{build,pilot}.log.
+
+Repeated fresh-process workloads: voices1/16 use22 cycles twice; voices64 use360
+cycles twice. Each cycle shares one10-second PCM clip across looping voices,
+observes actual mixer progress, all-voice pause/resume, stable paused position,
+stop and one natural completion, empty handle/command cleanup, stream errors and
+backend callback CPU fractions. OS process private/resident memory is sampled
+every250ms by target/audio-native-acquire.ps1. No other benchmarks/builds run
+alongside acquisition. Six output logs and target/audio-native-memory.csv retain
+raw observations. Final measurements, native window shutdown and full verification
+are pending; domain gate is not yet marked complete.
+
+Acquisition complete: all six output processes exit0. The64voice runs each cover
+360cycles,23040 looping submissions and about108.5s. After two excluded cycles,
+submit p950.735–0.807ms; mixer progress p9518.533–18.570ms; pause/resume
+p9510.859–10.994/10.725–10.731ms. Callback CPU p95 fractions about0.0577,
+maximum0.10146 across mixed active/idle callback samples. Each64voice process has
+406post-startup memory observations; private peaks6340608/6287360bytes and
+resident15147008/15130624bytes, with near-plateau private sample means. No claimed
+heap/device allocation bound or hours-long stability. Two22iteration native release
+probes identify asynchronous frame release: median486.465–487.528ms, versus2us
+drop signalling, matching the backend's detached500ms stream-manager poll.
+
+Three real Windows/GPU window probes pass: initialization476.488–571.693ms,
+1024-system shutdown50.3–56.3us, finish/resource drop38.583–42.347ms. Synthetic
+callback tests remain separate from actual OS sleep. Native/headless classic_2d
+smokes exit0 with no audio initialization/playback diagnostic; logs
+target/audio-platform-classic-{build,native-smoke,headless-smoke}.log. Sibling
+working-tree changes remain identical to the initial list; no sibling edits.
+
+WASAPI loopback was additionally possible through existing CPAL output-device
+input mode. No microphone or saved recording. Maintainer silenced other output.
+Absolute-only detector/pre-play pilots failed; coherent1000Hz/RMS gating rejects
+interference and has normal silence/DC/other-tone/non-finite regressions. Two
+retained runs pass with median28.4126/28.5029ms,p9528.7674/29.6629ms. A subsequent
+confirmation times out before first detection and is retained as a capture
+reproducibility limit. After adding state/position/peak diagnostics, two final
+runs pass: median28.6840/28.8856ms,p9529.3851/29.3356ms. Each successful capture
+run explicitly reports one excluded startup underrun/overrun; no measured-cycle
+capture error. This is callback delivery latency, not acoustic/wireless latency.
+Durable review records all outcomes and concrete follow-ups, not just successful
+logs. No unsupported capture API or device-recovery subsystem is implemented.
+
+Feature Clippy initially rejects long probe functions; extracted manual wait and
+diagnostic helpers. Later Clippy requires array chunks, safe midpoint and a
+sample-sized float progress threshold. An automated manual-gate confirmation
+also caught periodic-position aliasing: comparing a100ms loop at exactly100ms
+can see the same position after genuine playback. The helper now polls for more
+than one sample of progress. Final guard run2cycles/64voices with an already
+released gate passes (no second actual OS sleep claimed), log
+target/audio-native-final-guards-3.log. Final native-feature Clippy passes and
+audio tests13passed,5manual probes ignored,0failed. Logs
+target/audio-platform-feature-{clippy,tests}-final.log. First fullverify passes;
+final fullverify after these test-only changes also exits0 with process-local
+jobs2/testthreads1 (target/audio-platform-full-verify-final.log). Formatting,
+workspace check/all-target Clippy/tests, generated-project CLI end-to-end,
+dependency boundaries and whitespace all pass. classic_2d audio regressions:
+2passed,1manual probe ignored,0failed (target/audio-platform-classic-audio-tests.log).
+README/ROADMAP/RUNTIME_APIS/CHANGELOG and the durable review now close the
+audio/platform gate within recorded envelopes and explicit limits. Existing
+sibling dirty paths are unchanged. No staging/commits. Milestone4.5 remains open;
+next are simulation/grid/collision/snapshot domain closure and the other gates.
