@@ -5,6 +5,7 @@ mod gpu_performance;
 mod lifecycle;
 mod performance;
 mod pipeline;
+mod present_mode;
 mod target;
 mod texture_cache;
 mod textured_frame;
@@ -12,4 +13,5 @@ mod uploads;
 
 pub use context::SurfaceRenderer;
 pub use errors::RenderSurfaceError;
+pub use present_mode::PresentMode;
 pub use target::WindowSurfaceTarget;

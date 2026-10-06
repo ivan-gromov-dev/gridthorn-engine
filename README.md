@@ -91,6 +91,10 @@ placement, supported fullscreen modes and correlated applied-state feedback.
 Windows supports windowed, borderless and exclusive fullscreen with resolution/
 refresh selection and applied-state feedback on the happy path. Windows native
 mode-switch rejection may panic; recovery is deferred in the roadmap.
+[Presentation controls](docs/PRESENTATION.md) expose supported VSync policies,
+correlated configuration feedback and software FPS caps independent of fixed
+simulation ticks and monitor refresh. The sibling `desktop-displays` settings
+menu exercises VSync/mode/cap changes and continued simulation between redraws.
 [Performance limits](docs/PERFORMANCE.md) describe the measured Windows workload
 envelopes and the CPU comparison in CI. APIs remain provisional; engine-wide
 frame deadlines and cross-platform performance are not guaranteed.

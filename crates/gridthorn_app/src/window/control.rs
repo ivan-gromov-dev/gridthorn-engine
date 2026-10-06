@@ -3,6 +3,7 @@ use std::time::Instant;
 /// Window operations available to lifecycle hooks.
 #[derive(Debug, Default)]
 pub struct WindowControl {
+    pub(super) presentation_request: Option<(u64, super::presentation::PresentationConfig)>,
     pub(super) window_request: Option<(u64, super::settings::WindowRequest)>,
     pub(super) refresh_displays: bool,
     pub(super) selected_monitor: Option<crate::display::MonitorId>,
@@ -16,6 +17,14 @@ pub struct WindowControl {
 }
 
 impl WindowControl {
+    /// Request a correlated surface policy and software cap; the last call wins.
+    pub fn configure_presentation(
+        &mut self,
+        id: u64,
+        config: super::presentation::PresentationConfig,
+    ) {
+        self.presentation_request = Some((id, config));
+    }
     /// Submit one correlated explicit window operation; the last call wins.
     /// Feedback arrives through `window_operation_changed`. Invalid data is
     /// rejected by the native adapter before changing OS state.

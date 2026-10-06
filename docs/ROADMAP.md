@@ -84,8 +84,11 @@ capabilities are explicit, optional and reported through engine-owned APIs.
       Provisional initialization selection, surface-specific inventory and typed
       diagnostics are implemented; see [GRAPHICS_ADAPTERS.md](GRAPHICS_ADAPTERS.md)
       for the restart contract and native coverage limits.
-- [ ] Presentation controls: supported VSync/present modes and frame-rate caps,
+- [x] Presentation controls: supported VSync/present modes and frame-rate caps,
       independent of fixed simulation ticks and monitor refresh rate.
+      Provisional explicit policies, surface capabilities, correlated feedback
+      and monotonic redraw caps are implemented; see [PRESENTATION.md](PRESENTATION.md)
+      for Windows native evidence and remaining platform limits.
 - [ ] Controller discovery, buttons/axes, connection changes, dead-zone primitives,
       supported feedback and device identity; integrate generic UI navigation.
 - [ ] Input-device discovery/selection where the OS supports it, capability

@@ -8,6 +8,7 @@ mod scene;
 mod state;
 mod ui;
 mod window;
+pub use window::presentation;
 pub use window::settings;
 
 pub use runtime::{

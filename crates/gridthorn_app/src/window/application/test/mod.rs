@@ -13,6 +13,8 @@ mod native;
 
 #[cfg(target_os = "windows")]
 mod graphics;
+#[cfg(target_os = "windows")]
+mod presentation;
 
 struct ShutdownProbe(Arc<AtomicBool>);
 

@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Provisional `gridthorn::presentation` surface capabilities, explicit FIFO,
+  adaptive FIFO, immediate and mailbox policies, correlated configuration
+  feedback and validated monotonic FPS caps. Runtime wakes remain independent
+  of redraw deadlines, preserving fixed simulation at low caps. The sibling
+  desktop-displays settings menu and Windows native tests exercise the workflow.
+
 - Independent graphics device and rendering API preferences, with device-model
   grouping, per-API compatibility and explicit ambiguity reporting. The settings
   example provides separate card/API lists and migrates its saved preference.

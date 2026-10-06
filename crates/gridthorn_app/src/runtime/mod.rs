@@ -58,6 +58,10 @@ impl ApplicationRuntime {
         self.schedules.world()
     }
 
+    pub(crate) fn fixed_step_interval(&self) -> Duration {
+        self.fixed_clock.fixed_step()
+    }
+
     /// Run `Startup` once without advancing a host frame.
     ///
     /// # Errors

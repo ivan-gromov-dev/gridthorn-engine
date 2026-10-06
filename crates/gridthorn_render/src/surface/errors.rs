@@ -7,6 +7,9 @@ type BoxedError = Box<dyn Error + Send + Sync>;
 /// Failure produced while creating, configuring, or rendering a surface.
 #[derive(Debug, Error)]
 pub enum RenderSurfaceError {
+    /// This explicit policy is not supported by the initialized surface/adapter pair.
+    #[error("present mode {mode:?} is unsupported by this surface/adapter")]
+    UnsupportedPresentMode { mode: super::PresentMode },
     /// The selected device/API combination is not exposed by this inventory.
     #[error("graphics device/API selection is unavailable: {selection:?}")]
     GraphicsSelectionUnavailable { selection: crate::GraphicsSelection },

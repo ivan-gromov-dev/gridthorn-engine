@@ -59,8 +59,9 @@ Fullscreen requests reject windowed size, policy and placement. Switching to
 `Windowed` restores the last windowed size/position unless overridden; configured
 resizing policy is reapplied after fullscreen bounds are cleared. Ordinary resize
 and DPI events continue to drive viewport, layout and surface reconfiguration.
-Monitor selection moves the existing rendering window; adapter selection and
-presentation/VSync controls are separate future roadmap items.
+Monitor selection moves the existing rendering window. Initialization adapter
+selection and presentation/VSync controls are separate implemented APIs; see
+[GRAPHICS_ADAPTERS.md](GRAPHICS_ADAPTERS.md) and [PRESENTATION.md](PRESENTATION.md).
 
 Windows exclusive readback uses current OS refresh rather than echoing the
 requested mode. The underlying API reports integer hertz; millihertz units do not

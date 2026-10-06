@@ -5,6 +5,14 @@ use super::{ApplicationError, WindowControl};
 
 /// Provisional hooks for exercising application lifecycle behavior.
 pub trait WindowLifecycle {
+    /// Publish capabilities and last configured mode before startup and after changes.
+    fn presentation_state_changed(&mut self, _state: super::presentation::PresentationState) {}
+    /// Report pending/applied/failed presentation requests without stopping the app.
+    fn presentation_operation_changed(
+        &mut self,
+        _operation: super::presentation::PresentationOperation,
+    ) {
+    }
     /// Publish the surface-specific inventory and effective adapter before `started`.
     /// Not called for renderer-free windows or failed GPU initialization.
     fn graphics_adapters_initialized(&mut self, _adapters: gridthorn_render::GraphicsAdapters) {}

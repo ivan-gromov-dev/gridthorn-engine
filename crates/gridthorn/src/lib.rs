@@ -4,6 +4,12 @@
 //! under construction.
 
 mod runtime;
+/// Provisional `VSync` policy, surface capabilities and independent software FPS caps.
+pub mod presentation {
+    pub use gridthorn_app::presentation::*;
+    #[cfg(test)]
+    mod test;
+}
 /// Provisional explicit window configuration, capabilities and applied-state feedback.
 pub mod window {
     pub use gridthorn_app::settings::*;

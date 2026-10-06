@@ -20,4 +20,4 @@ pub use presentation::{
     RenderFrame, Sprite, SpriteRegion, SpriteRegionError, TextLabel, TexturedSprite, TimingOverlay,
     UiError, UiPrimitive, UiRect,
 };
-pub use surface::{RenderSurfaceError, SurfaceRenderer, WindowSurfaceTarget};
+pub use surface::{PresentMode, RenderSurfaceError, SurfaceRenderer, WindowSurfaceTarget};
