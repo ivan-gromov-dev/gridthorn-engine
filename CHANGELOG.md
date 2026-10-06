@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Explicit one-shot `ControllerPolling::request_poll()` for lazy discovery and
+  controller event collection; no automatic startup/per-frame polling. The visual
+  example owns refresh requests and 50 ms polling while a controller is selected.
+
+- Provisional controller discovery, per-connection identity and capabilities,
+  ordered buttons/axes, hotplug state, explicit axial/radial dead zones and
+  bounded capability-gated rumble with correlated typed feedback. Opt-in UI
+  routing maps buttons and stick hysteresis through generic navigation.
+  The sibling visual controllers example shows live controls, device selection
+  and disconnect fallback, with headless and native discovery smoke.
+
 - Provisional `gridthorn::presentation` surface capabilities, explicit FIFO,
   adaptive FIFO, immediate and mailbox policies, correlated configuration
   feedback and validated monotonic FPS caps. Runtime wakes remain independent

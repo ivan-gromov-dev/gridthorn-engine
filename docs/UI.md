@@ -190,8 +190,8 @@ controls. Enter/Space activates buttons/toggles on a nonrepeat press. Arrows cho
 spatial focus, with declaration order resolving equal distances; sliders adjust
 by one percent of their range with Left/Right, and lists move one row with Up/Down.
 Escape clears focus. `navigate` accepts the same `UiNavigation` commands from a
-game/controller adapter. Controller discovery and native buttons/axes remain
-Milestone 5; these are device-independent navigation hooks.
+game adapter. The [controller adapter](CONTROLLERS.md) now provides discovery,
+native buttons/axes and opt-in routing through these device-independent hooks.
 
 ## Context menus, popups and dialogs
 

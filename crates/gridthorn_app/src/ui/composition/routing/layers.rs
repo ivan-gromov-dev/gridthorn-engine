@@ -268,6 +268,10 @@ impl UiRouter {
                     | InputEvent::CursorLeft
                     | InputEvent::PointerMotion { .. }
                     | InputEvent::ModifiersChanged(_)
+                    | InputEvent::Controller(
+                        gridthorn_input::controller::ControllerEvent::Button { .. }
+                            | gridthorn_input::controller::ControllerEvent::Axis { .. }
+                    )
             );
         if blocked {
             match event {

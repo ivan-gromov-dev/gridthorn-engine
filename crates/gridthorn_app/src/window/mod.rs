@@ -21,5 +21,6 @@ mod dpi;
 pub use dpi::WindowScaleFactor;
 mod capture;
 mod clipboard;
+mod controller;
 mod key_mapping;
 mod text;

@@ -100,6 +100,14 @@ impl RuntimeWindowLifecycle {
     }
 
     fn collect_display_requests(&mut self, control: &mut WindowControl) {
+        if self
+            .runtime
+            .world()
+            .update_resource_with(gridthorn_input::controller::ControllerPolling::take_request)
+            == Some(true)
+        {
+            control.poll_controllers();
+        }
         if let Some(Some((id, config))) = self
             .runtime
             .world()
@@ -253,7 +261,23 @@ impl WindowLifecycle for RuntimeWindowLifecycle {
         self.runtime
             .world()
             .insert_resource(gridthorn_input::PointerCapture::default());
+        self.runtime
+            .world()
+            .insert_resource(gridthorn_input::controller::ControllerFeedback::default());
+        self.runtime.world().insert_resource(self.input.snapshot());
+        self.runtime
+            .world()
+            .insert_resource(gridthorn_input::controller::ControllerPolling::default());
         self.runtime.startup()?;
+        if let Some(requests) = self
+            .runtime
+            .world()
+            .update_resource_with(gridthorn_input::controller::ControllerFeedback::take_requests)
+        {
+            for request in requests {
+                control.rumble(request);
+            }
+        }
         self.collect_display_requests(control);
         self.frame_timer.start(Instant::now());
         Ok(())
@@ -265,6 +289,15 @@ impl WindowLifecycle for RuntimeWindowLifecycle {
         self.run_elapsed_frame(elapsed)?;
         if let Some(deadline) = now.checked_add(self.runtime.fixed_step_interval()) {
             control.wake_at(deadline);
+        }
+        if let Some(requests) = self
+            .runtime
+            .world()
+            .update_resource_with(gridthorn_input::controller::ControllerFeedback::take_requests)
+        {
+            for request in requests {
+                control.rumble(request);
+            }
         }
         self.collect_display_requests(control);
         if let Some(Some(area)) = self

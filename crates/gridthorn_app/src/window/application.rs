@@ -88,6 +88,7 @@ where
 }
 
 struct WinitApplication<L> {
+    controllers: super::controller::NativeControllers,
     suspended: bool,
     presentation: super::presentation::native::NativePresentation,
     graphics_selection: Option<gridthorn_render::GraphicsSelection>,
@@ -112,6 +113,7 @@ where
 {
     fn new(config: WindowConfig, lifecycle: L) -> Self {
         Self {
+            controllers: super::controller::NativeControllers::default(),
             suspended: false,
             presentation: super::presentation::native::NativePresentation::default(),
             graphics_selection: None,
@@ -135,6 +137,7 @@ where
         mut self,
         event_result: Result<(), ApplicationError>,
     ) -> Result<(), ApplicationError> {
+        self.controllers.stop();
         self.lifecycle.shutdown();
         event_result?;
         self.error.map_or(Ok(()), Err)
@@ -183,6 +186,7 @@ where
         self.lifecycle.resized(size.width, size.height);
 
         let mut control = WindowControl::default();
+
         self.lifecycle.started(&mut control)?;
         self.apply_control(event_loop, &control);
         info!(
@@ -238,7 +242,48 @@ where
         }
     }
 
+    fn poll_controllers(&mut self, event_loop: &ActiveEventLoop) {
+        for event in self.controllers.poll() {
+            if matches!(
+                event,
+                gridthorn_input::InputEvent::Controller(
+                    gridthorn_input::controller::ControllerEvent::Button { .. }
+                        | gridthorn_input::controller::ControllerEvent::Axis { .. }
+                )
+            ) && !self
+                .window
+                .as_ref()
+                .is_some_and(|window| window.has_focus())
+            {
+                continue;
+            }
+            if let Err(error) = self.lifecycle.input(event) {
+                self.fail(event_loop, error);
+                return;
+            }
+        }
+    }
+
+    fn apply_controller_control(&mut self, event_loop: &ActiveEventLoop, control: &WindowControl) {
+        if control.poll_controllers {
+            self.poll_controllers(event_loop);
+        }
+        for request in &control.controller_feedback {
+            let event = self.controllers.feedback_focused(
+                *request,
+                self.window
+                    .as_ref()
+                    .is_some_and(|window| window.has_focus()),
+            );
+            if let Err(error) = self.lifecycle.input(event) {
+                self.fail(event_loop, error);
+                return;
+            }
+        }
+    }
+
     fn apply_control(&mut self, event_loop: &ActiveEventLoop, control: &WindowControl) {
+        self.apply_controller_control(event_loop, control);
         if let Some((id, config)) = control.presentation_request {
             self.configure_presentation(id, config);
         }
@@ -388,6 +433,7 @@ where
     L: WindowLifecycle,
 {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
+        self.controllers.cancel_input();
         self.suspended = false;
         self.presentation.pacer.reset();
         if self.window.is_none() {
@@ -403,6 +449,7 @@ where
     }
 
     fn suspended(&mut self, event_loop: &ActiveEventLoop) {
+        self.controllers.stop();
         self.suspended = true;
         event_loop.set_control_flow(ControlFlow::Wait);
         self.cancel_capture(event_loop);
@@ -445,6 +492,9 @@ where
             );
         }
 
+        if matches!(event, WindowEvent::Focused(_)) {
+            self.controllers.cancel_input();
+        }
         if matches!(event, WindowEvent::Focused(false)) {
             self.cancel_capture(event_loop);
             if let Some(window) = &self.window {

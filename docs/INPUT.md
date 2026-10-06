@@ -58,7 +58,7 @@ requests native release and reports its result. Capture does not automatically
 resume on focus return. Focus loss is an explicit ordered cancellation event;
 consumers must not interpret its release edges as a completed click. This is
 native cursor capture; [UI ownership, hit testing and explicit input consumption](UI.md)
-are now implemented separately. Gamepads remain Milestone 5 work.
+are now implemented separately. [Controller discovery, state, dead zones and feedback](CONTROLLERS.md) are now implemented provisionally.
 
 ## Unicode text sessions, IME and clipboard
 

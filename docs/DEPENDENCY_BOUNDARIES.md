@@ -16,7 +16,7 @@ slice and its focused dependency spikes:
 | `gridthorn_collision`  | Provisional engine-owned basic 2D shape collision queries   | None                                                          |
 | `gridthorn_cli`        | Thin command-line adapter and project template             | None                                                          |
 | `gridthorn_grid` | Optional square/isometric coordinate module | None |
-| `gridthorn_input`      | Engine-owned keyboard and mouse events and frame state     | None                                                          |
+| `gridthorn_input`      | Engine-owned desktop/controller events, frame state and feedback contracts     | None                                                          |
 | `gridthorn_localization` | Validated catalog assets and headless presentation localization | None |
 | `gridthorn_render`     | Provisional GPU surface and renderer services              | `gridthorn_assets`                                            |
 | `gridthorn_scene`      | Provisional scene documents, validation, migrations, and prepared loading | `gridthorn_world`                                  |

@@ -1,5 +1,6 @@
-//! Provisional engine-owned keyboard and mouse input contracts.
+//! Provisional engine-owned desktop and controller input contracts.
 
+pub mod controller;
 mod event;
 mod key_code;
 mod keyboard;

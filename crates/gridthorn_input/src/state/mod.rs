@@ -5,6 +5,11 @@ use crate::{ButtonState, CursorPosition, InputEvent, KeyCode, MouseButton};
 /// Immutable keyboard and mouse state for one host frame.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct InputState {
+    controller_availability: Option<Result<(), crate::controller::ControllerError>>,
+    controllers: std::collections::BTreeMap<
+        crate::controller::ControllerId,
+        crate::controller::ControllerState,
+    >,
     composition: Option<(String, Option<(usize, usize)>)>,
     text_input_active: bool,
     events: Vec<InputEvent>,
@@ -22,6 +27,25 @@ pub struct InputState {
 }
 
 impl InputState {
+    /// Backend initialization result; `None` until an adapter reports availability.
+    #[must_use]
+    pub fn controller_availability(
+        &self,
+    ) -> Option<&Result<(), crate::controller::ControllerError>> {
+        self.controller_availability.as_ref()
+    }
+    /// Connected controllers in connection-key order.
+    pub fn controllers(&self) -> impl Iterator<Item = &crate::controller::ControllerState> {
+        self.controllers.values()
+    }
+    /// Look up a current controller connection.
+    #[must_use]
+    pub fn controller(
+        &self,
+        id: crate::controller::ControllerId,
+    ) -> Option<&crate::controller::ControllerState> {
+        self.controllers.get(&id)
+    }
     /// Current preedit and optional UTF-8 byte cursor endpoints, retained across frames.
     #[must_use]
     pub fn composition(&self) -> Option<(&str, Option<(usize, usize)>)> {
@@ -124,6 +148,30 @@ impl InputBuffer {
     pub fn push(&mut self, event: InputEvent) {
         let focus_lost = matches!(event, InputEvent::FocusLost);
         match &event {
+            InputEvent::Controller(controller) => {
+                use crate::controller::ControllerEvent;
+                match controller {
+                    ControllerEvent::Ready => self.state.controller_availability = Some(Ok(())),
+                    ControllerEvent::Unavailable(error) => {
+                        self.state.controller_availability = Some(Err(error.clone()));
+                    }
+                    ControllerEvent::Connected(info) => {
+                        self.state.controllers.insert(
+                            info.id,
+                            crate::controller::ControllerState::new(info.clone()),
+                        );
+                    }
+                    ControllerEvent::Disconnected(id) => {
+                        self.state.controllers.remove(id);
+                    }
+                    ControllerEvent::Button { id, .. } | ControllerEvent::Axis { id, .. } => {
+                        if let Some(state) = self.state.controllers.get_mut(id) {
+                            state.apply(controller);
+                        }
+                    }
+                    ControllerEvent::Feedback { .. } => {}
+                }
+            }
             InputEvent::Text(crate::TextInputEvent::Composition { text, cursor }) => {
                 let cursor = cursor.filter(|(start, end)| {
                     text.is_char_boundary(*start) && text.is_char_boundary(*end)
@@ -195,6 +243,9 @@ impl InputBuffer {
         let mut snapshot = self.state.clone();
         snapshot.events = events;
         self.state.keys_pressed.clear();
+        for controller in self.state.controllers.values_mut() {
+            controller.clear_edges();
+        }
         self.state.keys_released.clear();
         self.state.mouse_buttons_pressed.clear();
         self.state.mouse_buttons_released.clear();
@@ -244,6 +295,9 @@ impl InputBuffer {
     }
 
     fn release_all(&mut self) {
+        for controller in self.state.controllers.values_mut() {
+            controller.cancel();
+        }
         if self.state.composition.take().is_some() {
             self.state.events.push(InputEvent::Text(
                 crate::TextInputEvent::CompositionCancelled,
