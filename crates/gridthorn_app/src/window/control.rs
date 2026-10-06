@@ -3,6 +3,8 @@ use std::time::Instant;
 /// Window operations available to lifecycle hooks.
 #[derive(Debug, Default)]
 pub struct WindowControl {
+    pub(super) poll_controllers: bool,
+    pub(super) controller_feedback: Vec<gridthorn_input::controller::RumbleRequest>,
     pub(super) presentation_request: Option<(u64, super::presentation::PresentationConfig)>,
     pub(super) window_request: Option<(u64, super::settings::WindowRequest)>,
     pub(super) refresh_displays: bool,
@@ -17,6 +19,14 @@ pub struct WindowControl {
 }
 
 impl WindowControl {
+    /// Request controller discovery and pending input once; results arrive as input events.
+    pub fn poll_controllers(&mut self) {
+        self.poll_controllers = true;
+    }
+    /// Queue a controller rumble request; results arrive as input events.
+    pub fn rumble(&mut self, request: gridthorn_input::controller::RumbleRequest) {
+        self.controller_feedback.push(request);
+    }
     /// Request a correlated surface policy and software cap; the last call wins.
     pub fn configure_presentation(
         &mut self,

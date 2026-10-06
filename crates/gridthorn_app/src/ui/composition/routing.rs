@@ -9,6 +9,7 @@ use gridthorn_input::{
 };
 use std::collections::BTreeSet;
 
+mod controller;
 mod keyboard;
 mod layers;
 mod navigation;
@@ -60,6 +61,8 @@ pub struct UiRoute {
     pub effects: Vec<(UiNodeId, UiEffect)>,
     /// Suppress continuous world keyboard bindings while UI owns focus/held keys.
     pub keyboard_blocked: bool,
+    /// Suppress continuous mapped controller bindings while navigation owns them.
+    pub controller_blocked: bool,
     /// Suppress continuous world pointer bindings while hovered/captured/held by UI.
     pub pointer_blocked: bool,
     /// Operations for the platform adapter; routing itself has no native side effects.
@@ -85,6 +88,7 @@ struct PendingClipboard {
 /// confinement/locking. Reserve unique clipboard IDs for this router.
 #[derive(Clone, Debug)]
 pub struct UiRouter {
+    controllers: controller::ControllerRouting,
     performance: Option<std::sync::Arc<super::layout_performance::LayoutPerformance>>,
     layers: Vec<layers::OpenLayer>,
     layer_roots: BTreeSet<UiNodeId>,
@@ -111,6 +115,7 @@ impl UiRouter {
     pub fn new(first_clipboard_id: u64) -> Self {
         Self {
             performance: super::layout_performance::LayoutPerformance::new(),
+            controllers: controller::ControllerRouting::default(),
             layers: Vec::new(),
             layer_roots: BTreeSet::new(),
             layer_hovered: false,
@@ -237,7 +242,8 @@ impl UiRouter {
         router.reconcile(&next, prepared.base(), &mut result);
         for (index, event) in events.iter().enumerate() {
             let scoped = prepared.event_layout(&mut router, &next, layout, event);
-            if router.layer_event(&next, layout, event, &mut result)
+            if router.controller_event(&mut next, layout, event, &mut result)?
+                || router.layer_event(&next, layout, event, &mut result)
                 || router.event(&mut next, scoped, event, &mut result)?
                 || router.block_modal_event(event)
             {
@@ -369,6 +375,7 @@ impl UiRouter {
 
     fn finish(&self, result: &mut UiRoute) {
         let modal = self.layers.iter().any(|layer| layer.options.modal);
+        result.controller_blocked |= modal || self.controllers.enabled;
         result.keyboard_blocked |= modal || self.focus.is_some() || !self.owned_keys.is_empty();
         result.pointer_blocked |= modal
             || self.layer_hovered

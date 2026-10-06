@@ -89,8 +89,11 @@ capabilities are explicit, optional and reported through engine-owned APIs.
       Provisional explicit policies, surface capabilities, correlated feedback
       and monotonic redraw caps are implemented; see [PRESENTATION.md](PRESENTATION.md)
       for Windows native evidence and remaining platform limits.
-- [ ] Controller discovery, buttons/axes, connection changes, dead-zone primitives,
+- [x] Controller discovery, buttons/axes, connection changes, dead-zone primitives,
       supported feedback and device identity; integrate generic UI navigation.
+      Provisional contracts, on-demand native discovery, bounded rumble and opt-in UI routing
+      are implemented with a visual device-selection example. Physical hardware
+      acceptance and Linux/macOS native validation remain deferred; see [CONTROLLERS.md](CONTROLLERS.md).
 - [ ] Input-device discovery/selection where the OS supports it, capability
       reporting for aggregate keyboard/mouse input and configurable action bindings.
 - [ ] Enumerate/select audio output and capture devices; opt-in capture API,

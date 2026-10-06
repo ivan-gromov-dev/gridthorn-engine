@@ -46,3 +46,4 @@ fn field(value: &str) -> UiTree {
         placeholder: "type".into(),
     }])
 }
+mod controller;

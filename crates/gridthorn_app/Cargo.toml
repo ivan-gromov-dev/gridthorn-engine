@@ -9,6 +9,7 @@ authors.workspace = true
 publish = false
 
 [dependencies]
+gilrs.workspace = true
 arboard.workspace = true
 cpu-time.workspace = true
 gridthorn_input = { path = "../gridthorn_input" }

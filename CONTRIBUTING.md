@@ -1,6 +1,10 @@
 # Contributing to Gridthorn
 
 Gridthorn uses Rust 1.99.0 for local development and as its MSRV.
+
+Linux controller backend builds require `pkg-config` and libudev development
+files (`sudo apt-get install pkg-config libudev-dev` on Debian/Ubuntu). CI installs
+these prerequisites for Linux verification, MSRV and performance jobs.
 `rust-toolchain.toml` selects that toolchain with Clippy and rustfmt; rustup
 installs it automatically. CI also verifies the latest stable toolchain.
 

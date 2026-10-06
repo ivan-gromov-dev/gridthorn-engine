@@ -37,6 +37,8 @@ pub struct CursorPosition {
 /// Engine-owned input event produced by a platform adapter.
 #[derive(Clone, Debug, PartialEq)]
 pub enum InputEvent {
+    /// Controller discovery, input or feedback in arrival order.
+    Controller(crate::controller::ControllerEvent),
     /// Committed Unicode text or IME lifecycle; never a physical shortcut.
     Text(crate::TextInputEvent),
     /// Applied text-session state; IME availability is reported separately.

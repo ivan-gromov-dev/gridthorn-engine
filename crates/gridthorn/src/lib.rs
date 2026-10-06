@@ -32,6 +32,10 @@ pub use runtime::{
     ScenarioState, SimulationSnapshot, StateFingerprint, WorldSaveCodec, WorldSaveError,
 };
 mod version;
+/// Provisional controller discovery, state, dead zones and feedback contracts.
+pub mod controller {
+    pub use gridthorn_input::controller::*;
+}
 /// Provisional headless locale selection, validated Fluent catalogs and formatting.
 pub mod localization {
     pub use gridthorn_localization::{

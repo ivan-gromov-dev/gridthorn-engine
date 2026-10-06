@@ -28,6 +28,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - name: Install controller backend build prerequisites
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libudev-dev
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy,rustfmt
@@ -46,6 +49,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install controller backend build prerequisites
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libudev-dev
       - uses: dtolnay/rust-toolchain@1.99.0
       - uses: Swatinem/rust-cache@v2
       - name: Check all targets at the MSRV
@@ -70,6 +75,8 @@ jobs:
           path: previous
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@1.99.0
+      - name: Install controller backend build prerequisites
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libudev-dev
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

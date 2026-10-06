@@ -90,5 +90,6 @@ fn excludes_suspended_time_from_the_next_frame() {
 mod desktop;
 mod text;
 
+mod controller;
 mod graphics;
 mod window_settings;
