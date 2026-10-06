@@ -34,3 +34,4 @@ fn prelude_builds_and_runs_a_game_lifecycle() {
         Some(3)
     );
 }
+mod graphics;

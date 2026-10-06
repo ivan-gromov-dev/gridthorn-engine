@@ -13,6 +13,7 @@ use super::target::WindowSurfaceTarget;
 
 /// GPU renderer bound to one owned window surface.
 pub struct SurfaceRenderer {
+    graphics: crate::GraphicsAdapters,
     adapter: Adapter,
     device: Device,
     queue: Queue,
@@ -36,15 +37,79 @@ impl SurfaceRenderer {
         width: u32,
         height: u32,
     ) -> Result<Self, RenderSurfaceError> {
+        Self::with_adapter(target, width, height, None)
+    }
+
+    /// Initialize a renderer with an optional revalidated adapter preference.
+    /// Changing the preference requires destroying the renderer and creating a new one.
+    ///
+    /// # Errors
+    /// Returns typed missing, ambiguous or incompatible selection errors, or surface/device failures.
+    pub fn with_adapter(
+        target: WindowSurfaceTarget,
+        width: u32,
+        height: u32,
+        selection: Option<&crate::GraphicsAdapterKey>,
+    ) -> Result<Self, RenderSurfaceError> {
+        Self::initialize(target, width, height, selection, None)
+    }
+
+    /// Initialize with independent device and rendering API preferences.
+    ///
+    /// # Errors
+    /// Returns selection, compatibility, surface or device initialization failures.
+    pub fn with_graphics_selection(
+        target: WindowSurfaceTarget,
+        width: u32,
+        height: u32,
+        selection: &crate::GraphicsSelection,
+    ) -> Result<Self, RenderSurfaceError> {
+        Self::initialize(target, width, height, None, Some(selection))
+    }
+
+    fn initialize(
+        target: WindowSurfaceTarget,
+        width: u32,
+        height: u32,
+        selection: Option<&crate::GraphicsAdapterKey>,
+        graphics_selection: Option<&crate::GraphicsSelection>,
+    ) -> Result<Self, RenderSurfaceError> {
         let instance = Instance::default();
         let surface = instance
             .create_surface(target.into_wgpu())
             .map_err(RenderSurfaceError::surface_creation)?;
-        let adapter = pollster::block_on(instance.request_adapter(&RequestAdapterOptions {
-            compatible_surface: Some(&surface),
-            ..RequestAdapterOptions::default()
-        }))
-        .map_err(RenderSurfaceError::adapter_request)?;
+        let mut native_adapters =
+            pollster::block_on(instance.enumerate_adapters(wgpu::Backends::all()));
+        let adapters: Vec<_> = native_adapters
+            .iter()
+            .map(|adapter| crate::graphics::describe(adapter, Some(&surface)))
+            .collect();
+        let resolved = graphics_selection
+            .map(|selection| crate::graphics::resolve(&adapters, selection))
+            .transpose()?
+            .flatten();
+        let selection = resolved.as_ref().or(selection);
+        let adapter = if let Some(key) = selection {
+            let index = crate::graphics::select(&adapters, key)?;
+            native_adapters.remove(index)
+        } else {
+            pollster::block_on(instance.request_adapter(&RequestAdapterOptions {
+                compatible_surface: Some(&surface),
+                ..RequestAdapterOptions::default()
+            }))
+            .map_err(RenderSurfaceError::adapter_request)?
+        };
+        let selected = crate::graphics::describe(&adapter, Some(&surface));
+        if selected.compatibility != crate::GraphicsAdapterCompatibility::Compatible {
+            return Err(RenderSurfaceError::AdapterIncompatible {
+                key: selected.key,
+                reason: selected.compatibility,
+            });
+        }
+        let graphics = crate::GraphicsAdapters {
+            adapters,
+            selected: selected.key,
+        };
         let performance = super::performance::SurfacePerformance::new();
         let required_features = if performance.enabled() {
             adapter.features() & wgpu::Features::TIMESTAMP_QUERY
@@ -65,6 +130,7 @@ impl SurfaceRenderer {
         );
 
         let mut renderer = Self {
+            graphics,
             adapter,
             device,
             queue,
@@ -77,6 +143,12 @@ impl SurfaceRenderer {
         };
         renderer.resize(width, height)?;
         Ok(renderer)
+    }
+
+    /// Surface-specific inventory and successfully initialized adapter.
+    #[must_use]
+    pub fn graphics_adapters(&self) -> &crate::GraphicsAdapters {
+        &self.graphics
     }
 
     /// Queue a new non-zero extent or suspend acquisition at zero.

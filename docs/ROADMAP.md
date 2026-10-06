@@ -79,8 +79,11 @@ capabilities are explicit, optional and reported through engine-owned APIs.
       disconnection. Integrate compatible upstream winit recovery and verify
       rejected activation/restoration and queued teardown. Until then, native
       rejection may panic; exclusive fullscreen supports the happy path only.
-- [ ] Enumerate compatible graphics adapters, select an adapter at initialization
+- [x] Enumerate compatible graphics adapters, select an adapter at initialization
       or through an explicit restart/recreation contract, and report incompatibility.
+      Provisional initialization selection, surface-specific inventory and typed
+      diagnostics are implemented; see [GRAPHICS_ADAPTERS.md](GRAPHICS_ADAPTERS.md)
+      for the restart contract and native coverage limits.
 - [ ] Presentation controls: supported VSync/present modes and frame-rate caps,
       independent of fixed simulation ticks and monitor refresh rate.
 - [ ] Controller discovery, buttons/axes, connection changes, dead-zone primitives,

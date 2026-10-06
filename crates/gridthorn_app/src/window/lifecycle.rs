@@ -5,6 +5,10 @@ use super::{ApplicationError, WindowControl};
 
 /// Provisional hooks for exercising application lifecycle behavior.
 pub trait WindowLifecycle {
+    /// Publish the surface-specific inventory and effective adapter before `started`.
+    /// Not called for renderer-free windows or failed GPU initialization.
+    fn graphics_adapters_initialized(&mut self, _adapters: gridthorn_render::GraphicsAdapters) {}
+
     /// Publish native window observations and explicit capability flags.
     /// Runs before `started` and on relevant window events; no monitor enumeration.
     fn window_state_changed(
