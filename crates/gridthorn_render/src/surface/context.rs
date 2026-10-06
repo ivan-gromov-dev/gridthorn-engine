@@ -13,6 +13,8 @@ use super::target::WindowSurfaceTarget;
 
 /// GPU renderer bound to one owned window surface.
 pub struct SurfaceRenderer {
+    present_modes: Vec<super::PresentMode>,
+    present_mode: super::PresentMode,
     graphics: crate::GraphicsAdapters,
     adapter: Adapter,
     device: Device,
@@ -129,7 +131,11 @@ impl SurfaceRenderer {
             "initialized graphics adapter"
         );
 
+        let present_modes =
+            super::present_mode::supported(&surface.get_capabilities(&adapter).present_modes);
         let mut renderer = Self {
+            present_modes,
+            present_mode: super::PresentMode::default(),
             graphics,
             adapter,
             device,
@@ -149,6 +155,36 @@ impl SurfaceRenderer {
     #[must_use]
     pub fn graphics_adapters(&self) -> &crate::GraphicsAdapters {
         &self.graphics
+    }
+
+    /// Latest explicit policies reported for this surface and initialized adapter.
+    /// Requests and native configuration refresh this snapshot.
+    #[must_use]
+    pub fn present_modes(&self) -> &[super::PresentMode] {
+        &self.present_modes
+    }
+
+    /// Queue a supported mode for the next renderable acquisition; reject without mutation.
+    /// # Errors
+    /// Returns `UnsupportedPresentMode` without silently selecting a fallback.
+    pub fn set_present_mode(&mut self, mode: super::PresentMode) -> Result<(), RenderSurfaceError> {
+        self.present_modes = super::present_mode::supported(
+            &self.surface.get_capabilities(&self.adapter).present_modes,
+        );
+        super::present_mode::validate(&self.present_modes, mode)?;
+        if self.present_mode != mode {
+            self.present_mode = mode;
+            self.lifecycle.invalidate_configuration();
+        }
+        Ok(())
+    }
+
+    /// Last configured queue policy, absent before configuration or at zero size.
+    #[must_use]
+    pub fn applied_present_mode(&self) -> Option<super::PresentMode> {
+        self.configuration
+            .as_ref()
+            .and_then(|configuration| super::PresentMode::from_native(configuration.present_mode))
     }
 
     /// Queue a new non-zero extent or suspend acquisition at zero.
@@ -274,10 +310,15 @@ impl SurfaceRenderer {
     }
 
     fn configure(&mut self, extent: SurfaceExtent) -> Result<(), RenderSurfaceError> {
-        let configuration = self
+        self.present_modes = super::present_mode::supported(
+            &self.surface.get_capabilities(&self.adapter).present_modes,
+        );
+        super::present_mode::validate(&self.present_modes, self.present_mode)?;
+        let mut configuration = self
             .surface
             .get_default_config(&self.adapter, extent.width, extent.height)
             .ok_or(RenderSurfaceError::UnsupportedConfiguration)?;
+        configuration.present_mode = self.present_mode.native();
         self.surface.configure(&self.device, &configuration);
         if self.performance.enabled() {
             let adapter = self.adapter.get_info();

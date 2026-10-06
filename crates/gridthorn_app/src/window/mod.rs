@@ -5,6 +5,7 @@ mod errors;
 mod input;
 mod lifecycle;
 mod performance;
+pub mod presentation;
 mod runtime;
 pub mod settings;
 mod viewport;

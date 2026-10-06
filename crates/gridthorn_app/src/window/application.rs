@@ -88,6 +88,8 @@ where
 }
 
 struct WinitApplication<L> {
+    suspended: bool,
+    presentation: super::presentation::native::NativePresentation,
     graphics_selection: Option<gridthorn_render::GraphicsSelection>,
     graphics_adapter: Option<gridthorn_render::GraphicsAdapterKey>,
     window_settings: super::settings::native::NativeWindowSettings,
@@ -110,6 +112,8 @@ where
 {
     fn new(config: WindowConfig, lifecycle: L) -> Self {
         Self {
+            suspended: false,
+            presentation: super::presentation::native::NativePresentation::default(),
             graphics_selection: None,
             graphics_adapter: None,
             config,
@@ -169,6 +173,7 @@ where
             self.renderer = Some(renderer);
         }
         self.lifecycle.scale_factor_changed(window.scale_factor());
+        self.publish_presentation();
         self.window_settings.initialize(event_loop, &window);
         self.lifecycle.window_state_changed(
             self.window_settings.state(&window, &self.displays),
@@ -234,6 +239,9 @@ where
     }
 
     fn apply_control(&mut self, event_loop: &ActiveEventLoop, control: &WindowControl) {
+        if let Some((id, config)) = control.presentation_request {
+            self.configure_presentation(id, config);
+        }
         self.apply_window_settings(event_loop, control);
         let Some(window) = self.window.as_ref() else {
             return;
@@ -306,11 +314,36 @@ where
         if let Some(minimized) = control.minimized {
             window.set_minimized(minimized);
         }
-        if let Some(deadline) = control.wake_at {
-            event_loop.set_control_flow(ControlFlow::WaitUntil(deadline));
-        }
+        let frame_deadline = self
+            .presentation
+            .pacer
+            .deadline()
+            .filter(|deadline| *deadline > std::time::Instant::now());
+        let deadline = match (control.wake_at, frame_deadline) {
+            (Some(a), Some(b)) => Some(a.min(b)),
+            (a, b) => a.or(b),
+        };
+        event_loop.set_control_flow(deadline.map_or(ControlFlow::Wait, ControlFlow::WaitUntil));
         if control.exit_requested {
             event_loop.exit();
+        }
+    }
+
+    fn configure_presentation(&mut self, id: u64, config: super::presentation::PresentationConfig) {
+        let operation = self
+            .presentation
+            .configure(self.renderer.as_mut(), id, config);
+        self.lifecycle.presentation_operation_changed(operation);
+        self.publish_presentation();
+    }
+
+    fn publish_presentation(&mut self) {
+        let (state, operation) = self.presentation.observe(self.renderer.as_ref());
+        if let Some(state) = state {
+            self.lifecycle.presentation_state_changed(state);
+        }
+        if let Some(operation) = operation {
+            self.lifecycle.presentation_operation_changed(operation);
         }
     }
 
@@ -355,6 +388,8 @@ where
     L: WindowLifecycle,
 {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
+        self.suspended = false;
+        self.presentation.pacer.reset();
         if self.window.is_none() {
             if let Err(error) = self.initialize(event_loop) {
                 self.fail(event_loop, error);
@@ -368,6 +403,8 @@ where
     }
 
     fn suspended(&mut self, event_loop: &ActiveEventLoop) {
+        self.suspended = true;
+        event_loop.set_control_flow(ControlFlow::Wait);
         self.cancel_capture(event_loop);
         let events = self.text.translate(&WindowEvent::Focused(false));
         if let Some(window) = &self.window {
@@ -441,6 +478,7 @@ where
                 {
                     self.fail(event_loop, error.into());
                 }
+                self.publish_presentation();
             }
             WindowEvent::Occluded(occluded) => {
                 if let Some(renderer) = self.renderer.as_mut() {
@@ -448,6 +486,14 @@ where
                 }
             }
             WindowEvent::RedrawRequested => {
+                if self.suspended {
+                    return;
+                }
+                let now = std::time::Instant::now();
+                if !self.presentation.pacer.ready(now) {
+                    return;
+                }
+                self.presentation.pacer.record(now);
                 let start = self.performance.start();
                 if let Some(renderer) = self.renderer.as_mut()
                     && let Err(error) = renderer.render()
@@ -455,6 +501,7 @@ where
                     self.fail(event_loop, error.into());
                 }
                 self.performance.redraw(start);
+                self.publish_presentation();
             }
             _ => {}
         }
@@ -484,7 +531,7 @@ where
     }
 
     fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
-        if self.error.is_some() {
+        if self.error.is_some() || self.suspended {
             return;
         }
         let start = self.performance.start();
@@ -510,7 +557,9 @@ where
             renderer.set_frame(frame);
         }
         self.apply_control(event_loop, &control);
-        if let Some(window) = self.window.as_ref() {
+        if self.presentation.pacer.ready(std::time::Instant::now())
+            && let Some(window) = self.window.as_ref()
+        {
             window.request_redraw();
         }
         self.performance.preparation(start);

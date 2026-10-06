@@ -53,6 +53,9 @@ Milestone 5 proceeds through window/display capabilities, graphics selection and
 pacing, controllers/input devices, then audio devices and platform directories.
 Graphics enumeration and initialization selection are implemented provisionally;
 see [GRAPHICS_ADAPTERS.md](GRAPHICS_ADAPTERS.md) for compatibility and restart semantics.
+Explicit surface policies and software frame caps are implemented provisionally;
+see [PRESENTATION.md](PRESENTATION.md) for requested/applied feedback, independent
+runtime wakes and platform acceptance limits.
 Report requested and effective configurations separately. Adapter selection may
 require restarting or recreating rendering resources; do not promise live GPU
 switching without validation. Display refresh, presentation rate limits and fixed

@@ -100,6 +100,13 @@ impl RuntimeWindowLifecycle {
     }
 
     fn collect_display_requests(&mut self, control: &mut WindowControl) {
+        if let Some(Some((id, config))) = self
+            .runtime
+            .world()
+            .update_resource_with(super::presentation::PresentationSettings::take_request)
+        {
+            control.configure_presentation(id, config);
+        }
         if let Some(Some((id, request))) = self
             .runtime
             .world()
@@ -126,6 +133,33 @@ impl RuntimeWindowLifecycle {
 }
 
 impl WindowLifecycle for RuntimeWindowLifecycle {
+    fn presentation_state_changed(&mut self, state: super::presentation::PresentationState) {
+        if self
+            .runtime
+            .world()
+            .read_resource(|_: &super::presentation::PresentationSettings| ())
+            .is_none()
+        {
+            self.runtime
+                .world()
+                .insert_resource(super::presentation::PresentationSettings::default());
+        }
+        self.runtime.world().update_resource(
+            |settings: &mut super::presentation::PresentationSettings| {
+                settings.publish_state(state);
+            },
+        );
+    }
+    fn presentation_operation_changed(
+        &mut self,
+        operation: super::presentation::PresentationOperation,
+    ) {
+        self.runtime.world().update_resource(
+            |settings: &mut super::presentation::PresentationSettings| {
+                settings.publish_feedback(operation);
+            },
+        );
+    }
     fn graphics_adapters_initialized(&mut self, adapters: gridthorn_render::GraphicsAdapters) {
         self.runtime.world().insert_resource(adapters);
     }
@@ -190,6 +224,16 @@ impl WindowLifecycle for RuntimeWindowLifecycle {
         if self
             .runtime
             .world()
+            .read_resource(|_: &super::presentation::PresentationSettings| ())
+            .is_none()
+        {
+            self.runtime
+                .world()
+                .insert_resource(super::presentation::PresentationSettings::default());
+        }
+        if self
+            .runtime
+            .world()
             .read_resource(|_: &super::settings::WindowSettings| ())
             .is_none()
         {
@@ -216,8 +260,12 @@ impl WindowLifecycle for RuntimeWindowLifecycle {
     }
 
     fn idle(&mut self, control: &mut WindowControl) -> Result<(), ApplicationError> {
-        let elapsed = self.frame_timer.advance(Instant::now());
+        let now = Instant::now();
+        let elapsed = self.frame_timer.advance(now);
         self.run_elapsed_frame(elapsed)?;
+        if let Some(deadline) = now.checked_add(self.runtime.fixed_step_interval()) {
+            control.wake_at(deadline);
+        }
         self.collect_display_requests(control);
         if let Some(Some(area)) = self
             .runtime
