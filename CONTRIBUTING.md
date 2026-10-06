@@ -37,7 +37,7 @@ The docs-only gate examines local changes, not already committed branch changes.
 Individual checks are also available:
 
 ```console
-cargo fmt --all -- --check
+cargo fmt -- --check
 cargo check --workspace --all-targets --locked
 cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo test --workspace --locked

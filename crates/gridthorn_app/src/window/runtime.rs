@@ -69,6 +69,13 @@ impl RuntimeWindowLifecycle {
     }
 
     fn collect_display_requests(&mut self, control: &mut WindowControl) {
+        if let Some(Some((id, request))) = self
+            .runtime
+            .world()
+            .update_resource_with(super::settings::WindowSettings::take_request)
+        {
+            control.configure_window(id, request);
+        }
         if let Some((refresh, monitor)) =
             self.runtime
                 .world()
@@ -88,6 +95,34 @@ impl RuntimeWindowLifecycle {
 }
 
 impl WindowLifecycle for RuntimeWindowLifecycle {
+    fn window_state_changed(
+        &mut self,
+        state: super::settings::WindowState,
+        capabilities: super::settings::WindowCapabilities,
+    ) {
+        if self
+            .runtime
+            .world()
+            .read_resource(|_: &super::settings::WindowSettings| ())
+            .is_none()
+        {
+            self.runtime
+                .world()
+                .insert_resource(super::settings::WindowSettings::default());
+        }
+        self.runtime
+            .world()
+            .update_resource(|settings: &mut super::settings::WindowSettings| {
+                settings.publish_state(state, capabilities);
+            });
+    }
+    fn window_operation_changed(&mut self, operation: super::settings::WindowOperation) {
+        self.runtime
+            .world()
+            .update_resource(|settings: &mut super::settings::WindowSettings| {
+                settings.publish_feedback(operation);
+            });
+    }
     fn displays_changed(&mut self, displays: crate::display::Displays) {
         self.runtime
             .world()
@@ -117,6 +152,16 @@ impl WindowLifecycle for RuntimeWindowLifecycle {
     }
 
     fn started(&mut self, control: &mut WindowControl) -> Result<(), ApplicationError> {
+        if self
+            .runtime
+            .world()
+            .read_resource(|_: &super::settings::WindowSettings| ())
+            .is_none()
+        {
+            self.runtime
+                .world()
+                .insert_resource(super::settings::WindowSettings::default());
+        }
         self.runtime
             .world()
             .insert_resource(crate::display::Displays::default());

@@ -45,6 +45,7 @@ preferred direction.
 
 ## Records
 
-No project decisions are accepted. Historical proposed records have been removed;
-current provisional contracts live in their domain documents. Keep this process
-and template for future stabilization and invariant exceptions.
+| Record | Status | Decision |
+| --- | --- | --- |
+| [0001](0001-recoverable-windows-fullscreen.md) | Superseded | Historical vendored Windows fullscreen recovery, superseded by ADR 0002. |
+| [0002](0002-upstream-fullscreen-happy-path.md) | Accepted | Use upstream winit; provisionally accept native fullscreen rejection panic and defer recovery to Milestone 5. |

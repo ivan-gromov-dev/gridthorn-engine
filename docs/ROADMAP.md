@@ -68,10 +68,17 @@ capabilities are explicit, optional and reported through engine-owned APIs.
       Provisional OS DPI scaling and explicit-query connection changes are documented in
       [DISPLAYS.md](DISPLAYS.md); physical DPI and Linux/macOS native acceptance
       remain explicit limitations.
-- [ ] Window controls: size, resizing policy, placement, monitor selection,
+- [x] Window controls: size, resizing policy, placement, monitor selection,
       windowed/borderless/exclusive fullscreen where supported and applied-state feedback.
-      Windowed monitor placement with native confirmation is implemented; the
-      remaining controls and fullscreen modes are pending. See [DISPLAYS.md](DISPLAYS.md).
+      Explicit requests, native confirmation, windowed/borderless controls and
+      capability-gated exclusive are implemented. Windows exclusive resolution/
+      refresh changes and monitor transfer are supported on the happy path;
+      Linux/macOS native acceptance is deferred. See [WINDOWS.md](WINDOWS.md).
+- [ ] Recover Windows exclusive-fullscreen mode-switch failures without panic,
+      report only applied state, and restore desktop modes on transfer, exit and
+      disconnection. Integrate compatible upstream winit recovery and verify
+      rejected activation/restoration and queued teardown. Until then, native
+      rejection may panic; exclusive fullscreen supports the happy path only.
 - [ ] Enumerate compatible graphics adapters, select an adapter at initialization
       or through an explicit restart/recreation contract, and report incompatibility.
 - [ ] Presentation controls: supported VSync/present modes and frame-rate caps,

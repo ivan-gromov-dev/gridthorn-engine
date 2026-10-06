@@ -3,6 +3,7 @@ use std::time::Instant;
 /// Window operations available to lifecycle hooks.
 #[derive(Debug, Default)]
 pub struct WindowControl {
+    pub(super) window_request: Option<(u64, super::settings::WindowRequest)>,
     pub(super) refresh_displays: bool,
     pub(super) selected_monitor: Option<crate::display::MonitorId>,
     pub(super) text_input: Option<gridthorn_input::TextInputRequest>,
@@ -15,6 +16,12 @@ pub struct WindowControl {
 }
 
 impl WindowControl {
+    /// Submit one correlated explicit window operation; the last call wins.
+    /// Feedback arrives through `window_operation_changed`. Invalid data is
+    /// rejected by the native adapter before changing OS state.
+    pub fn configure_window(&mut self, id: u64, request: super::settings::WindowRequest) {
+        self.window_request = Some((id, request));
+    }
     /// Request one inventory snapshot; feedback arrives through `displays_changed`.
     pub fn refresh_displays(&mut self) {
         self.refresh_displays = true;

@@ -5,6 +5,17 @@ use super::{ApplicationError, WindowControl};
 
 /// Provisional hooks for exercising application lifecycle behavior.
 pub trait WindowLifecycle {
+    /// Publish native window observations and explicit capability flags.
+    /// Runs before `started` and on relevant window events; no monitor enumeration.
+    fn window_state_changed(
+        &mut self,
+        _state: super::settings::WindowState,
+        _capabilities: super::settings::WindowCapabilities,
+    ) {
+    }
+
+    /// Report correlated pending/applied/failed configuration without stopping the app.
+    fn window_operation_changed(&mut self, _operation: super::settings::WindowOperation) {}
     /// Publish inventory only in response to an explicit refresh or selection request.
     /// Queries run on the event-loop thread; the snapshot contains only owned data.
     fn displays_changed(&mut self, _displays: crate::display::Displays) {}

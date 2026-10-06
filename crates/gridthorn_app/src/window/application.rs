@@ -61,6 +61,7 @@ where
 }
 
 struct WinitApplication<L> {
+    window_settings: super::settings::native::NativeWindowSettings,
     displays: crate::display::native::NativeDisplays,
     performance: super::performance::WindowPerformance,
     text: super::text::NativeTextInput,
@@ -82,6 +83,7 @@ where
         Self {
             config,
             error: None,
+            window_settings: super::settings::native::NativeWindowSettings::default(),
             displays: crate::display::native::NativeDisplays::default(),
             performance: super::performance::WindowPerformance::new(),
             text: super::text::NativeTextInput::default(),
@@ -119,6 +121,11 @@ where
             self.renderer = Some(SurfaceRenderer::new(target, size.width, size.height)?);
         }
         self.lifecycle.scale_factor_changed(window.scale_factor());
+        self.window_settings.initialize(event_loop, &window);
+        self.lifecycle.window_state_changed(
+            self.window_settings.state(&window, &self.displays),
+            self.window_settings.capabilities(),
+        );
         self.window = Some(window);
         self.lifecycle.resized(size.width, size.height);
 
@@ -133,19 +140,56 @@ where
         Ok(())
     }
 
-    fn apply_control(&mut self, event_loop: &ActiveEventLoop, control: &WindowControl) {
+    fn apply_window_settings(&mut self, event_loop: &ActiveEventLoop, control: &WindowControl) {
         let Some(window) = self.window.as_ref() else {
             return;
         };
-
-        if control.refresh_displays || control.selected_monitor.is_some() {
+        if control.refresh_displays
+            || control.selected_monitor.is_some()
+            || control
+                .window_request
+                .is_some_and(|(_, request)| request.monitor().is_some())
+        {
             let inventory = self.displays.refresh(event_loop, window);
             self.lifecycle.displays_changed(inventory);
+            self.lifecycle.window_state_changed(
+                self.window_settings.state(window, &self.displays),
+                self.window_settings.capabilities(),
+            );
         }
-        if let Some(monitor) = control.selected_monitor {
+        if let Some((id, request)) = control.window_request {
+            if let Some(operation) = self.window_settings.cancel(window, &self.displays) {
+                self.lifecycle.window_operation_changed(operation);
+            }
+            if let Some(selection) = self.displays.cancel() {
+                self.lifecycle.monitor_selection_changed(selection);
+            }
+            if let Some(monitor) = control.selected_monitor {
+                self.lifecycle.monitor_selection_changed(
+                    crate::display::MonitorSelection::Failed {
+                        monitor,
+                        error: crate::display::MonitorSelectionError::Superseded,
+                    },
+                );
+            }
+            let operation = self
+                .window_settings
+                .submit(window, &self.displays, id, request);
+            self.lifecycle.window_operation_changed(operation);
+        } else if let Some(monitor) = control.selected_monitor {
+            if let Some(operation) = self.window_settings.cancel(window, &self.displays) {
+                self.lifecycle.window_operation_changed(operation);
+            }
             let selection = self.displays.select(window, monitor);
             self.lifecycle.monitor_selection_changed(selection);
         }
+    }
+
+    fn apply_control(&mut self, event_loop: &ActiveEventLoop, control: &WindowControl) {
+        self.apply_window_settings(event_loop, control);
+        let Some(window) = self.window.as_ref() else {
+            return;
+        };
 
         if let Some(area) = control.text_input {
             let area = match area {
@@ -199,8 +243,17 @@ where
                 return;
             }
         }
-        if let Some((width, height)) = control.requested_size {
-            let _ignored = window.request_inner_size(PhysicalSize::new(width, height));
+        if control.window_request.is_none()
+            && let Some((width, height)) = control.requested_size
+        {
+            let request = super::settings::WindowRequest {
+                size: Some(crate::display::DisplayResolution { width, height }),
+                ..super::settings::WindowRequest::default()
+            };
+            let operation = self
+                .window_settings
+                .submit(window, &self.displays, 0, request);
+            self.lifecycle.window_operation_changed(operation);
         }
         if let Some(minimized) = control.minimized {
             window.set_minimized(minimized);
@@ -294,6 +347,19 @@ where
             return;
         }
 
+        if matches!(
+            event,
+            WindowEvent::Moved(_)
+                | WindowEvent::Resized(_)
+                | WindowEvent::ScaleFactorChanged { .. }
+        ) && let Some(window) = self.window.as_ref()
+        {
+            self.lifecycle.window_state_changed(
+                self.window_settings.state(window, &self.displays),
+                self.window_settings.capabilities(),
+            );
+        }
+
         if matches!(event, WindowEvent::Focused(false)) {
             self.cancel_capture(event_loop);
             if let Some(window) = &self.window {
@@ -375,6 +441,11 @@ where
         }
         let start = self.performance.start();
         let mut control = WindowControl::default();
+        if let Some(window) = self.window.as_ref()
+            && let Some(operation) = self.window_settings.feedback(window, &self.displays)
+        {
+            self.lifecycle.window_operation_changed(operation);
+        }
         if let Some(window) = self.window.as_ref()
             && let Some(selection) = self.displays.selection_feedback(window)
         {

@@ -6,6 +6,7 @@ mod input;
 mod lifecycle;
 mod performance;
 mod runtime;
+pub mod settings;
 mod viewport;
 
 pub use application::WindowApplication;

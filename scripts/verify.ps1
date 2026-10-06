@@ -46,7 +46,7 @@ try {
         Write-Host "Documentation-only verification passed; executable snippets require their affected checks."
         return
     }
-    Invoke-CheckedCommand "Formatting" { cargo fmt --all -- --check }
+    Invoke-CheckedCommand "Formatting" { cargo fmt -- --check }
     Invoke-CheckedCommand "Workspace check" { cargo check --workspace --all-targets --locked }
     Invoke-CheckedCommand "Clippy" { cargo clippy --workspace --all-targets --locked -- -D warnings }
     Invoke-CheckedCommand "Tests" { cargo test --workspace --locked }
