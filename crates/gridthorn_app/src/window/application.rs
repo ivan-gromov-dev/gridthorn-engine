@@ -16,6 +16,8 @@ use super::lifecycle::WindowLifecycle;
 
 /// Application runner that owns the platform window lifecycle.
 pub struct WindowApplication<L> {
+    graphics_selection: Option<gridthorn_render::GraphicsSelection>,
+    graphics_adapter: Option<gridthorn_render::GraphicsAdapterKey>,
     rendering_enabled: bool,
     config: WindowConfig,
     lifecycle: L,
@@ -28,6 +30,8 @@ where
     /// Create an application with engine-owned configuration and lifecycle hooks.
     pub fn new(config: WindowConfig, lifecycle: L) -> Self {
         Self {
+            graphics_selection: None,
+            graphics_adapter: None,
             config,
             lifecycle,
             rendering_enabled: true,
@@ -38,6 +42,27 @@ where
     #[must_use]
     pub fn without_renderer(mut self) -> Self {
         self.rendering_enabled = false;
+        self
+    }
+
+    /// Select a graphics adapter at initialization; a different selection requires a new run.
+    /// Missing, ambiguous and incompatible preferences fail rather than selecting a fallback.
+    #[must_use]
+    pub fn with_graphics_adapter(mut self, adapter: gridthorn_render::GraphicsAdapterKey) -> Self {
+        self.graphics_selection = None;
+        self.graphics_adapter = Some(adapter);
+        self
+    }
+
+    /// Select the device and rendering API independently at initialization.
+    /// A new run is required to apply a different selection; the last builder call wins.
+    #[must_use]
+    pub fn with_graphics_selection(
+        mut self,
+        selection: gridthorn_render::GraphicsSelection,
+    ) -> Self {
+        self.graphics_adapter = None;
+        self.graphics_selection = Some(selection);
         self
     }
 
@@ -53,6 +78,8 @@ where
 
         let mut state = WinitApplication::new(self.config, self.lifecycle);
         state.rendering_enabled = self.rendering_enabled;
+        state.graphics_adapter = self.graphics_adapter;
+        state.graphics_selection = self.graphics_selection;
         let event_result = event_loop
             .run_app(&mut state)
             .map_err(ApplicationError::event_loop);
@@ -61,6 +88,8 @@ where
 }
 
 struct WinitApplication<L> {
+    graphics_selection: Option<gridthorn_render::GraphicsSelection>,
+    graphics_adapter: Option<gridthorn_render::GraphicsAdapterKey>,
     window_settings: super::settings::native::NativeWindowSettings,
     displays: crate::display::native::NativeDisplays,
     performance: super::performance::WindowPerformance,
@@ -81,6 +110,8 @@ where
 {
     fn new(config: WindowConfig, lifecycle: L) -> Self {
         Self {
+            graphics_selection: None,
+            graphics_adapter: None,
             config,
             error: None,
             window_settings: super::settings::native::NativeWindowSettings::default(),
@@ -118,7 +149,24 @@ where
         self.performance.report_configuration(&window);
         if self.rendering_enabled {
             let target = WindowSurfaceTarget::new(window.clone());
-            self.renderer = Some(SurfaceRenderer::new(target, size.width, size.height)?);
+            let renderer = if let Some(selection) = &self.graphics_selection {
+                SurfaceRenderer::with_graphics_selection(
+                    target,
+                    size.width,
+                    size.height,
+                    selection,
+                )?
+            } else {
+                SurfaceRenderer::with_adapter(
+                    target,
+                    size.width,
+                    size.height,
+                    self.graphics_adapter.as_ref(),
+                )?
+            };
+            self.lifecycle
+                .graphics_adapters_initialized(renderer.graphics_adapters().clone());
+            self.renderer = Some(renderer);
         }
         self.lifecycle.scale_factor_changed(window.scale_factor());
         self.window_settings.initialize(event_loop, &window);

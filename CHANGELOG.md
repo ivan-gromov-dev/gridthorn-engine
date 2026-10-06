@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Independent graphics device and rendering API preferences, with device-model
+  grouping, per-API compatibility and explicit ambiguity reporting. The settings
+  example provides separate card/API lists and migrates its saved preference.
+
+- Provisional graphics adapter inventory and explicit initialization selection,
+  surface compatibility diagnostics, effective-adapter runtime resource and a
+  documented restart contract. Missing or ambiguous preferences never silently
+  select another adapter.
+
 - Provisional `gridthorn::window` requests for physical size, resizing constraints,
   placement and capability-gated fullscreen, with native state/operation feedback
   and windowed geometry restoration. The sibling settings example stages these

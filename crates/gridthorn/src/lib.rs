@@ -39,6 +39,9 @@ pub use gridthorn_app::WindowScaleFactor;
 
 pub use gridthorn_assets::{FontAsset, FontAssetError};
 pub use gridthorn_render::{
+    GraphicsDevice, GraphicsDeviceKey, GraphicsSelection, graphics_devices,
+};
+pub use gridthorn_render::{
     RasterText, TextAlignment, TextError, TextGlyph, TextLayout, TextLine, TextMeasurement,
     TextStyle, TextSystem, TextWrap,
 };
@@ -103,4 +106,9 @@ pub use runtime::{
     KeyLocation, KeyboardEvent, LogicalKey, Modifiers, NamedKey, NativeKey, PhysicalKey,
     PointerCapture, PointerCaptureError, PointerCaptureMode, PointerCaptureStatus, ScrollPhase,
     WheelDelta,
+};
+
+pub use gridthorn_render::{
+    GraphicsAdapter, GraphicsAdapterCompatibility, GraphicsAdapterKey, GraphicsAdapters,
+    GraphicsBackend, enumerate_graphics_adapters,
 };

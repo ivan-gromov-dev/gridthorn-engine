@@ -7,6 +7,24 @@ type BoxedError = Box<dyn Error + Send + Sync>;
 /// Failure produced while creating, configuring, or rendering a surface.
 #[derive(Debug, Error)]
 pub enum RenderSurfaceError {
+    /// The selected device/API combination is not exposed by this inventory.
+    #[error("graphics device/API selection is unavailable: {selection:?}")]
+    GraphicsSelectionUnavailable { selection: crate::GraphicsSelection },
+    /// Multiple indistinguishable devices expose the requested API.
+    #[error("graphics device/API selection is ambiguous: {selection:?}")]
+    GraphicsSelectionAmbiguous { selection: crate::GraphicsSelection },
+    /// The requested adapter key is no longer exposed by the native backends.
+    #[error("requested graphics adapter is unavailable: {key:?}")]
+    AdapterUnavailable { key: crate::GraphicsAdapterKey },
+    /// Multiple adapters share the requested key; none is selected silently.
+    #[error("requested graphics adapter is ambiguous: {key:?}")]
+    AdapterAmbiguous { key: crate::GraphicsAdapterKey },
+    /// The requested adapter fails renderer or window compatibility validation.
+    #[error("requested graphics adapter is incompatible: {key:?}: {reason:?}")]
+    AdapterIncompatible {
+        key: crate::GraphicsAdapterKey,
+        reason: crate::GraphicsAdapterCompatibility,
+    },
     /// The GPU surface could not be created for the platform window.
     #[error("GPU surface creation failed")]
     SurfaceCreation {

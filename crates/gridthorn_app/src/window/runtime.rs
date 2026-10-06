@@ -8,6 +8,8 @@ use super::{ApplicationError, WindowApplication, WindowConfig, WindowControl, Wi
 
 /// Windowed runner for an application runtime and its timed frame schedules.
 pub struct WindowedApplication {
+    graphics_selection: Option<gridthorn_render::GraphicsSelection>,
+    graphics_adapter: Option<gridthorn_render::GraphicsAdapterKey>,
     rendering_enabled: bool,
     config: WindowConfig,
     runtime: ApplicationRuntime,
@@ -18,6 +20,8 @@ impl WindowedApplication {
     #[must_use]
     pub fn new(config: WindowConfig, runtime: ApplicationRuntime) -> Self {
         Self {
+            graphics_selection: None,
+            graphics_adapter: None,
             config,
             runtime,
             rendering_enabled: true,
@@ -31,14 +35,41 @@ impl WindowedApplication {
         self
     }
 
+    /// Choose an adapter for this run. Restart the application to change GPU resources.
+    /// Explicit preferences are revalidated and never silently replaced.
+    #[must_use]
+    pub fn with_graphics_adapter(mut self, adapter: gridthorn_render::GraphicsAdapterKey) -> Self {
+        self.graphics_selection = None;
+        self.graphics_adapter = Some(adapter);
+        self
+    }
+
+    /// Select device and rendering API independently for this run.
+    /// The last selection builder call wins; changing GPU resources requires a new run.
+    #[must_use]
+    pub fn with_graphics_selection(
+        mut self,
+        selection: gridthorn_render::GraphicsSelection,
+    ) -> Self {
+        self.graphics_adapter = None;
+        self.graphics_selection = Some(selection);
+        self
+    }
+
     /// Run timed frames until the platform event loop exits.
     ///
     /// # Errors
     ///
     /// Returns contextual platform, renderer, or runtime failures.
     pub fn run(self) -> Result<(), ApplicationError> {
-        let application =
+        let mut application =
             WindowApplication::new(self.config, RuntimeWindowLifecycle::new(self.runtime));
+        if let Some(adapter) = self.graphics_adapter {
+            application = application.with_graphics_adapter(adapter);
+        }
+        if let Some(selection) = self.graphics_selection {
+            application = application.with_graphics_selection(selection);
+        }
         if self.rendering_enabled {
             application.run()
         } else {
@@ -95,6 +126,10 @@ impl RuntimeWindowLifecycle {
 }
 
 impl WindowLifecycle for RuntimeWindowLifecycle {
+    fn graphics_adapters_initialized(&mut self, adapters: gridthorn_render::GraphicsAdapters) {
+        self.runtime.world().insert_resource(adapters);
+    }
+
     fn window_state_changed(
         &mut self,
         state: super::settings::WindowState,
