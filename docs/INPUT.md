@@ -151,7 +151,7 @@ Windows native clipboard and IME behavior has maintainer manual acceptance for
 this subset. Automated injected text events do not prove OS language behavior;
 Linux/macOS native IME/clipboard and platform candidate-window geometry remain
 unvalidated. Backend semantics follow [winit IME](https://docs.rs/winit/0.30.13/winit/event/enum.Ime.html)
-and [arboard clipboard](https://docs.rs/arboard/3.6.1/arboard/struct.Clipboard.html).
+and [arboard clipboard](https://docs.rs/arboard/latest/arboard/struct.Clipboard.html).
 
 ## Input capabilities, discovery and source selection
 

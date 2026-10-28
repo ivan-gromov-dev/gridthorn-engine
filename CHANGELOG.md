@@ -72,6 +72,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Refresh direct and transitive Cargo dependencies to current stable releases in
+  the engine and sibling examples, including ECS, font validation, localization,
+  clipboard and audio backends. Preserve the existing Rust MSRV and SDK contracts.
+
 - Performance CI records current measurements with a warning when a workload is
   absent from the previous revision, while still comparing shared workloads.
 - Add an advisory CI comparison of paired release CPU workloads against the previous
