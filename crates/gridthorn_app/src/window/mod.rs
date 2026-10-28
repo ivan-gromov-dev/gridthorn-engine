@@ -1,6 +1,7 @@
 mod application;
 mod config;
 mod control;
+mod devices;
 mod errors;
 mod input;
 mod lifecycle;

@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Explicit `RawInput::request(true/false)` observation lifetime, disabled by
+  default, with applied-state feedback and typed unsupported errors. Stopping
+  clears raw connections and cancels raw actions while aggregate input and
+  pointer capture remain independent. Re-enabling invalidates old source IDs.
+
+- Provisional aggregate keyboard/mouse capability reporting, observed Windows raw
+  connection discovery and validated source selection with session identities,
+  separate held state and focus/disconnect cancellation. Other native adapters
+  explicitly report raw selection unsupported; discovery is not a full initial
+  hardware inventory. Configurable digital action alternatives support physical
+  keys, mouse/raw buttons, selected controllers and exact modifier chords, with
+  ordered taps, rebinding and distinct cancellation. The sibling desktop-input
+  monitor demonstrates selection/rebinding and headless/native smoke.
+
 - Explicit one-shot `ControllerPolling::request_poll()` for lazy discovery and
   controller event collection; no automatic startup/per-frame polling. The visual
   example owns refresh requests and 50 ms polling while a controller is selected.
@@ -57,6 +71,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.5.0] - 2026-10-05
 
 ### Changed
+
+- Refresh direct and transitive Cargo dependencies to current stable releases in
+  the engine and sibling examples, including ECS, font validation, localization,
+  clipboard and audio backends. Preserve the existing Rust MSRV and SDK contracts.
 
 - Performance CI records current measurements with a warning when a workload is
   absent from the previous revision, while still comparing shared workloads.

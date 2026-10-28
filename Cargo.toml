@@ -32,31 +32,31 @@ pedantic = "warn"
 
 [workspace.dependencies]
 gilrs = "0.11.2"
-arboard = { version = "3.6.1", default-features = false }
+arboard = { version = "3.7.0", default-features = false }
 anyhow = "1.0.104"
-bevy_ecs = { version = "0.19.1", default-features = false, features = ["multi_threaded", "std"] }
+bevy_ecs = { version = "0.20.0", default-features = false, features = ["multi_threaded", "std"] }
 bytemuck = { version = "1.25.2", features = ["derive"] }
 clap = { version = "4.6.7", features = ["derive"] }
 cpu-time = "1.0.0"
 dhat = "0.3.3"
 cosmic-text = { version = "0.19.0", default-features = false, features = ["std", "swash"] }
-fontdb = { version = "0.23.0", default-features = false, features = ["std"] }
+fontdb = { version = "0.24.0", default-features = false, features = ["std"] }
 fluent-bundle = "0.16.0"
 fluent-syntax = "0.12.0"
 unic-langid = "0.9.6"
 unicode-segmentation = "1.13.3"
 intl-memoizer = "0.5.3"
-icu_decimal = "2.3.0"
-icu_locale_core = "2.3.0"
-icu_provider = { version = "2.3.1", features = ["sync"] }
+icu_decimal = "2.4.0"
+icu_locale_core = "2.4.0"
+icu_provider = { version = "2.4.0", features = ["sync"] }
 writeable = "0.6.4"
 image = { version = "0.25.10", default-features = false, features = ["png", "pnm"] }
-kira = { version = "0.12.5", default-features = false }
+kira = { version = "0.12.6", default-features = false }
 semver = "1.0.28"
 serde = { version = "1.0.229", features = ["derive"] }
 pollster = "1.0.1"
 thiserror = "2.0.21"
-toml = "1.1.6"
+toml = "1.1.8"
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "fmt"] }
 wgpu = "30.0.1"

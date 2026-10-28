@@ -54,7 +54,7 @@ they are explicitly marked as implemented.
 | App and renderer internals         | Window/surface lifecycle and basic colored-sprite pipeline implemented                                     |
 | Graphics adapters                  | Provisional [independent GPU/API selection](docs/GRAPHICS_ADAPTERS.md), enumeration, surface compatibility and explicit restart contract |
 | Controllers                       | Provisional [on-demand discovery, connection identity, buttons/axes, dead zones and rumble](docs/CONTROLLERS.md), with opt-in generic UI navigation |
-| Keyboard and mouse input           | Provisional [desktop input](docs/INPUT.md): physical/logical keys, modifiers, repeat, ordered events, wheel, capture, Unicode/IME text sessions and plain-text clipboard |
+| Keyboard and mouse input           | Provisional [desktop input](docs/INPUT.md): physical/logical keys, wheel/capture, Unicode/IME and clipboard; aggregate capabilities, opt-in Windows raw-device observation/selection and configurable digital action bindings |
 | World and schedules                | ECS lifecycle schedule spike implemented                                                                   |
 | Game commands and world control    | Ordered commands and controllable entity example implemented                                               |
 | Texture assets                     | PNG/PNM decoding and textured-sprite presentation implemented                                              |

@@ -1,10 +1,14 @@
 use std::collections::BTreeSet;
 
 use crate::{ButtonState, CursorPosition, InputEvent, KeyCode, MouseButton};
+mod devices;
 
 /// Immutable keyboard and mouse state for one host frame.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct InputState {
+    raw_input_enabled: bool,
+    capabilities: crate::devices::InputCapabilities,
+    devices: std::collections::BTreeMap<crate::devices::InputDeviceId, crate::devices::DeviceState>,
     controller_availability: Option<Result<(), crate::controller::ControllerError>>,
     controllers: std::collections::BTreeMap<
         crate::controller::ControllerId,
@@ -146,8 +150,44 @@ impl InputBuffer {
 
     /// Apply one engine-owned platform event in arrival order.
     pub fn push(&mut self, event: InputEvent) {
+        let cancelled_composition =
+            matches!(event, InputEvent::FocusLost) && self.state.composition.is_some();
+        self.apply(&event);
+        self.state.events.push(event);
+        if cancelled_composition {
+            self.state.events.push(InputEvent::Text(
+                crate::TextInputEvent::CompositionCancelled,
+            ));
+        }
+    }
+
+    pub(crate) fn state(&self) -> &InputState {
+        &self.state
+    }
+
+    pub(crate) fn synchronize(&mut self, input: &InputState) {
+        self.state = InputState {
+            raw_input_enabled: input.raw_input_enabled,
+            capabilities: input.capabilities,
+            devices: input.devices.clone(),
+            controller_availability: input.controller_availability.clone(),
+            controllers: input.controllers.clone(),
+            physical_keys_down: input.physical_keys_down.clone(),
+            modifiers: input.modifiers,
+            focused: input.focused,
+            capture: input.capture,
+            keys_down: input.keys_down.clone(),
+            mouse_buttons_down: input.mouse_buttons_down.clone(),
+            ..InputState::default()
+        };
+    }
+
+    pub(crate) fn apply(&mut self, event: &InputEvent) {
         let focus_lost = matches!(event, InputEvent::FocusLost);
-        match &event {
+        match event {
+            InputEvent::RawInputChanged { enabled, .. } => self.apply_raw_input_status(*enabled),
+            InputEvent::Capabilities(capabilities) => self.state.capabilities = *capabilities,
+            InputEvent::Device(event) => self.apply_device(event),
             InputEvent::Controller(controller) => {
                 use crate::controller::ControllerEvent;
                 match controller {
@@ -229,7 +269,6 @@ impl InputBuffer {
                 }
             }
         }
-        self.state.events.push(event);
         if focus_lost {
             self.release_all();
         }
@@ -295,14 +334,13 @@ impl InputBuffer {
     }
 
     fn release_all(&mut self) {
+        for device in self.state.devices.values_mut() {
+            device.cancel();
+        }
         for controller in self.state.controllers.values_mut() {
             controller.cancel();
         }
-        if self.state.composition.take().is_some() {
-            self.state.events.push(InputEvent::Text(
-                crate::TextInputEvent::CompositionCancelled,
-            ));
-        }
+        self.state.composition = None;
         self.state.text_input_active = false;
         self.state.physical_keys_down.clear();
         self.state.modifiers = crate::Modifiers::default();
