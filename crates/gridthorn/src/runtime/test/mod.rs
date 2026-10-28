@@ -1,5 +1,6 @@
 use crate::prelude::*;
 
+mod actions;
 mod animation;
 mod audio;
 mod collision;

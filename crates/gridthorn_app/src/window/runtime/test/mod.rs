@@ -7,6 +7,7 @@ use crate::{ApplicationRuntime, WindowControl, WindowLifecycle};
 
 use super::{FrameTimer, RuntimeWindowLifecycle};
 
+mod devices;
 mod displays;
 mod dpi;
 mod exit;

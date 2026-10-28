@@ -10,6 +10,8 @@ use super::WinitApplication;
 
 #[cfg(target_os = "windows")]
 mod native;
+#[cfg(target_os = "windows")]
+mod raw_input;
 
 #[cfg(target_os = "windows")]
 mod graphics;

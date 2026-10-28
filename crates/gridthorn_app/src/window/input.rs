@@ -72,7 +72,7 @@ fn map_key_code(key: KeyCode) -> EngineKeyCode {
     map_keycode(key)
 }
 
-fn map_physical_key(key: PhysicalKey) -> gridthorn_input::PhysicalKey {
+pub(super) fn map_physical_key(key: PhysicalKey) -> gridthorn_input::PhysicalKey {
     use gridthorn_input::{NativeKey, PhysicalKey as P};
     match key {
         PhysicalKey::Code(code) => P::Code(map_key_code(code)),
@@ -113,7 +113,7 @@ fn map_mouse_button(button: MouseButton) -> EngineMouseButton {
     }
 }
 
-fn map_button_state(state: ElementState) -> ButtonState {
+pub(super) fn map_button_state(state: ElementState) -> ButtonState {
     match state {
         ElementState::Pressed => ButtonState::Pressed,
         ElementState::Released => ButtonState::Released,

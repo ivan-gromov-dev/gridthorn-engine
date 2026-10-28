@@ -94,8 +94,13 @@ capabilities are explicit, optional and reported through engine-owned APIs.
       Provisional contracts, on-demand native discovery, bounded rumble and opt-in UI routing
       are implemented with a visual device-selection example. Physical hardware
       acceptance and Linux/macOS native validation remain deferred; see [CONTROLLERS.md](CONTROLLERS.md).
-- [ ] Input-device discovery/selection where the OS supports it, capability
+- [x] Input-device discovery/selection where the OS supports it, capability
       reporting for aggregate keyboard/mouse input and configurable action bindings.
+      Provisional explicitly enabled Windows raw observation, validated source selection,
+      aggregate capability reporting and digital action bindings are implemented
+      with domain/facade tests and the desktop-input example. Windows smoke and
+      maintainer manual acceptance passed; complete startup enumeration and
+      Linux/macOS raw adapters remain outside this subset. See [INPUT.md](INPUT.md).
 - [ ] Enumerate/select audio output and capture devices; opt-in capture API,
       output switching, default-device changes and device-loss recovery.
 - [ ] Master/category audio buses, mute and gain controls without game-specific

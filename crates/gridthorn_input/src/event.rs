@@ -37,6 +37,17 @@ pub struct CursorPosition {
 /// Engine-owned input event produced by a platform adapter.
 #[derive(Clone, Debug, PartialEq)]
 pub enum InputEvent {
+    /// Applied raw observation state; stopping clears the inventory and cancels raw actions.
+    RawInputChanged {
+        /// Whether continuous raw observation is active.
+        enabled: bool,
+        /// Unsupported request or other source-selection diagnostic, if any.
+        error: Option<crate::devices::DeviceSelectionError>,
+    },
+    /// Adapter capabilities, retained across snapshots.
+    Capabilities(crate::devices::InputCapabilities),
+    /// Raw connection lifecycle or input, separate from aggregate window input.
+    Device(crate::devices::DeviceEvent),
     /// Controller discovery, input or feedback in arrival order.
     Controller(crate::controller::ControllerEvent),
     /// Committed Unicode text or IME lifecycle; never a physical shortcut.

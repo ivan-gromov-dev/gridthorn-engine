@@ -3,6 +3,7 @@ use std::time::Instant;
 /// Window operations available to lifecycle hooks.
 #[derive(Debug, Default)]
 pub struct WindowControl {
+    pub(super) raw_input: Option<bool>,
     pub(super) poll_controllers: bool,
     pub(super) controller_feedback: Vec<gridthorn_input::controller::RumbleRequest>,
     pub(super) presentation_request: Option<(u64, super::presentation::PresentationConfig)>,
@@ -19,6 +20,11 @@ pub struct WindowControl {
 }
 
 impl WindowControl {
+    /// Enable or stop continuous raw-device observation; disabled by default.
+    /// Applied state/errors arrive through `InputEvent::RawInputChanged`.
+    pub fn set_raw_input(&mut self, enabled: bool) {
+        self.raw_input = Some(enabled);
+    }
     /// Request controller discovery and pending input once; results arrive as input events.
     pub fn poll_controllers(&mut self) {
         self.poll_controllers = true;

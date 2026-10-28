@@ -88,6 +88,7 @@ where
 }
 
 struct WinitApplication<L> {
+    input_devices: super::devices::NativeInputDevices,
     controllers: super::controller::NativeControllers,
     suspended: bool,
     presentation: super::presentation::native::NativePresentation,
@@ -113,6 +114,7 @@ where
 {
     fn new(config: WindowConfig, lifecycle: L) -> Self {
         Self {
+            input_devices: super::devices::NativeInputDevices::default(),
             controllers: super::controller::NativeControllers::default(),
             suspended: false,
             presentation: super::presentation::native::NativePresentation::default(),
@@ -187,6 +189,10 @@ where
 
         let mut control = WindowControl::default();
 
+        self.lifecycle
+            .input(gridthorn_input::InputEvent::Capabilities(
+                super::devices::NativeInputDevices::capabilities(),
+            ))?;
         self.lifecycle.started(&mut control)?;
         self.apply_control(event_loop, &control);
         info!(
@@ -283,6 +289,13 @@ where
     }
 
     fn apply_control(&mut self, event_loop: &ActiveEventLoop, control: &WindowControl) {
+        if let Some(enabled) = control.raw_input {
+            let event = self.input_devices.set_enabled(enabled);
+            if let Err(error) = self.lifecycle.input(event) {
+                self.fail(event_loop, error);
+                return;
+            }
+        }
         self.apply_controller_control(event_loop, control);
         if let Some((id, config)) = control.presentation_request {
             self.configure_presentation(id, config);
@@ -560,9 +573,20 @@ where
     fn device_event(
         &mut self,
         event_loop: &ActiveEventLoop,
-        _device_id: winit::event::DeviceId,
+        device_id: winit::event::DeviceId,
         event: winit::event::DeviceEvent,
     ) {
+        let focused = !self.suspended
+            && self
+                .window
+                .as_ref()
+                .is_some_and(|window| window.has_focus());
+        for event in self.input_devices.map(device_id, &event, focused) {
+            if let Err(error) = self.lifecycle.input(event) {
+                self.fail(event_loop, error);
+                return;
+            }
+        }
         if self.capture.effective() != gridthorn_input::PointerCaptureMode::None
             && self
                 .window

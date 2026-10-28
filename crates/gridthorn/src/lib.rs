@@ -36,6 +36,14 @@ mod version;
 pub mod controller {
     pub use gridthorn_input::controller::*;
 }
+/// Provisional aggregate capabilities, observed raw devices and validated source selection.
+pub mod input_devices {
+    pub use gridthorn_input::devices::*;
+}
+/// Provisional explicitly evaluated, configurable digital game-action bindings.
+pub mod actions {
+    pub use gridthorn_input::actions::*;
+}
 /// Provisional headless locale selection, validated Fluent catalogs and formatting.
 pub mod localization {
     pub use gridthorn_localization::{

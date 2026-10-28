@@ -100,6 +100,13 @@ impl RuntimeWindowLifecycle {
     }
 
     fn collect_display_requests(&mut self, control: &mut WindowControl) {
+        if let Some(Some(enabled)) = self
+            .runtime
+            .world()
+            .update_resource_with(gridthorn_input::devices::RawInput::take_request)
+        {
+            control.set_raw_input(enabled);
+        }
         if self
             .runtime
             .world()
@@ -261,6 +268,9 @@ impl WindowLifecycle for RuntimeWindowLifecycle {
         self.runtime
             .world()
             .insert_resource(gridthorn_input::PointerCapture::default());
+        self.runtime
+            .world()
+            .insert_resource(gridthorn_input::devices::RawInput::default());
         self.runtime
             .world()
             .insert_resource(gridthorn_input::controller::ControllerFeedback::default());
