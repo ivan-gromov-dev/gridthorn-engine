@@ -6,8 +6,13 @@ use crate::{AudioOutput, devices::AudioDeviceSelection};
 fn reconnect_preserves_voices_and_suspension() {
     let mut output = AudioOutput::new().unwrap();
     let mut commands = AudioCommandQueue::new();
+    let bus = crate::AudioBusId::Category(12);
+    commands.set_bus(bus, crate::AudioBusSettings::new(0.5, true).unwrap());
     let voice = commands
-        .play(stereo_clip(), PlaybackSettings::new(0.0, true).unwrap())
+        .play(
+            stereo_clip(),
+            PlaybackSettings::new(0.0, true).unwrap().with_bus(bus),
+        )
         .unwrap();
     output.process(&mut commands).unwrap();
     output.suspend();
@@ -23,6 +28,10 @@ fn reconnect_preserves_voices_and_suspension() {
     assert!(output.backend.voices[&voice].position() >= position);
     output.select_device(AudioDeviceSelection::Default).unwrap();
     assert_eq!(output.active_voice_count(), 1);
+    assert_eq!(output.backend.buses.gain(bus, 1.0), 0.0);
+    commands.set_bus(bus, crate::AudioBusSettings::new(0.5, false).unwrap());
+    output.process(&mut commands).unwrap();
+    assert_eq!(output.backend.buses.gain(bus, 1.0), 0.5);
     output.resume();
     commands.stop(voice);
     output.process(&mut commands).unwrap();

@@ -1,10 +1,12 @@
 //! Provisional engine-owned audio assets and playback commands.
 
+mod bus;
 mod clip;
 mod command;
 #[cfg(any(feature = "native-output", test))]
 mod output;
 
+pub use bus::{AudioBusId, AudioBusSettings};
 pub use clip::{AudioClip, AudioClipError, WavDecodeError};
 pub use command::{
     AudioCommand, AudioCommandQueue, AudioQueueError, AudioSettingsError, AudioVoiceId,

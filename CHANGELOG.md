@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Provisional master and caller-defined category audio buses through `gridthorn::audio`,
+  with validated linear gain, independent mute and FIFO controls affecting existing
+  and future voices. Playback defaults to master; no game category names or settings
+  persistence policy are imposed.
+
 - Audio output command processing performs no device polling or automatic
   recovery. Device checks and reconnection require explicit `refresh_device()`.
   The sibling `audio-devices` example demonstrates on-demand output selection.
