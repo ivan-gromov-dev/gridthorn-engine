@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Audio output command processing performs no device polling or automatic
+  recovery. Device checks and reconnection require explicit `refresh_device()`.
+  The sibling `audio-devices` example demonstrates on-demand output selection.
+
+- Provisional audio endpoint inventory, explicit/default output selection and
+  voice-preserving stream recovery through `gridthorn::audio` with `native-audio`.
+  Optional `audio-capture` starts bounded recording only on explicit request.
+  Native errors and unsupported f32 formats are reported through engine types.
+
 - Explicit `RawInput::request(true/false)` observation lifetime, disabled by
   default, with applied-state feedback and typed unsupported errors. Stopping
   clears raw connections and cancels raw actions while aggregate input and

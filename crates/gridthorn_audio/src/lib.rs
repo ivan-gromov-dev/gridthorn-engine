@@ -12,3 +12,10 @@ pub use command::{
 };
 #[cfg(feature = "native-output")]
 pub use output::{AudioOutput, AudioOutputError};
+
+#[cfg(feature = "capture")]
+mod capture;
+#[cfg(feature = "native-output")]
+pub mod devices;
+#[cfg(feature = "capture")]
+pub use capture::{AudioCapture, CapturedAudio};

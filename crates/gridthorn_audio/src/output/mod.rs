@@ -1,4 +1,8 @@
+#[cfg(feature = "native-output")]
+mod devices;
 mod errors;
+#[cfg(feature = "native-output")]
+mod native_backend;
 mod prepared_batch;
 
 use std::{collections::HashMap, sync::Arc};
@@ -9,8 +13,6 @@ use kira::{
     sound::PlaybackState,
     sound::static_sound::{StaticSoundData, StaticSoundHandle, StaticSoundSettings},
 };
-#[cfg(feature = "native-output")]
-use kira::{AudioManagerSettings, backend::DefaultBackend};
 
 pub use errors::AudioOutputError;
 
@@ -18,13 +20,15 @@ use crate::{AudioClip, AudioCommand, AudioCommandQueue, AudioVoiceId};
 
 /// Native audio output service backed by Kira's mixer and platform adapter.
 ///
-/// Constructing this service is the only audio operation that requires an
-/// output device. Decoding clips and queueing commands remain headless-safe.
-/// Dropping the service signals backend shutdown; it does not synchronously
-/// wait for the native stream thread or device resources to finish releasing.
+/// Native device access is explicit. Decoding clips and queueing commands
+/// remain headless-safe.
+/// Stream release follows the native host contract. Device enumeration and
+/// refresh occur only through explicit calls, never during command processing.
 #[cfg(feature = "native-output")]
 pub struct AudioOutput {
-    backend: OutputBackend<DefaultBackend>,
+    backend: OutputBackend<native_backend::NativeBackend>,
+    selection: crate::devices::AudioDeviceSelection,
+    device: crate::devices::AudioDeviceId,
 }
 
 #[cfg(feature = "native-output")]
@@ -33,22 +37,18 @@ impl AudioOutput {
     ///
     /// # Errors
     ///
-    /// Returns [`AudioOutputError::DeviceInitialization`] if an output stream
+    /// Returns [`AudioOutputError::Device`] if an output stream
     /// cannot be created.
     pub fn new() -> Result<Self, AudioOutputError> {
-        let manager = AudioManager::<DefaultBackend>::new(AudioManagerSettings::default())
-            .map_err(|error| AudioOutputError::DeviceInitialization(error.to_string()))?;
-        Ok(Self {
-            backend: OutputBackend::new(manager),
-        })
+        Self::with_device(crate::devices::AudioDeviceSelection::Default)
     }
 
     /// Consume queued playback commands in FIFO order and release completed voices.
     ///
     /// # Errors
     ///
-    /// Returns an error when a clip layout is unsupported or the mixer cannot
-    /// allocate a requested voice.
+    /// Returns a playback error when a clip layout is unsupported or the mixer
+    /// cannot allocate a voice. This does not query devices or recover streams.
     pub fn process(&mut self, commands: &mut AudioCommandQueue) -> Result<(), AudioOutputError> {
         self.backend.process(commands)
     }

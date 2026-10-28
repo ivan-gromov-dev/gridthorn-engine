@@ -98,11 +98,18 @@ queue is empty. Active voice counts exclude completed voices and include paused
 voices. Shared clip clones reuse converted frames within a single command batch,
 with retention capped at 16 entries and 1 MiB of converted frames; per-voice
 volume and looping settings remain independent. Cleanup requires continued
-output processing. Native output release signals
-shutdown asynchronously without a synchronous thread join; backend data may
-remain alive after drop. [PERFORMANCE.md](PERFORMANCE.md) records the measured
+output processing. The native device adapter supports explicit selection,
+voice-preserving reconnection and optional bounded capture. Command processing
+does not query or reconnect devices; refresh is explicitly requested. Explicit
+device selections never silently fall back. Enable facade `native-audio` for
+output and inventory, or `audio-capture` for explicitly started bounded recording.
+The native adapter currently requires an advertised f32 format; capture restart
+clears old buffered samples. IDs are host/direction scoped and are not promised
+to persist across OS sessions. Historical
+Kira-default-backend release measurements do not establish the new adapter's
+release behavior. [PERFORMANCE.md](PERFORMANCE.md) records the measured
 release/latency envelope. Software loopback is not acoustic latency.
 Automatic Windows power-event routing to runtime/audio hooks is not implemented;
 sleep must not be assumed to reset runtime elapsed time through those hooks.
-Device switching/error recovery, acoustic latency, hours-long sessions and
-cross-platform validation remain Milestone 5/deployment follow-ups.
+Physical hotplug/default-change acceptance, acoustic latency, hours-long sessions
+and cross-platform validation remain deployment follow-ups.

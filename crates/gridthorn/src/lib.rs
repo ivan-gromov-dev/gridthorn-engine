@@ -130,3 +130,5 @@ pub use gridthorn_render::{
     GraphicsAdapter, GraphicsAdapterCompatibility, GraphicsAdapterKey, GraphicsAdapters,
     GraphicsBackend, enumerate_graphics_adapters,
 };
+
+pub mod audio;

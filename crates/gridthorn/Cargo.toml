@@ -25,4 +25,6 @@ gridthorn_world = { path = "../gridthorn_world" }
 workspace = true
 
 [features]
+native-audio = ["gridthorn_audio/native-output"]
+audio-capture = ["native-audio", "gridthorn_audio/capture"]
 grid = ["dep:gridthorn_grid"]

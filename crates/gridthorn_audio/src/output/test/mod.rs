@@ -84,3 +84,6 @@ fn wav_clip(channels: u16, samples: &[i16]) -> AudioClip {
     }
     AudioClip::from_wav_bytes(&bytes).expect("test clip should decode")
 }
+
+#[cfg(feature = "native-output")]
+mod devices;
