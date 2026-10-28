@@ -23,6 +23,7 @@ impl AudioVoiceId {
 pub struct PlaybackSettings {
     volume: f32,
     looping: bool,
+    bus: crate::AudioBusId,
 }
 
 impl PlaybackSettings {
@@ -34,7 +35,24 @@ impl PlaybackSettings {
     /// and inside `0.0..=1.0`.
     pub fn new(volume: f32, looping: bool) -> Result<Self, AudioSettingsError> {
         validate_volume(volume)?;
-        Ok(Self { volume, looping })
+        Ok(Self {
+            volume,
+            looping,
+            bus: crate::AudioBusId::Master,
+        })
+    }
+
+    /// Route through master directly or through a caller-defined category.
+    #[must_use]
+    pub const fn with_bus(mut self, bus: crate::AudioBusId) -> Self {
+        self.bus = bus;
+        self
+    }
+
+    /// Destination bus; defaults to master.
+    #[must_use]
+    pub const fn bus(self) -> crate::AudioBusId {
+        self.bus
     }
 
     /// Normalized linear playback gain.
@@ -55,6 +73,7 @@ impl Default for PlaybackSettings {
         Self {
             volume: 1.0,
             looping: false,
+            bus: crate::AudioBusId::Master,
         }
     }
 }
@@ -62,6 +81,13 @@ impl Default for PlaybackSettings {
 /// Ordered request consumed later by an audio output service.
 #[derive(Clone, Debug, PartialEq)]
 pub enum AudioCommand {
+    /// Replace bus controls in FIFO order.
+    SetBus {
+        /// Destination to update.
+        bus: crate::AudioBusId,
+        /// Validated gain and mute.
+        settings: crate::AudioBusSettings,
+    },
     /// Start a decoded clip as a new voice.
     Play {
         /// Allocated voice identifier.
@@ -152,6 +178,12 @@ impl AudioCommandQueue {
         Ok(())
     }
 
+    /// Queue bus controls for existing and future voices.
+    pub fn set_bus(&mut self, bus: crate::AudioBusId, settings: crate::AudioBusSettings) {
+        self.commands
+            .push_back(AudioCommand::SetBus { bus, settings });
+    }
+
     /// Number of commands awaiting a backend service.
     #[must_use]
     pub fn len(&self) -> usize {
@@ -171,7 +203,7 @@ impl AudioCommandQueue {
     }
 }
 
-fn validate_volume(volume: f32) -> Result<(), AudioSettingsError> {
+pub(crate) fn validate_volume(volume: f32) -> Result<(), AudioSettingsError> {
     if volume.is_finite() && (0.0..=1.0).contains(&volume) {
         Ok(())
     } else {

@@ -107,8 +107,11 @@ capabilities are explicit, optional and reported through engine-owned APIs.
       capture are implemented. Windows native smoke and injected recovery passed;
       physical hotplug/default changes and Linux/macOS acceptance remain deferred.
       The sibling `audio-devices` example demonstrates explicit output selection.
-- [ ] Master/category audio buses, mute and gain controls without game-specific
+- [x] Master/category audio buses, mute and gain controls without game-specific
       category names or settings-screen policies.
+      Provisional caller-defined flat categories, validated linear gain and independent
+      mute apply to existing/future voices; PCM rendering and facade tests cover the
+      contract. See [RUNTIME_APIS.md](RUNTIME_APIS.md).
 - [ ] Platform user-data/config/cache directory discovery and clipboard integration
       with contextual errors; preserve the existing game-owned save-codec boundary.
 - [ ] Validate APIs through a sibling settings/device example and Windows/Linux/

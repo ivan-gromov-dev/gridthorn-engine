@@ -1,3 +1,4 @@
+mod buses;
 #[cfg(feature = "native-output")]
 mod devices;
 mod errors;
@@ -74,6 +75,7 @@ struct OutputBackend<B: Backend> {
     manager: AudioManager<B>,
     voices: HashMap<AudioVoiceId, StaticSoundHandle>,
     suspended: bool,
+    buses: buses::BusMixer,
 }
 
 impl<B: Backend> OutputBackend<B> {
@@ -82,12 +84,14 @@ impl<B: Backend> OutputBackend<B> {
             manager,
             voices: HashMap::new(),
             suspended: false,
+            buses: buses::BusMixer::default(),
         }
     }
 
     fn process(&mut self, commands: &mut AudioCommandQueue) -> Result<(), AudioOutputError> {
         self.voices
             .retain(|_, handle| handle.state() != PlaybackState::Stopped);
+        self.buses.retain(&self.voices);
         let mut prepared = prepared_batch::PreparedBatch::default();
         for command in commands.drain() {
             self.apply(command, &mut prepared)?;
@@ -101,12 +105,19 @@ impl<B: Backend> OutputBackend<B> {
         prepared: &mut prepared_batch::PreparedBatch,
     ) -> Result<(), AudioOutputError> {
         match command {
+            AudioCommand::SetBus { bus, settings } => {
+                self.buses.set(bus, settings, &mut self.voices);
+            }
             AudioCommand::Play {
                 voice,
                 clip,
                 settings,
             } => {
-                let sound = prepared.sound(&clip, settings.volume(), settings.looping())?;
+                let sound = prepared.sound(
+                    &clip,
+                    self.buses.gain(settings.bus(), settings.volume()),
+                    settings.looping(),
+                )?;
                 let mut handle =
                     self.manager
                         .play(sound)
@@ -118,15 +129,21 @@ impl<B: Backend> OutputBackend<B> {
                     handle.pause(Tween::default());
                 }
                 self.voices.insert(voice, handle);
+                self.buses
+                    .insert_voice(voice, settings.bus(), settings.volume());
             }
             AudioCommand::Stop { voice } => {
+                self.buses.remove_voice(voice);
                 if let Some(mut handle) = self.voices.remove(&voice) {
                     handle.stop(Tween::default());
                 }
             }
             AudioCommand::SetVolume { voice, volume } => {
                 if let Some(handle) = self.voices.get_mut(&voice) {
-                    handle.set_volume(linear_gain(volume), Tween::default());
+                    handle.set_volume(
+                        linear_gain(self.buses.set_voice_volume(voice, volume)),
+                        Tween::default(),
+                    );
                 }
             }
         }

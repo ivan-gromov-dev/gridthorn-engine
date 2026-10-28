@@ -93,6 +93,23 @@ and file documents are limited to 16 MiB; compatibility and deferrals remain in
 [WORLD_SAVES.md](WORLD_SAVES.md). These milestones do not implicitly add cloud
 saves, asynchronous saves, arbitrary ECS capture or cross-release migrations.
 
+Provisional audio buses are exposed through `gridthorn::audio`. Playback defaults
+to `AudioBusId::Master`; `PlaybackSettings::with_bus(AudioBusId::Category(id))`
+routes through a caller-defined numeric category, then master. Categories need
+no registration and default to gain 1, unmuted. `AudioBusSettings::new(gain, muted)`
+validates finite linear gain in `0.0..=1.0`; `with_muted` preserves the configured
+gain. `AudioCommandQueue::set_bus` applies settings in FIFO order to existing
+and future voices. Effective gain is voice volume × category gain × master gain
+(direct master voices omit the category factor); either mute yields silence.
+Muting does not pause or restart playback. Voice volume changes while muted are
+retained for unmute. Bus controls survive suspend/resume and device reconnection
+within the same output service; a new output service starts with defaults.
+The queue and settings are headless-safe. Native changes use the existing mixer
+tween, so they are asynchronous rather than sample-immediate. Categories are
+flat, with no nesting, effects, per-voice rerouting, built-in game names, settings
+persistence or settings UI policy. Non-default bus settings remain until reset
+by `set_bus(bus, AudioBusSettings::default())` or output-service destruction.
+
 Audio output processing releases completed voice handles even when the command
 queue is empty. Active voice counts exclude completed voices and include paused
 voices. Shared clip clones reuse converted frames within a single command batch,
