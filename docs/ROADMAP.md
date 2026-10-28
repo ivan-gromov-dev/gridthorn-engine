@@ -101,8 +101,12 @@ capabilities are explicit, optional and reported through engine-owned APIs.
       with domain/facade tests and the desktop-input example. Windows smoke and
       maintainer manual acceptance passed; complete startup enumeration and
       Linux/macOS raw adapters remain outside this subset. See [INPUT.md](INPUT.md).
-- [ ] Enumerate/select audio output and capture devices; opt-in capture API,
+- [x] Enumerate/select audio output and capture devices; opt-in capture API,
       output switching, default-device changes and device-loss recovery.
+      Provisional explicit refresh, voice-preserving output reconnection and bounded
+      capture are implemented. Windows native smoke and injected recovery passed;
+      physical hotplug/default changes and Linux/macOS acceptance remain deferred.
+      The sibling `audio-devices` example demonstrates explicit output selection.
 - [ ] Master/category audio buses, mute and gain controls without game-specific
       category names or settings-screen policies.
 - [ ] Platform user-data/config/cache directory discovery and clipboard integration

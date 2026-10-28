@@ -3,6 +3,10 @@ use thiserror::Error;
 /// Failure while starting or driving the native audio output service.
 #[derive(Debug, Error)]
 pub enum AudioOutputError {
+    /// Native endpoint query or stream failure.
+    #[cfg(feature = "native-output")]
+    #[error(transparent)]
+    Device(#[from] crate::devices::AudioDeviceError),
     /// The operating system did not provide a usable output stream.
     #[cfg(feature = "native-output")]
     #[error("failed to initialize the audio output device: {0}")]

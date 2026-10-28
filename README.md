@@ -68,7 +68,7 @@ they are explicitly marked as implemented.
 | Sprite batching and animation      | Provisional ordered texture batches and sprite-sheet playback                                              |
 | UI property animation              | Provisional frame-time tweens and interruptible offset, size, color and scroll transitions; independent of simulation pause/speed |
 | Text and runtime UI                | Provisional [multilingual text](docs/TEXT.md) and [UI composition/controls](docs/UI.md): sizing, layout, anchors, clipping, scrolling, themes and six reusable controls |
-| Audio                              | Provisional PCM16 WAV assets, queue, and opt-in Kira output adapter                                        |
+| Audio                              | Provisional PCM16 WAV assets, queue, device selection/recovery and opt-in capture                                        |
 | Component/resource reflection      | Provisional explicit registration, scalar metadata and read-only snapshots                                 |
 | Versioned scene serialization      | Provisional schema 1 TOML, validated prepared loading and migration hooks                                  |
 | Basic 2D collision                 | Provisional circle/AABB overlap and minimum-translation queries                                            |
